@@ -24,6 +24,9 @@
 	import ButtonMenu from './ButtonMenu.svelte';
 	import ButtonMenuClose from './ButtonMenuClose.svelte';
 	import ButtonSoundSwitch from './ButtonSoundSwitch.svelte';
+	import ButtonMuteMusic from './ButtonMuteMusic.svelte';
+	import ButtonMuteSounds from './ButtonMuteSounds.svelte';
+	import { getUiTheme } from '../theme';
 
 	type Props = {
 		gameName: Snippet;
@@ -33,6 +36,7 @@
 	const props: Props = $props();
 
 	const { stateLayoutDerived } = getContextLayout();
+	const theme = getUiTheme();
 
 	const LAYOUT_COMPONENT_MAP = {
 		desktop: LayoutDesktop,
@@ -41,7 +45,10 @@
 		tablet: LayoutTablet,
 	};
 
-	const LayoutComponent = $derived(LAYOUT_COMPONENT_MAP[stateLayoutDerived.layoutType()]);
+	const LayoutComponent = $derived(
+		theme?.layouts?.[stateLayoutDerived.layoutType()] ??
+			LAYOUT_COMPONENT_MAP[stateLayoutDerived.layoutType()],
+	);
 </script>
 
 <EnableSpaceHold />
@@ -69,7 +76,9 @@
 		{/snippet}
 
 		{#snippet buttonBuyBonus(buttonProps)}
-			<ButtonBuyBonus {...buttonProps} />
+			{#if !theme?.hideBuyBonusOn?.includes(stateLayoutDerived.layoutType())}
+				<ButtonBuyBonus {...buttonProps} />
+			{/if}
 		{/snippet}
 
 		{#snippet buttonBet(buttonProps)}
@@ -114,6 +123,14 @@
 
 		{#snippet buttonSoundSwitch(buttonProps)}
 			<ButtonSoundSwitch {...buttonProps} />
+		{/snippet}
+
+		{#snippet buttonMuteMusic(buttonProps)}
+			<ButtonMuteMusic {...buttonProps} />
+		{/snippet}
+
+		{#snippet buttonMuteSounds(buttonProps)}
+			<ButtonMuteSounds {...buttonProps} />
 		{/snippet}
 	</LayoutComponent>
 </UiFadeContainer>

@@ -1,0 +1,389 @@
+import _ from 'lodash';
+
+import type { BonusType, RawSymbol, SymbolName, SymbolState } from './types';
+
+// row height
+export const SYMBOL_SIZE = 120;
+// reels are wider than the rows are tall, so the big wild art (about 1:2.5) is barely
+// squashed to fill a reel 4 rows tall
+export const REEL_WIDTH = SYMBOL_SIZE * 1.3;
+
+export const REEL_PADDING = 0.5;
+
+// initial board (padded top and bottom)
+export const INITIAL_BOARD: RawSymbol[][] = [
+	[
+		{
+			name: 'L2',
+		},
+		{
+			name: 'L1',
+		},
+		{
+			name: 'L4',
+		},
+		{
+			name: 'H2',
+		},
+		{
+			name: 'L3',
+		},
+		{
+			name: 'L1',
+		},
+	],
+	[
+		{
+			name: 'H1',
+		},
+		{
+			name: 'L5',
+		},
+		{
+			name: 'L2',
+		},
+		{
+			name: 'H3',
+		},
+		{
+			name: 'H2',
+		},
+		{
+			name: 'L4',
+		},
+	],
+	[
+		{
+			name: 'L3',
+		},
+		{
+			name: 'L5',
+		},
+		{
+			name: 'L3',
+		},
+		{
+			name: 'H4',
+		},
+		{
+			name: 'L1',
+		},
+		{
+			name: 'L4',
+		},
+	],
+	[
+		{
+			name: 'H4',
+		},
+		{
+			name: 'H3',
+		},
+		{
+			name: 'L4',
+		},
+		{
+			name: 'L5',
+		},
+		{
+			name: 'H1',
+		},
+		{
+			name: 'L1',
+		},
+	],
+	[
+		{
+			name: 'H3',
+		},
+		{
+			name: 'L3',
+		},
+		{
+			name: 'L3',
+		},
+		{
+			name: 'H1',
+		},
+		{
+			name: 'L2',
+		},
+		{
+			name: 'H1',
+		},
+	],
+];
+
+export const BOARD_DIMENSIONS = { x: INITIAL_BOARD.length, y: INITIAL_BOARD[0].length - 2 };
+
+export const BOARD_SIZES = {
+	width: REEL_WIDTH * BOARD_DIMENSIONS.x,
+	height: SYMBOL_SIZE * BOARD_DIMENSIONS.y,
+};
+
+export const BACKGROUND_RATIO = 2039 / 1000;
+export const PORTRAIT_BACKGROUND_RATIO = 1242 / 2208;
+const PORTRAIT_RATIO = 800 / 1422;
+const LANDSCAPE_RATIO = 1600 / 900;
+const DESKTOP_RATIO = 1422 / 800;
+
+const DESKTOP_HEIGHT = 800;
+const LANDSCAPE_HEIGHT = 900;
+const PORTRAIT_HEIGHT = 1422;
+export const DESKTOP_MAIN_SIZES = { width: DESKTOP_HEIGHT * DESKTOP_RATIO, height: DESKTOP_HEIGHT };
+export const LANDSCAPE_MAIN_SIZES = {
+	width: LANDSCAPE_HEIGHT * LANDSCAPE_RATIO,
+	height: LANDSCAPE_HEIGHT,
+};
+export const PORTRAIT_MAIN_SIZES = {
+	width: PORTRAIT_HEIGHT * PORTRAIT_RATIO,
+	height: PORTRAIT_HEIGHT,
+};
+
+export const HIGH_SYMBOLS = ['H1', 'H2', 'H3', 'H4', 'H5'];
+// the cats; they jiggle as their reel lands (see ReelSymbol)
+export const CAT_SYMBOLS: SymbolName[] = ['H1', 'H2', 'H3', 'H4'];
+
+export const INITIAL_SYMBOL_STATE: SymbolState = 'static';
+
+const HIGH_SYMBOL_SIZE = 0.9;
+
+const SPIN_OPTIONS_SHARED = {
+	reelBounceBackSpeed: 0.15,
+	reelSpinSpeedBeforeBounce: 4,
+	reelPaddingMultiplierNormal: 1.2,
+	reelPaddingMultiplierAnticipated: 10,
+	reelSpinDelay: 145,
+};
+
+export const SPIN_OPTIONS_DEFAULT = {
+	...SPIN_OPTIONS_SHARED,
+	reelPreSpinSpeed: 2.4,
+	reelSpinSpeed: 3.6,
+	reelBounceSizeMulti: 0.3,
+};
+
+export const SPIN_OPTIONS_FAST = {
+	...SPIN_OPTIONS_SHARED,
+	reelPreSpinSpeed: 5,
+	reelSpinSpeed: 5,
+	reelBounceSizeMulti: 0.05,
+};
+
+export const MOTION_BLUR_VELOCITY = 31;
+
+export const zIndexes = {
+	background: {
+		backdrop: -3,
+		normal: -2,
+		feature: -1,
+	},
+};
+
+const explosion = {
+	type: 'spine',
+	assetKey: 'explosion',
+	animationName: 'explosion',
+	sizeRatios: { width: 1, height: 1 },
+};
+
+// The symbol art is cropped to its edges, so size each image by its area (wide and tall art then
+// look equally big) and cap its width and height so it stays inside the cell. The width cap is
+// against the reel width, so wide art can use the extra room of the wide reels.
+const SYMBOL_ART_SIZE = 1.05;
+const SYMBOL_ART_MAX_HEIGHT = 0.96;
+const SYMBOL_ART_MAX_WIDTH = (0.9 * REEL_WIDTH) / SYMBOL_SIZE;
+// widened a little to suit the wide reels (round art can opt out, see sStatic)
+const SYMBOL_ART_STRETCH_X = 1.1;
+// Each symbol also has a soft shadow image (`<key>Shadow`): the same art blurred, with padding
+// around it, so it shares the symbol's centre and scale. `size` scales a symbol that looks too big
+// or small next to the others.
+const symbolArt = (
+	assetKey: string,
+	[imageWidth, imageHeight]: [number, number],
+	[shadowWidth, shadowHeight]: [number, number],
+	stretchX = SYMBOL_ART_STRETCH_X,
+	size = 1,
+) => {
+	const scale =
+		size *
+		Math.min(
+			SYMBOL_ART_SIZE / Math.sqrt(imageWidth * imageHeight),
+			SYMBOL_ART_MAX_HEIGHT / imageHeight,
+			SYMBOL_ART_MAX_WIDTH / (imageWidth * stretchX),
+		);
+	return {
+		type: 'sprite',
+		assetKey,
+		sizeRatios: { width: imageWidth * scale * stretchX, height: imageHeight * scale },
+		shadow: {
+			assetKey: `${assetKey}Shadow`,
+			sizeRatios: {
+				width: shadowWidth * scale * stretchX,
+				height: shadowHeight * scale,
+			},
+		},
+	};
+};
+
+const h1Static = symbolArt('symbolH1', [277, 290], [329, 342]);
+const h2Static = symbolArt('symbolH2', [329, 288], [387, 346]);
+const h3Static = symbolArt('symbolH3', [296, 223], [348, 275]);
+const h4Static = symbolArt('symbolH4', [240, 282], [292, 334]);
+const h5Static = { type: 'sprite', assetKey: 'h5.webp', sizeRatios: { width: 1, height: 1 } };
+
+const l1Static = symbolArt('symbolL1', [562, 419], [662, 519]);
+// the collar
+const l2Static = symbolArt('symbolL2', [339, 265], [403, 329], SYMBOL_ART_STRETCH_X, 0.9);
+// the paw
+const l3Static = symbolArt('symbolL3', [306, 256], [364, 314], SYMBOL_ART_STRETCH_X, 0.85);
+const l4Static = symbolArt('symbolL4', [676, 403], [800, 527]);
+// the bowl
+const l5Static = symbolArt('symbolL5', [474, 325], [562, 413], SYMBOL_ART_STRETCH_X, 0.9);
+
+// not widened: the round badge looks squashed when stretched
+const sStatic = symbolArt('symbolS', [512, 423], [604, 515], 1);
+const wStatic = symbolArt('symbolW', [512, 493], [604, 585]);
+
+// A reel that lands any W is drawn as one big wild, stretched over the whole reel.
+export const BIG_WILD_INFO = {
+	type: 'sprite',
+	assetKey: 'bigWild',
+	sizeRatios: { width: REEL_WIDTH / SYMBOL_SIZE, height: BOARD_DIMENSIONS.y },
+	winPulseScale: 1.05,
+} as const;
+// its multiplier sits on the water strip, centred 88.1% of the way down the art
+export const BIG_WILD_MULTIPLIER = {
+	y: (0.881 - 0.5) * BOARD_DIMENSIONS.y * SYMBOL_SIZE,
+	fontSize: SYMBOL_SIZE * 0.4,
+	maxWidth: REEL_WIDTH * 0.6,
+};
+
+export const SYMBOL_INFO_MAP = {
+	// sprite symbols in the 'win' state get a pulse animation in Symbol.svelte
+	H1: {
+		explosion,
+		win: h1Static,
+		postWinStatic: h1Static,
+		static: h1Static,
+		spin: h1Static,
+		land: h1Static,
+	},
+	H2: {
+		explosion,
+		win: h2Static,
+		postWinStatic: h2Static,
+		static: h2Static,
+		spin: h2Static,
+		land: h2Static,
+	},
+	H3: {
+		explosion,
+		win: h3Static,
+		postWinStatic: h3Static,
+		static: h3Static,
+		spin: h3Static,
+		land: h3Static,
+	},
+	H4: {
+		explosion,
+		win: h4Static,
+		postWinStatic: h4Static,
+		static: h4Static,
+		spin: h4Static,
+		land: h4Static,
+	},
+	H5: {
+		explosion,
+		win: {
+			type: 'spine',
+			assetKey: 'H5',
+			animationName: 'h5',
+			sizeRatios: { width: 0.5 * 0.9, height: HIGH_SYMBOL_SIZE * 0.53 },
+		},
+		postWinStatic: h5Static,
+		static: h5Static,
+		spin: h5Static,
+		land: h5Static,
+	},
+	L1: {
+		explosion,
+		win: l1Static,
+		postWinStatic: l1Static,
+		static: l1Static,
+		spin: l1Static,
+		land: l1Static,
+	},
+	L2: {
+		explosion,
+		win: l2Static,
+		postWinStatic: l2Static,
+		static: l2Static,
+		spin: l2Static,
+		land: l2Static,
+	},
+	L3: {
+		explosion,
+		win: l3Static,
+		postWinStatic: l3Static,
+		static: l3Static,
+		spin: l3Static,
+		land: l3Static,
+	},
+	L4: {
+		explosion,
+		win: l4Static,
+		postWinStatic: l4Static,
+		static: l4Static,
+		spin: l4Static,
+		land: l4Static,
+	},
+	L5: {
+		explosion,
+		win: l5Static,
+		postWinStatic: l5Static,
+		static: l5Static,
+		spin: l5Static,
+		land: l5Static,
+	},
+	W: {
+		explosion,
+		win: wStatic,
+		postWinStatic: wStatic,
+		static: wStatic,
+		spin: wStatic,
+		land: wStatic,
+	},
+	S: {
+		explosion,
+		win: sStatic,
+		postWinStatic: sStatic,
+		static: sStatic,
+		spin: sStatic,
+		land: sStatic,
+	},
+} as const;
+
+// The number of FS symbols that trigger free spins picks the bonus (see getBonusType).
+export const BONUS_SCATTER_COUNT: Record<BonusType, number> = { normal: 3, super: 4, mythic: 5 };
+// shown before "FREE SPINS" on the intro and the free spin counter; the normal bonus has none
+export const BONUS_NAME: Record<BonusType, string | undefined> = {
+	normal: undefined,
+	super: 'SUPER',
+	mythic: 'MYTHIC',
+};
+// how the bonus works, under its name on the intro; left out until the math decides what the
+// super and mythic bonuses give
+export const BONUS_DESCRIPTION: Record<BonusType, string | undefined> = {
+	normal: 'When a wild lands, it has a chance to shoot out extra wilds.',
+	super: undefined,
+	mythic: undefined,
+};
+
+export const SCATTER_LAND_SOUND_MAP = {
+	1: 'sfx_scatter_stop_1',
+	2: 'sfx_scatter_stop_2',
+	3: 'sfx_scatter_stop_3',
+	4: 'sfx_scatter_stop_4',
+	5: 'sfx_scatter_stop_5',
+} as const;

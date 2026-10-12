@@ -5,13 +5,17 @@
 
 	import UIDefault from './UIDefault.svelte';
 	import UIReplay from './UIReplay.svelte';
+	import { setUiTheme, type UiTheme } from '../theme';
 
 	type Props = {
 		gameName: Snippet;
 		logo: Snippet;
+		theme?: UiTheme;
 	};
 
 	const props: Props = $props();
+
+	setUiTheme(props.theme);
 
 	const UI_COMPONENT_MAP = {
 		default: UIDefault,

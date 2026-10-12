@@ -45,12 +45,15 @@ export type LayoutUiProps = {
 	buttonBet: Snippet<[Partial<ButtonProps>]>;
 	buttonTurbo: Snippet<[Partial<ButtonProps>]>;
 	buttonAutoSpin: Snippet<[Partial<ButtonProps>]>;
-	buttonIncrease: Snippet<[Partial<ButtonProps>]>;
-	buttonDecrease: Snippet<[Partial<ButtonProps>]>;
+	// `arrow` draws an up / down arrow instead of a plus / minus
+	buttonIncrease: Snippet<[Partial<ButtonProps> & { arrow?: boolean }]>;
+	buttonDecrease: Snippet<[Partial<ButtonProps> & { arrow?: boolean }]>;
 	buttonMenu: Snippet<[Partial<ButtonProps>]>;
 	buttonMenuClose: Snippet<[Partial<ButtonProps>]>;
 	buttonPayTable: Snippet<[Partial<ButtonProps>]>;
 	buttonGameRules: Snippet<[Partial<ButtonProps>]>;
 	buttonSettings: Snippet<[Partial<ButtonProps>]>;
 	buttonSoundSwitch: Snippet<[Partial<ButtonProps>]>;
+	buttonMuteMusic: Snippet<[Partial<ButtonProps>]>;
+	buttonMuteSounds: Snippet<[Partial<ButtonProps>]>;
 };

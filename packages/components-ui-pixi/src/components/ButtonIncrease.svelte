@@ -6,7 +6,12 @@
 	import { getContext } from '../context';
 	import { UI_BASE_SIZE } from '../constants';
 
-	const props: Partial<Omit<ButtonProps, 'children'>> = $props();
+	type Props = Partial<Omit<ButtonProps, 'children'>> & {
+		// an up arrow instead of a plus, for a pair of arrows stacked beside the bet
+		arrow?: boolean;
+	};
+
+	const { arrow, ...props }: Props = $props();
 	const context = getContext();
 	const sizes = { width: UI_BASE_SIZE, height: UI_BASE_SIZE };
 	const biggest = $derived(stateConfig.betAmountOptions[stateConfig.betAmountOptions.length - 1]);
@@ -23,4 +28,11 @@
 	};
 </script>
 
-<UiButton {...props} {sizes} {onpress} {disabled} icon="increase" />
+<UiButton
+	{...props}
+	{sizes}
+	{onpress}
+	{disabled}
+	icon="increase"
+	themeIcon={arrow ? 'arrowUp' : undefined}
+/>

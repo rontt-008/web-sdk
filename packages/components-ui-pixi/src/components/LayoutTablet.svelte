@@ -5,12 +5,14 @@
 	import { Container, Rectangle, anchorToPivot } from 'pixi-svelte';
 
 	import { getContext } from '../context';
+	import { getUiTheme } from '../theme';
 	import type { LayoutUiProps } from '../types';
 	import LabelFreeSpinCounter from './LabelFreeSpinCounter.svelte';
 	import { DESKTOP_BASE_SIZE, DESKTOP_BACKGROUND_WIDTH_LIST } from '../constants';
 
 	const props: LayoutUiProps = $props();
 	const context = getContext();
+	const theme = getUiTheme();
 </script>
 
 <Container x={20}>
@@ -49,7 +51,17 @@
 			{@render props.buttonMenu({ anchor: 0.5 })}
 		</Container>
 
-		<Container y={DESKTOP_BASE_SIZE * 0.5} x={20 + 180}>
+		{#if theme?.muteButtons}
+			<Container y={DESKTOP_BASE_SIZE * 0.5} x={20 + 180}>
+				{@render props.buttonMuteMusic({ anchor: 0.5 })}
+			</Container>
+
+			<Container y={DESKTOP_BASE_SIZE * 0.5} x={20 + 180 * 2}>
+				{@render props.buttonMuteSounds({ anchor: 0.5 })}
+			</Container>
+		{/if}
+
+		<Container y={DESKTOP_BASE_SIZE * 0.5} x={20 + 180 * (theme?.muteButtons ? 3 : 1)}>
 			{@render props.buttonBuyBonus({ anchor: 0.5 })}
 		</Container>
 

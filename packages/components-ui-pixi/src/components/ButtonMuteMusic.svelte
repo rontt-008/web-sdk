@@ -1,0 +1,37 @@
+<script lang="ts" module>
+	// music volume to go back to when unmuting
+	let unmutedVolume = 75;
+</script>
+
+<script lang="ts">
+	import type { ButtonProps } from 'components-pixi';
+	import { stateSound } from 'state-shared';
+
+	import UiButton from './UiButton.svelte';
+	import { UI_BASE_SIZE } from '../constants';
+	import { getContext } from '../context';
+
+	const props: Partial<Omit<ButtonProps, 'children'>> = $props();
+	const context = getContext();
+	const sizes = { width: UI_BASE_SIZE, height: UI_BASE_SIZE };
+	const muted = $derived(stateSound.volumeValueMusic === 0);
+
+	const onpress = () => {
+		context.eventEmitter.broadcast({ type: 'soundPressGeneral' });
+
+		if (muted) {
+			stateSound.volumeValueMusic = unmutedVolume;
+		} else {
+			unmutedVolume = stateSound.volumeValueMusic;
+			stateSound.volumeValueMusic = 0;
+		}
+	};
+</script>
+
+<UiButton
+	{...props}
+	{sizes}
+	{onpress}
+	icon={muted ? 'soundOff' : 'soundOn'}
+	themeIcon={muted ? 'musicOff' : 'musicOn'}
+/>

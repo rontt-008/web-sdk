@@ -1,9 +1,10 @@
 <script lang="ts">
-	import { Text } from 'pixi-svelte';
+	import { Rectangle, Text } from 'pixi-svelte';
 	import { WHITE } from 'constants-shared/colors';
 
 	import UiSprite from './UiSprite.svelte';
-	import { UI_BASE_FONT_SIZE } from '../constants';
+	import { UI_BASE_FONT_SIZE, UI_THEMED_LABEL_SIZES } from '../constants';
+	import { getUiTheme } from '../theme';
 
 	type Props = {
 		label: string;
@@ -13,6 +14,7 @@
 	};
 
 	const props: Props = $props();
+	const theme = getUiTheme();
 
 	const labelStyle = {
 		fontFamily: 'proxima-nova',
@@ -25,9 +27,62 @@
 		fontSize: UI_BASE_FONT_SIZE,
 		fill: WHITE,
 	} as const;
+
+	// themed: a soft pill with a small label over a bold value
+	const PILL_WIDTH = UI_THEMED_LABEL_SIZES.width;
+	const PILL_HEIGHT = UI_THEMED_LABEL_SIZES.height;
+	const themedLabelStyle = $derived({
+		fontFamily: theme?.fontFamily,
+		fontSize: UI_BASE_FONT_SIZE * 0.55,
+		fontWeight: '700',
+		letterSpacing: 3,
+		fill: theme?.label.label,
+	} as const);
+	const themedValueStyle = $derived({
+		fontFamily: theme?.fontFamily,
+		fontSize: UI_BASE_FONT_SIZE * 0.95,
+		fontWeight: '800',
+		fill: theme?.label.value,
+	} as const);
 </script>
 
-{#if props.stacked}
+{#if theme}
+	{#if props.stacked}
+		<Rectangle
+			anchor={{ x: 0.5, y: 0 }}
+			y={-UI_BASE_FONT_SIZE * 0.35}
+			width={PILL_WIDTH}
+			height={PILL_HEIGHT}
+			borderRadius={PILL_HEIGHT * 0.5}
+			backgroundColor={theme.label.panel}
+			backgroundAlpha={theme.label.panelAlpha}
+		/>
+		<Text anchor={{ x: 0.5, y: 0 }} text={props.label} style={themedLabelStyle} />
+		<Text
+			anchor={{ x: 0.5, y: 0 }}
+			y={UI_BASE_FONT_SIZE * 0.6}
+			text={props.value}
+			style={themedValueStyle}
+		/>
+	{:else}
+		<Rectangle
+			x={-UI_BASE_FONT_SIZE * 0.8}
+			anchor={{ x: 0, y: 0.5 }}
+			width={UI_BASE_FONT_SIZE * 11.6}
+			height={PILL_HEIGHT * 0.75}
+			borderRadius={PILL_HEIGHT * 0.375}
+			backgroundColor={theme.label.panel}
+			backgroundAlpha={theme.label.panelAlpha}
+		/>
+		<Text anchor={{ x: 0, y: 0.5 }} text={props.label} style={themedLabelStyle} />
+		<Text
+			anchor={{ x: 1, y: 0.5 }}
+			x={UI_BASE_FONT_SIZE * 10}
+			text={props.value}
+			style={themedValueStyle}
+		/>
+	{/if}
+{:else if props.stacked}
 	{#if props.tiled}
 		<UiSprite
 			y={-20}
@@ -54,8 +109,8 @@
 	<Text anchor={{ x: 0, y: 0.5 }} text={props.label} style={labelStyle} />
 	<Text
 		anchor={{ x: 1, y: 0.5 }}
+		x={UI_BASE_FONT_SIZE * 10}
 		text={props.value}
 		style={valueStyle}
-		x={UI_BASE_FONT_SIZE * 10}
 	/>
 {/if}

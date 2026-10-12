@@ -7,9 +7,11 @@
 	import { LANDSCAPE_BASE_SIZE, LANDSCAPE_BACKGROUND_WIDTH_LIST } from '../constants';
 	import type { LayoutUiProps } from '../types';
 	import { getContext } from '../context';
+	import { getUiTheme } from '../theme';
 
 	const props: LayoutUiProps = $props();
 	const context = getContext();
+	const theme = getUiTheme();
 </script>
 
 <Container x={20}>
@@ -36,7 +38,21 @@
 			{@render props.buttonMenu({ anchor: 0.5 })}
 		</Container>
 
-		<Container y={LANDSCAPE_BASE_SIZE * 0.5 - 90} x={220 + 20} scale={0.8}>
+		{#if theme?.muteButtons}
+			<Container y={LANDSCAPE_BASE_SIZE * 0.5 - 90} x={220 + 20} scale={0.8}>
+				{@render props.buttonMuteMusic({ anchor: 0.5 })}
+			</Container>
+
+			<Container y={LANDSCAPE_BASE_SIZE * 0.5 - 90} x={355 + 20} scale={0.8}>
+				{@render props.buttonMuteSounds({ anchor: 0.5 })}
+			</Container>
+		{/if}
+
+		<Container
+			y={LANDSCAPE_BASE_SIZE * 0.5 - 90}
+			x={(theme?.muteButtons ? 490 : 220) + 20}
+			scale={0.8}
+		>
 			{@render props.buttonBuyBonus({ anchor: 0.5 })}
 		</Container>
 

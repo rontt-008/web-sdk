@@ -4,6 +4,12 @@ export const UI_BASE_SIZE = 150;
 
 export const UI_BASE_FONT_SIZE = UI_BASE_SIZE * 0.3;
 
+// pill behind a label and its value, when a theme is used
+export const UI_THEMED_LABEL_SIZES = {
+	width: UI_BASE_FONT_SIZE * 8,
+	height: UI_BASE_FONT_SIZE * 2.4,
+};
+
 export const UI_TEXT_STYLES = {
 	labelStyle: {
 		fontSize: UI_BASE_FONT_SIZE,

@@ -13,9 +13,14 @@
 	import ButtonDrawer from './ButtonDrawer.svelte';
 	import type { LayoutUiProps } from '../types';
 	import { getContext } from '../context';
+	import { getUiTheme } from '../theme';
 
 	const props: LayoutUiProps = $props();
 	const context = getContext();
+	const theme = getUiTheme();
+
+	// the row beside the menu is full, so the mute buttons sit as a smaller pair just under it
+	const MUTE_SCALE = 0.7;
 
 	const DRAWER_Y = {
 		unfold: 0,
@@ -83,6 +88,24 @@
 		>
 			{@render props.buttonMenu({ anchor: 0.5 })}
 		</Container>
+
+		{#if theme?.muteButtons}
+			<Container
+				x={context.stateLayoutDerived.mainLayoutStandard().width * 0.5 - 470}
+				y={context.stateLayoutDerived.mainLayoutStandard().height - 245}
+				scale={MUTE_SCALE}
+			>
+				{@render props.buttonMuteMusic({ anchor: 0.5 })}
+			</Container>
+
+			<Container
+				x={context.stateLayoutDerived.mainLayoutStandard().width * 0.5 - 350}
+				y={context.stateLayoutDerived.mainLayoutStandard().height - 245}
+				scale={MUTE_SCALE}
+			>
+				{@render props.buttonMuteSounds({ anchor: 0.5 })}
+			</Container>
+		{/if}
 
 		<Container
 			x={context.stateLayoutDerived.mainLayoutStandard().width * 0.5 + 440}
