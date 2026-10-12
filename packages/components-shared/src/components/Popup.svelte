@@ -33,10 +33,6 @@
 	});
 </script>
 
-<div>
-	{@render props.children()}
-</div>
-
 <OnHotkey hotkey="Escape" onpress={closeModal} />
 
 <div class="pop-up-wrap" class:disabled style={`z-index: ${props.zIndex};`}>
@@ -65,10 +61,11 @@
 </div>
 
 <style lang="scss">
+	/* the --ui-* colours come from components-ui-html's theme when the popup is inside its <Modals> */
 	.pop-up-wrap {
-		font-family: 'proxima-nova', sans-serif;
+		font-family: var(--ui-font, 'proxima-nova', sans-serif);
 		touch-action: manipulation;
-		color: white;
+		color: var(--ui-text, white);
 		position: fixed;
 		left: 0;
 		top: 0;
@@ -78,6 +75,8 @@
 		display: flex !important;
 		justify-content: center;
 		align-items: center;
+		/* content scaled down to fit still takes its full size in the layout */
+		overflow: hidden;
 
 		&.disabled {
 			pointer-events: none;
@@ -90,7 +89,7 @@
 		top: 0;
 		bottom: 0;
 		right: 0;
-		background-color: rgba(0, 0, 0, 0.5);
+		background: var(--ui-backdrop, rgba(0, 0, 0, 0.5));
 		backdrop-filter: blur(30px);
 		-webkit-backdrop-filter: blur(30px);
 	}
@@ -115,20 +114,38 @@
 
 	.close-button-wrap {
 		position: absolute;
-		top: 0;
-		right: 0;
+		top: 1rem;
+		right: 1rem;
 		z-index: var(--zIndex);
 	}
 
 	.close-button {
 		cursor: pointer;
-		color: white;
-		font-size: 3rem;
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		padding: 0 0 0.15em;
+		color: var(--ui-control-text, white);
+		font-family: var(--ui-font-heading, inherit);
+		font-size: 2rem;
 		font-weight: 900;
-		background-color: transparent;
-		border-color: transparent;
-		line-height: 0px; /* to remove the button style influence */
-		width: 3rem;
-		height: 3rem;
+		line-height: 1;
+		background: var(--ui-control-bg, transparent);
+		border: var(--ui-control-border, none);
+		border-radius: 50%;
+		width: 2.75rem;
+		height: 2.75rem;
+		transition:
+			transform 120ms ease,
+			background 120ms ease;
+
+		&:hover {
+			background: var(--ui-control-bg-hovered, transparent);
+			transform: scale(1.06);
+		}
+
+		&:active {
+			transform: scale(0.95);
+		}
 	}
 </style>

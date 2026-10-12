@@ -4,8 +4,7 @@
 	import { getContextEventEmitter } from 'utils-event-emitter';
 	import { Button } from 'components-shared';
 
-	import BaseIcon from './BaseIcon.svelte';
-	import BaseButtonContent from './BaseButtonContent.svelte';
+	import ButtonFace from './ButtonFace.svelte';
 	import type { EmitterEventModal } from '../types';
 
 	type Props = {
@@ -15,11 +14,10 @@
 
 	let { value = $bindable(), children }: Props = $props();
 	const { eventEmitter } = getContextEventEmitter<EmitterEventModal>();
-	const ICONS = { on: 'volumeOn', off: 'volumeOff' } as const;
 </script>
 
 <div class="col">
-	<span>{@render children()}</span>
+	<span class="label">{@render children()}</span>
 	<div class="row">
 		<!-- button -->
 		<div class="button-wrap">
@@ -33,15 +31,21 @@
 					}
 				}}
 			>
-				<BaseIcon width="3rem" height="3rem" />
-				<BaseButtonContent>
-					<span>{value > 0 ? 'ON' : 'OFF'}</span>
-				</BaseButtonContent>
+				<ButtonFace
+					variant="control"
+					round
+					width="3rem"
+					height="3rem"
+					fontSize="0.85rem"
+					selected={value > 0}
+				>
+					{value > 0 ? 'ON' : 'OFF'}
+				</ButtonFace>
 			</Button>
 		</div>
 
 		<!-- range -->
-		<input bind:value type="range" min="0" max="100" class="range" />
+		<input bind:value type="range" min="0" max="100" class="range" style:--percent="{value}%" />
 
 		<!-- value -->
 		<div class="value">
@@ -54,30 +58,72 @@
 	.col {
 		display: flex;
 		flex-direction: column;
+		gap: 0.5rem;
+	}
+
+	.label {
+		color: var(--ui-text-muted, white);
 	}
 
 	.row {
 		display: flex;
 		flex-direction: row;
-		gap: 0.5rem;
+		align-items: center;
+		gap: 1rem;
 	}
 
 	.button-wrap {
-		width: 15%;
 		display: flex;
 		align-items: center;
 	}
 
 	.range {
-		width: 70%;
-		display: flex;
-		align-items: center;
+		flex: 1;
+		min-width: 0;
+		height: 0.5rem;
+		margin: 0;
+		appearance: none;
+		-webkit-appearance: none;
+		cursor: pointer;
+		border-radius: 1rem;
+		/* the theme's control background can be a gradient, which a colour stop cannot be */
+		background: linear-gradient(
+			to right,
+			var(--ui-accent-color, white) 0 var(--percent),
+			rgba(0, 0, 0, 0.3) var(--percent) 100%
+		);
+
+		&::-webkit-slider-thumb {
+			-webkit-appearance: none;
+			appearance: none;
+			width: 1.4rem;
+			height: 1.4rem;
+			border-radius: 50%;
+			background: var(--ui-text, white);
+			border: 0.2rem solid var(--ui-accent-color, white);
+			box-shadow: 0 0.1rem 0.35rem rgba(0, 0, 0, 0.45);
+		}
+
+		&::-moz-range-thumb {
+			width: 1rem;
+			height: 1rem;
+			border-radius: 50%;
+			background: var(--ui-text, white);
+			border: 0.2rem solid var(--ui-accent-color, white);
+			box-shadow: 0 0.1rem 0.35rem rgba(0, 0, 0, 0.45);
+		}
+
+		&:focus-visible {
+			outline: 2px solid var(--ui-accent-color, white);
+			outline-offset: 4px;
+		}
 	}
 
 	.value {
-		width: 15%;
-		display: flex;
-		justify-content: center;
-		align-items: center;
+		width: 2.5rem;
+		text-align: right;
+		font-family: var(--ui-font-heading, inherit);
+		font-weight: var(--ui-heading-weight, 800);
+		font-variant-numeric: tabular-nums;
 	}
 </style>

@@ -2,9 +2,13 @@ import { DEFAULT_BET_MODE_META, DEFAULT_GAME_RULE_META } from './constants';
 
 export type BetModeData = {
 	maxWin?: number;
+	// how volatile the mode is, 1 (low) to 5 (high); the buy bonus menu shows it when set
+	volatility?: number;
 	mode: string;
 	costMultiplier: number;
 	type: 'default' | 'activate' | 'buy';
+	// the mode this one is a level of, e.g. SUPER_BOOST of BOOST: the buy bonus menu shows a mode and
+	// its levels on one card. Empty for a mode of its own.
 	parent: string;
 	children: string;
 	assets: {

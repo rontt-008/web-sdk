@@ -28,7 +28,7 @@
 		position: relative;
 		text-align: center;
 		display: flex;
-		gap: 1rem;
+		gap: var(--scrollable-gap, 1rem);
 
 		&.column {
 			flex-direction: column;

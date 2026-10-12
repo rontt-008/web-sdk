@@ -11,7 +11,7 @@
 	import { GameVersion, Modals } from 'components-ui-html';
 
 	import { getContext } from '../game/context';
-	import { setBetModeMeta } from '../game/betModes';
+	import { setBetModeMeta, BOOSTER_MODE } from '../game/betModes';
 	import { uiTheme } from '../game/uiTheme';
 	import EnableSound from './EnableSound.svelte';
 	import EnableGameActor from './EnableGameActor.svelte';
@@ -23,6 +23,7 @@
 	import BoardParticles from './BoardParticles.svelte';
 	import GameLogo from './GameLogo.svelte';
 	import FeatureButtons from './FeatureButtons.svelte';
+	import BonusCardArt from './BonusCardArt.svelte';
 	import Board from './Board.svelte';
 	import Anticipations from './Anticipations.svelte';
 	import WildThrow from './WildThrow.svelte';
@@ -38,6 +39,11 @@
 	const context = getContext();
 
 	setBetModeMeta();
+
+	// the booster has its own switch beside the board on these layouts, so the buy menu leaves it out
+	const hiddenBetModes = $derived(
+		context.stateGameDerived.isLogoBesideBoard() ? [BOOSTER_MODE] : [],
+	);
 
 	onMount(() => (context.stateLayout.showLoadingScreen = true));
 
@@ -109,8 +115,12 @@
 	{/if}
 </App>
 
-<Modals>
+<!-- the menus in the SDK's default theme (UI_HTML_THEME_CLEAN), with the FS symbols on each bonus -->
+<Modals {hiddenBetModes}>
 	{#snippet version()}
 		<GameVersion version="0.0.0" />
+	{/snippet}
+	{#snippet bonusArt(betModeData)}
+		<BonusCardArt {betModeData} />
 	{/snippet}
 </Modals>

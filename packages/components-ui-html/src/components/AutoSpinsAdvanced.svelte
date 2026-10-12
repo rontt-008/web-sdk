@@ -36,11 +36,19 @@
 </DropdownToggle>
 
 {#if open}
-	<div
-		style="border: 2px solid white; border-radius: 10px;"
-		transition:slide={{ duration: SLIDE_DURATION }}
-	>
+	<div class="advanced" transition:slide={{ duration: SLIDE_DURATION }}>
 		<AutoSpinsLossLimit />
 		<AutoSpinsSingleWinLimit />
 	</div>
 {/if}
+
+<style lang="scss">
+	.advanced {
+		display: flex;
+		flex-direction: column;
+		gap: 0.5rem;
+		padding: 0.75rem 1rem 1rem;
+		background: rgba(0, 0, 0, 0.2);
+		border-radius: var(--ui-control-radius, 10px);
+	}
+</style>

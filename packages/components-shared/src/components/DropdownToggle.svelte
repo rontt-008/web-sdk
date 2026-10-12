@@ -28,7 +28,7 @@
 	.toggle {
 		position: relative;
 		display: inline-block;
-		color: white;
+		color: var(--ui-text, white);
 		font-weight: normal;
 		cursor: pointer;
 
@@ -52,7 +52,7 @@
 	.content:after {
 		content: '▼';
 		vertical-align: middle;
-		color: white;
+		color: var(--ui-text, white);
 		margin-left: 0.5rem;
 	}
 

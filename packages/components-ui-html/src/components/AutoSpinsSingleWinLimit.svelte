@@ -2,8 +2,7 @@
 	import { stateUi, SINGLE_WIN_LIMIT_TEXT_OPTIONS } from 'state-shared';
 	import { OptionsGrid } from 'components-shared';
 
-	import BaseIcon from './BaseIcon.svelte';
-	import BaseButtonContent from './BaseButtonContent.svelte';
+	import ButtonFace from './ButtonFace.svelte';
 	import { i18nDerived } from '../i18n/i18nDerived';
 </script>
 
@@ -16,39 +15,26 @@
 	onchange={(value) => (stateUi.autoSpinsSingleWinLimitText = value)}
 >
 	{#snippet option({ option })}
-		<BaseIcon
-			width="100%"
-			height="2rem"
-			border={option === stateUi.autoSpinsSingleWinLimitText
-				? '2px white solid'
-				: '2px black solid'}
-		/>
-		<BaseButtonContent>
-			<span
-				style="font-size: 1rem;"
-				class:infinity={option === '∞'}
-				class="option-wrap"
-				data-test="single-win-limit-options"
-			>
+		<ButtonFace
+			variant="control"
+			height="2.25rem"
+			selected={option === stateUi.autoSpinsSingleWinLimitText}
+		>
+			<span class:infinity={option === '∞'} data-test="single-win-limit-options">
 				{option}
 			</span>
-		</BaseButtonContent>
+		</ButtonFace>
 	{/snippet}
 </OptionsGrid>
 
 <style lang="scss">
 	.title {
 		line-height: 2rem;
-	}
-
-	.option-wrap {
-		white-space: nowrap;
+		color: var(--ui-text-muted, white);
 	}
 
 	.infinity {
 		font-size: 1.5rem;
 		line-height: 1rem;
-		margin-top: 0.3rem;
-		vertical-align: middle;
 	}
 </style>

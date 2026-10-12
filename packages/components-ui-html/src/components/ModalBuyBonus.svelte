@@ -1,48 +1,57 @@
 <script lang="ts">
+	import type { Snippet } from 'svelte';
 	import { Popup } from 'components-shared';
 	import { zIndex } from 'constants-shared/zIndex';
-	import { getContextLayout } from 'utils-layout';
-	import { stateModal, stateMetaDerived } from 'state-shared';
+	import { stateModal, stateMetaDerived, type BetModeData } from 'state-shared';
 
 	import BonusCards from './BonusCards.svelte';
-	import BetMenuAmountToggle from './BetMenuAmountToggle.svelte';
-	import BonusContentWrapLarge from './BonusContentWrapLarge.svelte';
-	import BonusContentWrapPortrait from './BonusContentWrapPortrait.svelte';
-	import BonusContentWrapLandscape from './BonusContentWrapLandscape.svelte';
+	import HeadingText from './HeadingText.svelte';
+	import BuyBonusDock from './BuyBonusDock.svelte';
+	import BonusContentWrap from './BonusContentWrap.svelte';
+	import { i18nDerived } from '../i18n/i18nDerived';
 
-	const { stateLayoutDerived } = getContextLayout();
+	type Props = {
+		bonusArt?: Snippet<[BetModeData]>;
+		hiddenBetModes?: string[];
+	};
 
-	const activateList = $derived(
-		stateMetaDerived.betModeMetaList().filter((item) => item.type === 'activate'),
+	const props: Props = $props();
+
+	// one card per bet mode of its own, holding it and its levels (the modes whose parent it is)
+	const toGroups = (list: BetModeData[]) =>
+		list
+			.filter((item) => !item.parent)
+			.map((item) => [item, ...list.filter((level) => level.parent === item.mode)]);
+
+	const shown = $derived(
+		stateMetaDerived.betModeMetaList().filter((item) => !props.hiddenBetModes?.includes(item.mode)),
 	);
 
-	const buyList = $derived(
-		stateMetaDerived.betModeMetaList().filter((item) => item.type === 'buy'),
-	);
+	const activateGroups = $derived(toGroups(shown.filter((item) => item.type === 'activate')));
 
-	const COMPONENT_MAP = {
-		desktop: BonusContentWrapLarge,
-		tablet: BonusContentWrapLarge,
-		portrait: BonusContentWrapPortrait,
-		landscape: BonusContentWrapLandscape,
-	} as const;
+	const buyGroups = $derived(toGroups(shown.filter((item) => item.type === 'buy')));
 
-	const BonusContentWrap = $derived(COMPONENT_MAP[stateLayoutDerived.layoutType()]);
+	// every card keeps room for a level slider when one has it, so the prices line up
+	const levelRow = $derived([...activateGroups, ...buyGroups].some((group) => group.length > 1));
 </script>
 
 {#if stateModal.modal?.name === 'buyBonus'}
 	<Popup zIndex={zIndex.modal} onclose={() => (stateModal.modal = null)}>
-		<BonusContentWrap maxListLength={Math.max(activateList.length, buyList.length)}>
-			{#snippet betAmount()}
-				<BetMenuAmountToggle />
+		<BonusContentWrap cardCount={activateGroups.length + buyGroups.length}>
+			{#snippet heading()}
+				<HeadingText>{i18nDerived.buyBonus()}</HeadingText>
+			{/snippet}
+
+			{#snippet dock()}
+				<BuyBonusDock />
 			{/snippet}
 
 			{#snippet bonusCardsActivate()}
-				<BonusCards list={activateList} />
+				<BonusCards groups={activateGroups} {levelRow} bonusArt={props.bonusArt} />
 			{/snippet}
 
 			{#snippet bonusCardsBuy()}
-				<BonusCards list={buyList} />
+				<BonusCards groups={buyGroups} {levelRow} bonusArt={props.bonusArt} />
 			{/snippet}
 		</BonusContentWrap>
 	</Popup>

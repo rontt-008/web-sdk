@@ -4,13 +4,13 @@
 	import { getContextEventEmitter } from 'utils-event-emitter';
 	import { numberToCurrencyString } from 'utils-shared/amount';
 
-	import BaseIcon from './BaseIcon.svelte';
-	import BaseButtonContent from './BaseButtonContent.svelte';
+	import ButtonFace from './ButtonFace.svelte';
+	import HeadingText from './HeadingText.svelte';
 	import type { EmitterEventModal } from '../types';
 
 	const { eventEmitter } = getContextEventEmitter<EmitterEventModal>();
 
-	const iconSize = '2.5rem';
+	const iconSize = '2.75rem';
 </script>
 
 <OptionsToggle
@@ -24,19 +24,19 @@
 	{#snippet children({ disabledDown, disabledUp, toggleDown, toggleUp })}
 		<div class="toggle-wrap">
 			<Button data-test="down-button" disabled={disabledDown} onclick={toggleDown}>
-				<BaseIcon width={iconSize} height={iconSize} />
-				<BaseButtonContent>
-					<span style="font-size: 2rem;">-</span>
-				</BaseButtonContent>
+				<ButtonFace variant="control" round width={iconSize} height={iconSize} fontSize="1.75rem">
+					−
+				</ButtonFace>
 			</Button>
 
-			<span class="amount">{numberToCurrencyString(stateBet.betAmount)}</span>
+			<span class="amount">
+				<HeadingText>{numberToCurrencyString(stateBet.betAmount)}</HeadingText>
+			</span>
 
 			<Button data-test="up-button" disabled={disabledUp} onclick={toggleUp}>
-				<BaseIcon width={iconSize} height={iconSize} />
-				<BaseButtonContent>
-					<span style="font-size: 2rem;">+</span>
-				</BaseButtonContent>
+				<ButtonFace variant="control" round width={iconSize} height={iconSize} fontSize="1.75rem">
+					+
+				</ButtonFace>
 			</Button>
 		</div>
 	{/snippet}
@@ -47,6 +47,12 @@
 		display: flex;
 		flex-direction: row;
 		align-items: center;
-		gap: 0.5rem;
+		gap: 0.75rem;
+	}
+
+	.amount {
+		min-width: 7rem;
+		text-align: center;
+		font-size: 1.75rem;
 	}
 </style>

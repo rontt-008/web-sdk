@@ -3,8 +3,7 @@
 	import { stateUi, AUTO_SPINS_TEXT_OPTIONS } from 'state-shared';
 	import { OptionsGrid } from 'components-shared';
 
-	import BaseIcon from './BaseIcon.svelte';
-	import BaseButtonContent from './BaseButtonContent.svelte';
+	import ButtonFace from './ButtonFace.svelte';
 
 	const { stateLayoutDerived } = getContextLayout();
 	const AUTO_SPINS_TEXT_OPTIONS_PORTRAIT = AUTO_SPINS_TEXT_OPTIONS.filter(
@@ -24,16 +23,11 @@
 	onchange={(value) => (stateUi.autoSpinsText = value)}
 >
 	{#snippet option({ option })}
-		<BaseIcon
-			width="100%"
-			height="2rem"
-			border={option === stateUi.autoSpinsText ? '2px white solid' : '2px black solid'}
-		/>
-		<BaseButtonContent>
-			<span style="font-size: 1rem;" class:infinity={option === '∞'} data-test="round-options">
+		<ButtonFace variant="control" height="2.25rem" selected={option === stateUi.autoSpinsText}>
+			<span class:infinity={option === '∞'} data-test="round-options">
 				{option}
 			</span>
-		</BaseButtonContent>
+		</ButtonFace>
 	{/snippet}
 </OptionsGrid>
 
@@ -41,6 +35,5 @@
 	.infinity {
 		font-size: 1.5rem;
 		line-height: 1rem;
-		margin-top: 0.3rem;
 	}
 </style>

@@ -39,3 +39,9 @@
 		</BaseContent>
 	</Popup>
 {/if}
+
+<style lang="scss">
+	.subtitle {
+		color: var(--ui-text-muted, white);
+	}
+</style>

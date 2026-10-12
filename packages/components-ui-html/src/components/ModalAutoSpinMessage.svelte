@@ -17,7 +17,7 @@
 
 {#if stateModal.modal?.name === 'autoSpinMessage'}
 	<Popup zIndex={zIndex.modal} onclose={() => (stateModal.modal = null)}>
-		<BaseContent maxWidth="100%">
+		<BaseContent maxWidth="500px">
 			<BaseTitle>
 				{i18nDerived.notification()}
 			</BaseTitle>
@@ -34,14 +34,19 @@
 <style lang="scss">
 	.text {
 		text-align: center;
+		color: var(--ui-text-muted, white);
 	}
 
 	.info-text {
+		box-sizing: border-box;
+		width: 100%;
 		text-align: center;
 		max-height: 100px;
 		max-width: 480px;
-		border-radius: 8px;
-		border: 1px solid white;
+		border-radius: var(--ui-control-radius, 8px);
+		background: rgba(0, 0, 0, 0.2);
+		font-family: var(--ui-font-heading, inherit);
+		font-weight: var(--ui-heading-weight, 800);
 		white-space: normal;
 		padding: 1rem;
 	}
