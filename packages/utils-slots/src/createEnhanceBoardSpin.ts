@@ -11,6 +11,10 @@ export function createEnhanceBoardSpin<TReel extends Reel<any, any>>({
 }) {
 	type TRawSymbol = GetRawSymbolFromReel<TReel>;
 
+	let spinning = false;
+	// set by skip during a spin: the reels all stop at once, so none starts anticipating
+	let skipping = false;
+
 	type BaseRevealEvent = {
 		index: number;
 		type: 'reveal';
@@ -26,6 +30,7 @@ export function createEnhanceBoardSpin<TReel extends Reel<any, any>>({
 		revealEvent: RevealEvent;
 		paddingBoard?: TRawSymbol[][];
 	}) {
+		spinning = true;
 		if (stateSlots.isPreSpinning) {
 			await Promise.all(
 				board.map(async (reel) => {
@@ -72,7 +77,7 @@ export function createEnhanceBoardSpin<TReel extends Reel<any, any>>({
 					reel.onReelStopping();
 					const nextReelIndex = reelIndex + 1;
 					const isNextReelAnticipated = (revealEvent.anticipation?.[nextReelIndex] || 0) > 0;
-					if (isNextReelAnticipated) board[nextReelIndex].reelState.anticipating = true;
+					if (isNextReelAnticipated && !skipping) board[nextReelIndex].reelState.anticipating = true;
 				},
 			});
 
@@ -84,7 +89,15 @@ export function createEnhanceBoardSpin<TReel extends Reel<any, any>>({
 				await reel.spin();
 			}),
 		);
+		spinning = false;
+		skipping = false;
 	}
 
-	return { spin };
+	// Stops every reel at once, anticipated ones included (stop leaves those spinning).
+	const skip = () => {
+		if (spinning || stateSlots.isPreSpinning) skipping = true;
+		board.forEach((reel) => reel.skip());
+	};
+
+	return { spin, skip };
 }

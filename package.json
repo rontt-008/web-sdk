@@ -2,7 +2,7 @@
   "name": "twist-turbo",
   "version": "0.0.0",
   "private": true,
-	"license": "MIT",
+  "license": "MIT",
   "scripts": {
     "lint": "turbo run lint",
     "format": "turbo run format",

@@ -7,7 +7,7 @@ export function createEnhanceBoard() {
 		type TRawSymbol = GetRawSymbolFromReel<TReel>;
 
 		const { preSpin } = createEnhanceBoardPreSpin({ board });
-		const { spin } = createEnhanceBoardSpin({ board });
+		const { spin, skip } = createEnhanceBoardSpin({ board });
 		const settle = (rawBoard?: TRawSymbol[][]) =>
 			board.forEach((reel, reelIndex) => {
 				const rawSymbols = rawBoard?.[reelIndex] || [];
@@ -24,6 +24,7 @@ export function createEnhanceBoard() {
 			spin,
 			settle,
 			stop,
+			skip,
 			readyToSpinEffect,
 		};
 	}

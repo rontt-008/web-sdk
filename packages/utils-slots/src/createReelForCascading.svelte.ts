@@ -255,6 +255,8 @@ export function createReelForCascading<TRawSymbol extends object, TSymbolState e
 		prepareToSpin,
 		spin,
 		stop,
+		// there is no anticipation to cut short, so skip is the same as stop
+		skip: stop,
 		setSymbolsWithRawSymbols,
 		readyToSpinEffect,
 	};

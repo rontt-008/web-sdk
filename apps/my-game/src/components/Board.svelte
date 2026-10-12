@@ -12,6 +12,7 @@
 </script>
 
 <script lang="ts">
+	import { Rectangle } from 'pixi-svelte';
 	import { waitForResolve } from 'utils-shared/wait';
 	import { BoardContext } from 'components-shared';
 
@@ -25,8 +26,16 @@
 
 	let show = $state(true);
 
+	// while any reel moves, clicking the reels stops them all
+	const spinning = $derived(
+		context.stateGame.board.some((reel) => reel.reelState.motion !== 'stopped'),
+	);
+
+	// skip rather than stop, so a scatter anticipation is cut short too
+	const skipSpin = () => context.stateGameDerived.enhancedBoard.skip();
+
 	context.eventEmitter.subscribeOnMount({
-		stopButtonClick: () => context.stateGameDerived.enhancedBoard.stop(),
+		stopButtonClick: skipSpin,
 		boardSettle: ({ board }) => context.stateGameDerived.enhancedBoard.settle(board),
 		boardShow: () => (show = true),
 		boardHide: () => (show = false),
@@ -62,4 +71,18 @@
 
 	<!-- on top of every symbol -->
 	<WinLine />
+
+	{#if spinning}
+		<BoardContainer>
+			<Rectangle
+				eventMode="static"
+				cursor="pointer"
+				backgroundColor={0xffffff}
+				backgroundAlpha={0.001}
+				width={context.stateGameDerived.boardLayout().width}
+				height={context.stateGameDerived.boardLayout().height}
+				onpointerdown={skipSpin}
+			/>
+		</BoardContainer>
+	{/if}
 {/if}

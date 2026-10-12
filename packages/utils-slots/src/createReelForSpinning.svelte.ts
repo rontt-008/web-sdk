@@ -59,6 +59,8 @@ export function createReelForSpinning<TRawSymbol extends object, TSymbolState ex
 
 	// interruptible
 	const interruptible = createInterruptible();
+	// the reels from the first anticipated one on (noStop) ignore stop, so skip interrupts them on its own
+	const skipInterruptible = createInterruptible();
 
 	// reactive states
 	const reelY = new Tween(defaultY);
@@ -82,6 +84,8 @@ export function createReelForSpinning<TRawSymbol extends object, TSymbolState ex
 	let paddingRawReel: TRawSymbol[] = reelOptions.initialSymbols;
 	let onSpinFinishing: () => void = () => {};
 	let noStop = false;
+	// set by skip during a spin, until the spin ends
+	let skipRequested = false;
 	let paddingSize = 0;
 
 	const getPaddingRawSymbol = ({
@@ -212,6 +216,7 @@ export function createReelForSpinning<TRawSymbol extends object, TSymbolState ex
 		const preSpinPaddingRawReel = preSpinPaddingReel;
 
 		isPreSpinning = true;
+		skipRequested = false;
 		reelState.spinType = isTurboBeforeAll ? 'fast' : 'normal';
 		await preSpinPadding({ preSpinPaddingRawReel });
 		if (!isTurboBeforeAll) await delaySpinByReelIndex();
@@ -230,9 +235,12 @@ export function createReelForSpinning<TRawSymbol extends object, TSymbolState ex
 		}
 
 		// Q: When to skip the slideDown?
-		// A: When it's preSpinning(isSpinning) and stop button is clicked(isTurbo) and is noStop is false
-		if (noStop) {
-			await slideDown();
+		// A: When skip was called, or when it's preSpinning(isSpinning) and stop button is clicked(isTurbo)
+		// and is noStop is false. Only skip cuts the noStop reels (e.g. the anticipated ones) short.
+		if (skipRequested) {
+			// skip
+		} else if (noStop) {
+			await skipInterruptible.add(slideDown);
 		} else if (stateBet.isTurbo && isSpinning) {
 			// skip
 		} else {
@@ -331,6 +339,8 @@ export function createReelForSpinning<TRawSymbol extends object, TSymbolState ex
 		await SPIN_MAP[reelState.spinType]();
 
 		interruptible.clear();
+		skipInterruptible.clear();
+		skipRequested = false;
 	};
 
 	const setSymbolsWithReelSymbols = (reelSymbols?: ReelSymbol[]) => {
@@ -351,6 +361,14 @@ export function createReelForSpinning<TRawSymbol extends object, TSymbolState ex
 
 	const stop = () => {
 		interruptible.interrupt();
+	};
+
+	// Like stop, but it also cuts short the reels stop leaves alone (from the first anticipated reel
+	// on), and a reel that hasn't started sliding down yet stops as soon as it would.
+	const skip = () => {
+		if (isPreSpinning || reelState.motion !== 'stopped') skipRequested = true;
+		interruptible.interrupt();
+		skipInterruptible.interrupt();
 	};
 
 	const readyToSpinEffect = () => {
@@ -374,6 +392,7 @@ export function createReelForSpinning<TRawSymbol extends object, TSymbolState ex
 		prepareToSpin,
 		spin,
 		stop,
+		skip,
 		setSymbolsWithRawSymbols,
 		readyToSpinEffect,
 	};

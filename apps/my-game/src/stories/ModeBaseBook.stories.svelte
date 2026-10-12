@@ -19,6 +19,8 @@
 	import { setContext } from '../game/context';
 	import { playBet } from '../game/utils';
 	import books from './data/base_books';
+	import realBooks from './data/base_books_real';
+	import { pickByWeight } from './pickByWeight';
 
 	setContext();
 </script>
@@ -45,6 +47,22 @@
 			const index = randomInteger({ min: 0, max: books.length - 1 });
 			const data = books[index];
 			console.log('Running a book at index', index);
+			await playBet({ ...data, state: data.events });
+		},
+	})}
+	{template}
+/>
+
+<!-- rounds picked by their lookup table weights, so free spins come as often as in the real game -->
+<Story
+	name="random (real odds)"
+	args={templateArgs({
+		skipLoadingScreen: true,
+		data: {},
+		action: async () => {
+			const index = pickByWeight(realBooks);
+			const data = realBooks[index];
+			console.log('Running a book at index', index, '(real odds)');
 			await playBet({ ...data, state: data.events });
 		},
 	})}

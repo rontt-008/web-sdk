@@ -373,11 +373,11 @@ export const BONUS_NAME: Record<BonusType, string | undefined> = {
 	mythic: 'MYTHIC',
 };
 // how the bonus works, under its name on the intro; left out until the math decides what the
-// super and mythic bonuses give
+// super bonus gives
 export const BONUS_DESCRIPTION: Record<BonusType, string | undefined> = {
 	normal: 'When a wild lands, it has a chance to shoot out extra wilds.',
 	super: undefined,
-	mythic: undefined,
+	mythic: 'Every spin has a big wild that shoots out 1 to 3 extra wilds.',
 };
 
 export const SCATTER_LAND_SOUND_MAP = {
