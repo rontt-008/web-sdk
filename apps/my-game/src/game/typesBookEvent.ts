@@ -18,6 +18,13 @@ type BookEventSetTotalWin = {
 	amount: number;
 };
 
+// Sent when the round reaches the max win; the round ends there (amount: the capped total win)
+type BookEventWincap = {
+	index: number;
+	type: 'wincap';
+	amount: number;
+};
+
 type BookEventFinalWin = {
 	index: number;
 	type: 'finalWin';
@@ -111,6 +118,7 @@ export type BookEvent =
 	| BookEventUpdateFreeSpin
 	| BookEventCreateBonusSnapshot
 	| BookEventFinalWin
+	| BookEventWincap
 	| BookEventSetWin
 	| BookEventFreeSpinEnd
 	// customised

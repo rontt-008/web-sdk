@@ -9,12 +9,14 @@ export const BONUS_MODE = 'BONUS';
 export const SUPER_MODE = 'SUPER';
 export const MYTHIC_MODE = 'MYTHIC';
 export const MYSTERY_MODE = 'MYSTERY';
+export const FEATURE_MODE = 'FEATURE';
 export const BOOSTER_MODE = 'ANTE';
 
 export const BONUS_COST = config.betModes.bonus.cost;
 export const SUPER_COST = config.betModes.super.cost;
 export const MYTHIC_COST = config.betModes.mythic.cost;
 export const MYSTERY_COST = config.betModes.mystery.cost;
+export const FEATURE_COST = config.betModes.feature.cost;
 // cost of each spin while the booster is on, as a multiple of the bet (the math's 'ante' mode)
 export const BOOSTER_COST = config.betModes.ante.cost;
 
@@ -44,6 +46,19 @@ export const setBetModeMeta = () => {
 				description: 'Increases your chance of triggering FREE SPINS.',
 				betAmountLabel: 'BOOSTER',
 				tickerIdle: 'BOOSTER IS ON',
+			},
+		},
+		// one spin, so the cheapest buy, first
+		[FEATURE_MODE]: {
+			...samples.BONUS,
+			mode: FEATURE_MODE,
+			costMultiplier: FEATURE_COST,
+			text: {
+				...samples.BONUS.text,
+				title: 'FEATURE SPIN',
+				dialog: `One spin for ${FEATURE_COST}x your bet with a guaranteed BIG WILD that shoots out 1 to 3 extra wilds.`,
+				description: 'One spin with a guaranteed BIG WILD that shoots out wilds.',
+				tickerSpin: 'FEATURE SPIN',
 			},
 		},
 		[BONUS_MODE]: {

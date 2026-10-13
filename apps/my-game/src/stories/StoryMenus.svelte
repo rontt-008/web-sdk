@@ -13,9 +13,17 @@
 		BOOSTER_MODE,
 	} from '../game/betModes';
 	import BonusCardArt from '../components/BonusCardArt.svelte';
+	import GameInfo from '../components/GameInfo.svelte';
 
 	type Props = {
-		modal: 'buyBonus' | 'buyBonusConfirm' | 'betAmountMenu' | 'autoSpin' | 'settings';
+		modal:
+			| 'buyBonus'
+			| 'buyBonusConfirm'
+			| 'betAmountMenu'
+			| 'autoSpin'
+			| 'settings'
+			| 'payTable'
+			| 'gameRules';
 		// made-up volatility to show the meter; the game's bet modes do not have it yet
 		sampleVolatility?: boolean;
 		// shows the super and mythic bonuses as levels of the bonus, on one card
@@ -66,8 +74,16 @@
 	<BonusCardArt {betModeData} />
 {/snippet}
 
+{#snippet payTable()}
+	<GameInfo part="payTable" />
+{/snippet}
+
+{#snippet gameRules()}
+	<GameInfo part="gameRules" />
+{/snippet}
+
 <GlobalStyle>
-	<Modals theme={UI_HTML_THEME_CLEAN} {version} {bonusArt} />
+	<Modals theme={UI_HTML_THEME_CLEAN} {version} {bonusArt} {payTable} {gameRules} />
 </GlobalStyle>
 
 <style>

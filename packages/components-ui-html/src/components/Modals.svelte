@@ -21,6 +21,9 @@
 		bonusArt?: Snippet<[BetModeData]>;
 		// bet modes the buy bonus menu leaves out, e.g. ones the game switches on elsewhere
 		hiddenBetModes?: string[];
+		// the game's pay table (symbols, paylines) and rules (features, RTP); placeholders when left out
+		payTable?: Snippet;
+		gameRules?: Snippet;
 	};
 
 	const props: Props = $props();
@@ -33,10 +36,10 @@
 	<ModalBuyBonusConfirm bonusArt={props.bonusArt} />
 	<ModalAutoSpin />
 	<ModalAutoSpinMessage />
-	<ModalPayTable>
+	<ModalPayTable content={props.payTable}>
 		{@render props.version()}
 	</ModalPayTable>
-	<ModalGameRules>
+	<ModalGameRules content={props.gameRules}>
 		{@render props.version()}
 	</ModalGameRules>
 	<ModalSettings />

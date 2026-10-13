@@ -5,10 +5,13 @@
 	import { zIndex } from 'constants-shared/zIndex';
 	import { stateModal } from 'state-shared';
 
+	import BaseTitle from './BaseTitle.svelte';
 	import BaseContent from './BaseContent.svelte';
 	import BaseScrollable from './BaseScrollable.svelte';
 
 	type Props = {
+		// the game's rules: how its features work, its RTP and max win; a placeholder when left out
+		content?: Snippet;
 		children: Snippet;
 	};
 
@@ -18,8 +21,15 @@
 {#if stateModal.modal?.name === 'gameRules'}
 	<Popup zIndex={zIndex.modal} onclose={() => (stateModal.modal = null)}>
 		<BaseContent maxWidth="100%">
+			{#if props.content}
+				<BaseTitle>GAME RULES</BaseTitle>
+			{/if}
 			<BaseScrollable type="column">
-				<span>ADD YOUR GAME RULES</span>
+				{#if props.content}
+					{@render props.content()}
+				{:else}
+					<span>ADD YOUR GAME RULES</span>
+				{/if}
 				{@render props.children()}
 			</BaseScrollable>
 		</BaseContent>

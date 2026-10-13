@@ -24,6 +24,7 @@
 	import GameLogo from './GameLogo.svelte';
 	import FeatureButtons from './FeatureButtons.svelte';
 	import BonusCardArt from './BonusCardArt.svelte';
+	import GameInfo from './GameInfo.svelte';
 	import Board from './Board.svelte';
 	import Anticipations from './Anticipations.svelte';
 	import WildThrow from './WildThrow.svelte';
@@ -122,5 +123,11 @@
 	{/snippet}
 	{#snippet bonusArt(betModeData)}
 		<BonusCardArt {betModeData} />
+	{/snippet}
+	{#snippet payTable()}
+		<GameInfo part="payTable" />
+	{/snippet}
+	{#snippet gameRules()}
+		<GameInfo part="gameRules" />
 	{/snippet}
 </Modals>

@@ -9,6 +9,7 @@
 		MYTHIC_MODE,
 		MYSTERY_MODE,
 		BOOSTER_MODE,
+		FEATURE_MODE,
 	} from '../game/betModes';
 
 	type Props = {
@@ -32,7 +33,13 @@
 	// the chunky orange text of the game, whatever the menu's colours
 	const BADGE_FILL = 'linear-gradient(180deg, #ffe234 0%, #ff8c1a 100%)';
 
+	// the feature spin gives a big wild rather than free spins, so it shows a WILD
+	const IMAGE: Record<string, string> = {
+		[FEATURE_MODE]: assets.symbolW.src,
+	};
+
 	const count = $derived(SCATTER_COUNT[props.betModeData.mode] ?? 1);
+	const image = $derived(IMAGE[props.betModeData.mode] ?? assets.symbolS.src);
 	const badge = $derived(BADGE[props.betModeData.mode]);
 
 	// fanned out like a hand of cards, the middle one in front
@@ -47,7 +54,7 @@
 
 <div class="art" class:single={count === 1}>
 	{#each { length: count } as _, index}
-		<img class="scatter" src={assets.symbolS.src} alt="" style={getStyle(index)} />
+		<img class="scatter" src={image} alt="" style={getStyle(index)} />
 	{/each}
 	{#if badge}
 		<span class="badge"><HeadingText fill={BADGE_FILL}>{badge}</HeadingText></span>

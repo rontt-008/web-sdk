@@ -7,7 +7,7 @@
 	import { getContext } from '../game/context';
 	import { SYMBOL_SIZE } from '../game/constants';
 	import { createBoardTextStyle, fitBoardFontSize } from '../game/textStyles';
-	import { BOOSTER_MODE, BONUS_COST, BOOSTER_COST } from '../game/betModes';
+	import { BOOSTER_MODE, FEATURE_COST, BOOSTER_COST } from '../game/betModes';
 	import BoosterSwitch, { BOOSTER_SWITCH_SIZES } from './BoosterSwitch.svelte';
 
 	const context = getContext();
@@ -50,8 +50,8 @@
 
 	const isIdle = $derived(context.stateXstateDerived.isIdle());
 	const boosterOn = $derived(stateBet.activeBetModeKey === BOOSTER_MODE);
-	// the normal bonus is the cheapest one in the buy menu
-	const bonusPrice = $derived(stateBet.betAmount * BONUS_COST);
+	// the feature spin is the cheapest buy in the menu
+	const bonusPrice = $derived(stateBet.betAmount * FEATURE_COST);
 	const buyDisabled = $derived(!isIdle || bonusPrice > stateBet.balanceAmount);
 
 	// the SDK's buy menu, listing every bonus that can be bought (the 'buy' bet modes)

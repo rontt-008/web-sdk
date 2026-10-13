@@ -177,6 +177,9 @@ export const bookEventHandlerMap: BookEventHandlerMap<BookEvent, BookEventContex
 	finalWin: async (bookEvent: BookEventOfType<'finalWin'>) => {
 		// Do nothing
 	},
+	// the round has reached the max win; the win and its max win celebration come with the events
+	// that follow (setWin, freeSpinEnd)
+	wincap: async (bookEvent: BookEventOfType<'wincap'>) => {},
 	// customised
 	createBonusSnapshot: async (bookEvent: BookEventOfType<'createBonusSnapshot'>) => {
 		const { bookEvents } = bookEvent;

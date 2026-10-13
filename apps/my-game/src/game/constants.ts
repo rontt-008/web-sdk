@@ -379,6 +379,12 @@ export const BONUS_DESCRIPTION: Record<BonusType, string | undefined> = {
 	super: undefined,
 	mythic: 'Every spin has a big wild that shoots out 1 to 3 extra wilds.',
 };
+// For the pay table; they must match the math. Free spins for 3, 4 and 5 FS symbols, and the spins
+// 2 to 5 FS symbols add during free spins (the math's freespin_triggers).
+export const FREE_SPINS_AWARDED: Record<number, number> = { 3: 8, 4: 12, 5: 15 };
+export const FREE_SPINS_ADDED: Record<number, number> = { 2: 3, 3: 5, 4: 8, 5: 12 };
+// the multipliers a wild can carry in free spins (the math's mult_values for the free game)
+export const FREE_SPIN_WILD_MULTIPLIERS = [2, 3, 4, 5, 10, 20, 50, 75, 100, 150, 200];
 
 export const SCATTER_LAND_SOUND_MAP = {
 	1: 'sfx_scatter_stop_1',

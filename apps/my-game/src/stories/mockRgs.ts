@@ -11,6 +11,7 @@ import bonusBooks from './data/bonus_books_real';
 import superBooks from './data/super_books_real';
 import mythicBooks from './data/mythic_books_real';
 import mysteryBooks from './data/mystery_books_real';
+import featureBooks from './data/feature_books_real';
 import { pickByWeight } from './pickByWeight';
 
 type BetModeName = keyof typeof config.betModes;
@@ -23,6 +24,7 @@ const BOOKS: Record<BetModeName, Book[]> = {
 	super: superBooks,
 	mythic: mythicBooks,
 	mystery: mysteryBooks,
+	feature: featureBooks,
 };
 
 // bet sizes offered, in dollars (the bet menu shows a handful of them)
