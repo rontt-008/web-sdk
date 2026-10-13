@@ -1,4 +1,4 @@
-import { stateMeta, type BetModeMeta } from 'state-shared';
+import { stateMeta, stateUrlDerived, type BetModeMeta } from 'state-shared';
 import { DEFAULT_BET_MODE_META } from 'state-shared/src/constants';
 
 import config from './config';
@@ -32,6 +32,10 @@ const percent = (chance: number) => `${Math.round(chance * 100)}%`;
 export const setBetModeMeta = () => {
 	// typed the way the SDK uses them for stateMeta.betModeMeta
 	const samples = DEFAULT_BET_MODE_META as BetModeMeta;
+	// social mode (social=true) can't say bet or buy
+	const social = stateUrlDerived.social();
+	const yourBet = social ? 'your play amount' : 'your bet';
+	const buyButton = social ? 'PLAY' : 'BUY';
 
 	stateMeta.betModeMeta = {
 		BASE: samples.BASE,
@@ -42,7 +46,7 @@ export const setBetModeMeta = () => {
 			text: {
 				...samples.ANTE.text,
 				title: 'BOOSTER',
-				dialog: `Increases your chance of triggering FREE SPINS. Each spin costs ${BOOSTER_COST}x your bet while the BOOSTER is on. It stays on until you turn it off.`,
+				dialog: `Increases your chance of triggering FREE SPINS. Each spin costs ${BOOSTER_COST}x ${yourBet} while the BOOSTER is on. It stays on until you turn it off.`,
 				description: 'Increases your chance of triggering FREE SPINS.',
 				betAmountLabel: 'BOOSTER',
 				tickerIdle: 'BOOSTER IS ON',
@@ -56,7 +60,8 @@ export const setBetModeMeta = () => {
 			text: {
 				...samples.BONUS.text,
 				title: 'FEATURE SPIN',
-				dialog: `One spin for ${FEATURE_COST}x your bet with a guaranteed BIG WILD that shoots out 1 to 3 extra wilds.`,
+				button: buyButton,
+				dialog: `One spin for ${FEATURE_COST}x ${yourBet} with a guaranteed BIG WILD that shoots out 1 to 3 extra wilds.`,
 				description: 'One spin with a guaranteed BIG WILD that shoots out wilds.',
 				tickerSpin: 'FEATURE SPIN',
 			},
@@ -68,8 +73,10 @@ export const setBetModeMeta = () => {
 			text: {
 				...samples.BONUS.text,
 				title: 'BONUS',
-				dialog: `Go straight to FREE SPINS for ${BONUS_COST}x your bet.`,
+				button: buyButton,
+				dialog: `Go straight to FREE SPINS for ${BONUS_COST}x ${yourBet}.`,
 				description: 'Go straight to FREE SPINS.',
+				tickerSpin: 'BONUS ACTIVATED',
 			},
 		},
 		[SUPER_MODE]: {
@@ -79,7 +86,8 @@ export const setBetModeMeta = () => {
 			text: {
 				...samples.SUPER.text,
 				title: 'SUPER BONUS',
-				dialog: `Go straight to SUPER FREE SPINS for ${SUPER_COST}x your bet.`,
+				button: buyButton,
+				dialog: `Go straight to SUPER FREE SPINS for ${SUPER_COST}x ${yourBet}.`,
 				description: 'Go straight to SUPER FREE SPINS.',
 				tickerSpin: 'SUPER BONUS ACTIVATED',
 			},
@@ -91,7 +99,8 @@ export const setBetModeMeta = () => {
 			text: {
 				...samples.SUPER.text,
 				title: 'MYTHIC BONUS',
-				dialog: `Go straight to MYTHIC FREE SPINS for ${MYTHIC_COST}x your bet. ${BONUS_DESCRIPTION.mythic}`,
+				button: buyButton,
+				dialog: `Go straight to MYTHIC FREE SPINS for ${MYTHIC_COST}x ${yourBet}. ${BONUS_DESCRIPTION.mythic}`,
 				description: 'Go straight to MYTHIC FREE SPINS.',
 				tickerSpin: 'MYTHIC BONUS ACTIVATED',
 			},
@@ -103,7 +112,8 @@ export const setBetModeMeta = () => {
 			text: {
 				...samples.SUPER.text,
 				title: 'MYSTERY BONUS',
-				dialog: `Go straight to FREE SPINS for ${MYSTERY_COST}x your bet: a ${percent(MYSTERY_CHANCES.normal)} chance of the normal FREE SPINS, ${percent(MYSTERY_CHANCES.super)} of SUPER FREE SPINS and ${percent(MYSTERY_CHANCES.mythic)} of MYTHIC FREE SPINS.`,
+				button: buyButton,
+				dialog: `Go straight to FREE SPINS for ${MYSTERY_COST}x ${yourBet}: a ${percent(MYSTERY_CHANCES.normal)} chance of the normal FREE SPINS, ${percent(MYSTERY_CHANCES.super)} of SUPER FREE SPINS and ${percent(MYSTERY_CHANCES.mythic)} of MYTHIC FREE SPINS.`,
 				description: 'FREE SPINS, with a chance of SUPER or MYTHIC FREE SPINS.',
 				tickerSpin: 'MYSTERY BONUS ACTIVATED',
 			},

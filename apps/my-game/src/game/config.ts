@@ -46,7 +46,8 @@ export default {
 			feature: false,
 			buyBonus: true,
 			rtp: 0.967,
-			max_win: 280.0,
+			// the biggest payout in lookUpTable_feature_0.csv: update it after re-running the math
+			max_win: 215.0,
 		},
 		mystery: {
 			cost: 250.0,

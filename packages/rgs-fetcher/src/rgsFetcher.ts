@@ -1,6 +1,10 @@
 import type { paths } from './schema';
 import { fetcher } from 'utils-fetcher';
 
+// rgs_url usually comes without a scheme: https:// is added only when it is missing
+const rgsEndpoint = (rgsUrl: string, url: string) =>
+	`${/^https?:\/\//i.test(rgsUrl) ? rgsUrl : `https://${rgsUrl}`}${url}`;
+
 export const rgsFetcher = {
 	post: async function post<
 		T extends keyof paths,
@@ -13,7 +17,7 @@ export const rgsFetcher = {
 		const response = await fetcher({
 			method: 'POST',
 			variables: options.variables,
-			endpoint: `https://${options.rgsUrl}${options.url}`,
+			endpoint: rgsEndpoint(options.rgsUrl, options.url),
 		});
 
 		if (response.status !== 200) console.error('error', response);
@@ -26,7 +30,7 @@ export const rgsFetcher = {
 	>(options: { url: T; rgsUrl: string }): Promise<TResponse> {
 		const response = await fetcher({
 			method: 'GET',
-			endpoint: `https://${options.rgsUrl}${options.url}`,
+			endpoint: rgsEndpoint(options.rgsUrl, options.url),
 		});
 
 		if (response.status !== 200) console.error('error', response);

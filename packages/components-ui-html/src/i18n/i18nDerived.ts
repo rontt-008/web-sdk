@@ -1,10 +1,14 @@
-import { stateI18nDerived } from 'state-shared';
+import { stateI18nDerived, stateUrlDerived } from 'state-shared';
+
+// social mode (social=true) can't use words like bet, buy or funds
+const social = () => stateUrlDerived.social();
 
 export const i18nDerived = {
-	bet: () => stateI18nDerived.translate('BET'),
+	bet: () => (social() ? 'PLAY AMOUNT' : stateI18nDerived.translate('BET')),
 	max: () => stateI18nDerived.translate('MAX'),
-	betMenu: () => stateI18nDerived.translate('BET MENU'),
-	selectYourBet: () => stateI18nDerived.translate('SELECT YOUR BET'),
+	betMenu: () => (social() ? 'PLAY AMOUNT' : stateI18nDerived.translate('BET MENU')),
+	selectYourBet: () =>
+		social() ? 'SELECT YOUR PLAY AMOUNT' : stateI18nDerived.translate('SELECT YOUR BET'),
 	confirm: () => stateI18nDerived.translate('CONFIRM'),
 	masterVolume: () => stateI18nDerived.translate('MASTER VOLUME'),
 	musicVolume: () => stateI18nDerived.translate('MUSIC VOLUME'),
@@ -18,13 +22,17 @@ export const i18nDerived = {
 	notification: () => stateI18nDerived.translate('NOTIFICATION'),
 	autoSpinsStopInfo: () => stateI18nDerived.translate('AUTO PLAY HAS STOPPED DUE TO'),
 	insufficientFunds: () =>
-		stateI18nDerived.translate(
-			'INSUFFICIENT FUNDS TO PLACE THIS BET. PLEASE ADD FUNDS TO YOUR ACCOUNT OR LOWER THE BET LEVEL.',
-		),
+		social()
+			? 'NOT ENOUGH BALANCE FOR THIS PLAY. PLEASE GET COINS OR LOWER THE PLAY AMOUNT.'
+			: stateI18nDerived.translate(
+					'INSUFFICIENT FUNDS TO PLACE THIS BET. PLEASE ADD FUNDS TO YOUR ACCOUNT OR LOWER THE BET LEVEL.',
+				),
 	lossLimitReached: () => stateI18nDerived.translate('LOSS LIMIT REACHED'),
 	singleWinLimitReached: () => stateI18nDerived.translate('SINGLE WIN LIMIT REACHED'),
 	settings: () => stateI18nDerived.translate('SETTINGS'),
 	balance: () => stateI18nDerived.translate('BALANCE'),
-	buyBonus: () => stateI18nDerived.translate('BUY BONUS'),
+	buyBonus: () => (social() ? 'PLAY BONUS' : stateI18nDerived.translate('BUY BONUS')),
 	volatility: () => stateI18nDerived.translate('VOLATILITY'),
+	notEnoughBalance: () => stateI18nDerived.translate('NOT ENOUGH BALANCE'),
+	payTable: () => (social() ? 'WIN TABLE' : stateI18nDerived.translate('PAYTABLE')),
 };

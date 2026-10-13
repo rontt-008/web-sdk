@@ -8,6 +8,7 @@
 	import BaseTitle from './BaseTitle.svelte';
 	import BaseContent from './BaseContent.svelte';
 	import BaseScrollable from './BaseScrollable.svelte';
+	import { i18nDerived } from '../i18n/i18nDerived';
 
 	type Props = {
 		// the game's pay table: its symbols, paylines and features; a placeholder when left out
@@ -22,7 +23,7 @@
 	<Popup zIndex={zIndex.modal} onclose={() => (stateModal.modal = null)}>
 		<BaseContent maxWidth="100%">
 			{#if props.content}
-				<BaseTitle>PAYTABLE</BaseTitle>
+				<BaseTitle>{i18nDerived.payTable()}</BaseTitle>
 			{/if}
 			<BaseScrollable type="column">
 				{#if props.content}

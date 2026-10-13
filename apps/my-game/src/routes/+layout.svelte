@@ -1,7 +1,7 @@
 <script lang="ts">
 	import { type Snippet } from 'svelte';
 	import { GlobalStyle } from 'components-ui-html';
-	import { Authenticate, LoaderStakeEngine, LoaderExample, LoadI18n } from 'components-shared';
+	import { Authenticate, LoaderBase, LoadI18n } from 'components-shared';
 	import Game from '../components/Game.svelte';
 	import { setContext } from '../game/context';
 
@@ -11,9 +11,7 @@
 
 	const props: Props = $props();
 
-	let showYourLoader = $state(false);
-
-	const loaderUrlStakeEngine = new URL('../../stake-engine-loader.gif', import.meta.url).href;
+	// '/loader.gif' is served from the static folder: apps/my-game/static/loader.gif
 	const loaderUrl = new URL('../../loader.gif', import.meta.url).href;
 
 	setContext();
@@ -27,12 +25,6 @@
 	</Authenticate>
 </GlobalStyle>
 
-<LoaderStakeEngine src={loaderUrlStakeEngine} oncomplete={() => (showYourLoader = true)} />
-
-{#if showYourLoader}
-	<LoaderExample src={loaderUrl} />
-	<!-- '/loader.gif' is served from static folder of sveltekit -->
-	<!-- File location: apps/scatter/static/loader.gif -->
-{/if}
+<LoaderBase src={loaderUrl} maxWidth={200} backgroundColor="#000000" timeout={2000} />
 
 {@render props.children()}

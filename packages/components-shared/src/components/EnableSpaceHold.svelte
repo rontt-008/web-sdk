@@ -1,5 +1,5 @@
 <script lang="ts" module>
-	import { stateBet, stateBetDerived } from 'state-shared';
+	import { stateBet, stateBetDerived, stateModal, stateUi } from 'state-shared';
 </script>
 
 <script lang="ts">
@@ -17,4 +17,10 @@
 	};
 </script>
 
-<OnHotkey hotkey="Space" onhold={spaceHoldOn} onholdend={spaceHoldOff} />
+<!-- holding space does nothing while a menu or a modal is open over the game -->
+<OnHotkey
+	hotkey="Space"
+	disabled={!!stateModal.modal || stateUi.menuOpen}
+	onhold={spaceHoldOn}
+	onholdend={spaceHoldOff}
+/>

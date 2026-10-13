@@ -2,7 +2,7 @@
 	import { Container, Text } from 'pixi-svelte';
 	import { Button, type ButtonProps } from 'components-pixi';
 	import { OnHotkey } from 'components-shared';
-	import { stateBetDerived } from 'state-shared';
+	import { stateBet, stateBetDerived, stateModal, stateUi } from 'state-shared';
 
 	import UiSprite from './UiSprite.svelte';
 	import UiThemeButtonFace from './UiThemeButtonFace.svelte';
@@ -10,16 +10,46 @@
 	import { UI_BASE_FONT_SIZE, UI_BASE_SIZE } from '../constants';
 	import { i18nDerived } from '../i18n/i18nDerived';
 	import { getUiTheme } from '../theme';
+	import { getContext } from '../context';
 
 	const props: Partial<Omit<ButtonProps, 'children'>> = $props();
+	const context = getContext();
 	const disabled = $derived(!stateBetDerived.isBetCostAvailable());
+	// the space bar does nothing while a menu or a modal is open over the game
+	const hotkeyDisabled = $derived(disabled || !!stateModal.modal || stateUi.menuOpen);
+	// why the button is disabled when the balance doesn't cover the next bet
+	const notEnoughBalance = $derived(
+		context.stateXstateDerived.isIdle() && stateBetDerived.betCost() > stateBet.balanceAmount,
+	);
 	const sizes = { width: UI_BASE_SIZE, height: UI_BASE_SIZE };
 	const theme = getUiTheme();
 </script>
 
+<!-- over the disabled button: why it can't be pressed -->
+{#snippet notEnoughBalanceText(center: { x: number; y: number })}
+	{#if notEnoughBalance}
+		<Text
+			anchor={0.5}
+			x={center.x}
+			y={center.y}
+			text={i18nDerived.notEnoughBalance()}
+			style={{
+				align: 'center',
+				wordWrap: true,
+				wordWrapWidth: sizes.width * 0.9,
+				fontFamily: theme?.fontFamily ?? 'proxima-nova',
+				fontWeight: '800',
+				fontSize: UI_BASE_FONT_SIZE * 0.55,
+				fill: 0xffffff,
+				stroke: { color: 0x000000, width: 6 },
+			}}
+		/>
+	{/if}
+{/snippet}
+
 <ButtonBetProvider>
 	{#snippet children({ key, onpress })}
-		<OnHotkey hotkey="Space" {disabled} {onpress} />
+		<OnHotkey hotkey="Space" disabled={hotkeyDisabled} {onpress} />
 		{#if theme}
 			{@const faceDisabled = disabled || ['spin_disabled', 'stop_disabled'].includes(key)}
 			<Button {...props} {sizes} {onpress} {disabled}>
@@ -40,6 +70,7 @@
 									? theme.spin.fillHovered
 									: theme.spin.fill}
 					/>
+					{@render notEnoughBalanceText(center)}
 				{/snippet}
 			</Button>
 		{:else}
@@ -73,6 +104,7 @@
 							}}
 						/>
 					</Container>
+					{@render notEnoughBalanceText(center)}
 				{/snippet}
 			</Button>
 		{/if}

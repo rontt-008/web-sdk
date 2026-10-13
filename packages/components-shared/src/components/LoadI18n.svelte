@@ -28,8 +28,10 @@
 
 	onMount(() => {
 		try {
-			const messages = loadMessages(stateUrlDerived.lang());
-			stateI18nDerived.init(stateUrlDerived.lang(), messages);
+			// an unknown language (e.g. lang=zz) falls back to English
+			const lang = stateUrlDerived.lang() in props.messagesMap ? stateUrlDerived.lang() : 'en';
+			const messages = loadMessages(lang);
+			stateI18nDerived.init(lang, messages);
 		} catch (error) {
 			console.error("Loading fallback locale 'en' because of error", error);
 			try {

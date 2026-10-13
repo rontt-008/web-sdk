@@ -9,6 +9,7 @@
 	import HeadingText from './HeadingText.svelte';
 	import VolatilityMeter from './VolatilityMeter.svelte';
 	import { stateBonus } from '../stateBonus.svelte';
+	import { i18nDerived } from '../i18n/i18nDerived';
 	import type { EmitterEventModal } from '../types';
 
 	type Props = {
@@ -32,6 +33,8 @@
 
 	const betModeData = $derived(props.levels[Math.min(index, props.levels.length - 1)]);
 	const cost = $derived(stateBet.betAmount * betModeData.costMultiplier);
+	// the card says why it can't be picked, instead of only being greyed out
+	const notEnoughBalance = $derived(stateBet.balanceAmount < cost);
 	const isActivate = $derived(betModeData.type === 'activate');
 	const active = $derived(stateBet.activeBetModeKey === betModeData.mode);
 	const hasLevels = $derived(props.levels.length > 1);
@@ -108,7 +111,7 @@
 			eventEmitter.broadcast({ type: 'buyBonusConfirm' });
 			eventEmitter.broadcast({ type: 'soundPressGeneral' });
 		}}
-		disabled={stateBet.betAmount <= 0 || stateBet.balanceAmount < cost}
+		disabled={stateBet.betAmount <= 0 || notEnoughBalance}
 	>
 		<ButtonFace
 			variant={isActivate ? 'activate' : 'primary'}
@@ -116,7 +119,7 @@
 			height="3.4rem"
 			fontSize="1.3rem"
 		>
-			{betModeData.text.button}
+			{notEnoughBalance ? i18nDerived.notEnoughBalance() : betModeData.text.button}
 		</ButtonFace>
 	</Button>
 </div>

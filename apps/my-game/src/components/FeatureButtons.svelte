@@ -1,7 +1,7 @@
 <script lang="ts">
 	import { Container, Sprite, Text } from 'pixi-svelte';
 	import { Button, FadeContainer } from 'components-pixi';
-	import { stateBet, stateModal, stateUi, INFINITY_MARK } from 'state-shared';
+	import { stateBet, stateModal, stateUi, stateUrlDerived, INFINITY_MARK } from 'state-shared';
 	import { numberToCurrencyString } from 'utils-shared/amount';
 
 	import { getContext } from '../game/context';
@@ -11,6 +11,8 @@
 	import BoosterSwitch, { BOOSTER_SWITCH_SIZES } from './BoosterSwitch.svelte';
 
 	const context = getContext();
+	// social mode (social=true) can't say buy or bet
+	const social = stateUrlDerived.social();
 
 	// wooden signs (both about 800x209); the leaves stick out past the panel, so the text only gets
 	// the middle of it
@@ -36,9 +38,12 @@
 	const TITLE_COLORS = { top: 0xffe234, bottom: 0xff8c1a };
 	const SUBTITLE_COLORS = { top: 0xfff2c2, bottom: 0xffffff };
 
-	// buttons sit under the logo in the base game; free spins use this spot for the free spin counter
+	// buttons sit under the logo in the base game; free spins use this spot for the free spin counter.
+	// A replay has no way into play, so it doesn't have them.
 	const show = $derived(
-		context.stateGameDerived.isLogoBesideBoard() && context.stateGame.gameType === 'basegame',
+		context.stateGameDerived.isLogoBesideBoard() &&
+			context.stateGame.gameType === 'basegame' &&
+			stateUi.config.mode !== 'replay',
 	);
 	const position = $derived({
 		x: context.stateGameDerived.logoLayout().x,
@@ -132,7 +137,7 @@
 			<Container {...center} scale={getScale(state)} tint={getTint(state)}>
 				<Sprite key="buttonBuyBonus" anchor={0.5} {...BUTTON_SIZES} />
 				{@render textLines(
-					'BUY BONUS',
+					social ? 'PLAY BONUS' : 'BUY BONUS',
 					`FROM ${numberToCurrencyString(bonusPrice)}`,
 					0,
 					TEXT_MAX_WIDTH,
@@ -154,7 +159,7 @@
 				<Sprite key="buttonBooster" anchor={0.5} {...BUTTON_SIZES} />
 				{@render textLines(
 					'BOOSTER',
-					`${BOOSTER_COST}x BET`,
+					social ? `COSTS ${BOOSTER_COST}x` : `${BOOSTER_COST}x BET`,
 					BOOSTER_TEXT_X,
 					BOOSTER_TEXT_MAX_WIDTH,
 				)}

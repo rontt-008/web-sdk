@@ -35,8 +35,9 @@
 		wrap.appendChild(context.stateApp.pixiApplication.canvas);
 
 		// to prevent that you can't scroll the page with touch on the canvas. https://github.com/pixijs/pixijs/issues/4824
+		// manipulation still lets the page scroll, but stops double-tap zoom on mobile
 		context.stateApp.pixiApplication.renderer.events.autoPreventDefault = false;
-		context.stateApp.pixiApplication.renderer.canvas.style.touchAction = 'auto';
+		context.stateApp.pixiApplication.renderer.canvas.style.touchAction = 'manipulation';
 	};
 
 	onMount(async () => {

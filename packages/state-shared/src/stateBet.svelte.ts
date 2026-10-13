@@ -1,5 +1,6 @@
 import type { BaseBet } from 'utils-bet';
 import { stateMeta } from './stateMeta.svelte';
+import { stateConfig } from './stateConfig.svelte';
 
 export type Currency = string;
 export type BetToResume = BaseBet | null;
@@ -26,8 +27,10 @@ const correctBetAmount = (value: number) => {
 	const costMultiplier = betCostMultiplier();
 	if (costMultiplier === 0) return 0;
 	const max = stateBet.balanceAmount / costMultiplier;
-	if (value >= max) return max;
-	return value;
+	if (value <= max) return value;
+	// never a value outside the bet levels: the biggest level the balance covers
+	const affordable = stateConfig.betAmountOptions.filter((level) => level <= max);
+	return affordable.length > 0 ? Math.max(...affordable) : value;
 };
 
 const setBetAmount = (value: number) => {

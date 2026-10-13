@@ -3,9 +3,35 @@ import { stateI18n } from 'state-shared';
 import { BOOK_AMOUNT_MULTIPLIER } from 'constants-shared/bet';
 import { stateBet } from 'state-shared';
 
+// social currencies show as "10.00 SC", with 2 decimals and no symbol
 const NO_LOCALISATION_CURRENCY_MAP: Record<string, string> = {
 	XGC: 'GC',
 	XSC: 'SC',
+	XEC: 'SC',
+};
+const NO_LOCALISATION_FRACTION_DIGITS = 2;
+// most decimals shown, for amounts finer than the currency's own decimals (e.g. sub-cent payouts)
+const MAX_FRACTION_DIGITS = 4;
+
+// the currency's own decimals: 2 for USD, 0 for JPY
+const currencyFractionDigitsCache: Record<string, number> = {};
+const currencyFractionDigits = (currency: string) => {
+	if (!(currency in currencyFractionDigitsCache)) {
+		currencyFractionDigitsCache[currency] = new Intl.NumberFormat('en', {
+			style: 'currency',
+			currency,
+		}).resolvedOptions().maximumFractionDigits as number;
+	}
+	return currencyFractionDigitsCache[currency];
+};
+
+// as many decimals as the amount needs, e.g. $0.005 instead of $0.01
+const fractionDigits = (value: number, minimumDigits: number) => {
+	for (let digits = minimumDigits; digits <= MAX_FRACTION_DIGITS; digits++) {
+		if (Math.abs(value - Number(value.toFixed(digits))) < 1e-9) return digits;
+	}
+	// amounts in between, e.g. during a count up, keep the currency's decimals
+	return minimumDigits;
 };
 
 // bookEventAmount: is the amount or win numbers in the events of books, e.g. the amount in setTotalWin bookEvent
@@ -31,12 +57,18 @@ export const numberToFloat = (value: number) => Number.parseFloat(`${value}`);
 
 export const numberToCurrencyString = (value: number) => {
 	if (stateBet.currency in NO_LOCALISATION_CURRENCY_MAP) {
-		return `${NO_LOCALISATION_CURRENCY_MAP[stateBet.currency]} ${numberToFloat(value).toFixed(2)}`;
+		const digits = fractionDigits(numberToFloat(value), NO_LOCALISATION_FRACTION_DIGITS);
+		const number = stateI18n.i18n.number(value, {
+			minimumFractionDigits: digits,
+			maximumFractionDigits: digits,
+		});
+		return `${number} ${NO_LOCALISATION_CURRENCY_MAP[stateBet.currency]}`;
 	}
 
+	const digits = fractionDigits(numberToFloat(value), currencyFractionDigits(stateBet.currency));
 	return stateI18n.i18n.number(value, {
-		minimumFractionDigits: 2,
-		maximumFractionDigits: 2,
+		minimumFractionDigits: digits,
+		maximumFractionDigits: digits,
 		style: 'currency',
 		currency: stateBet.currency,
 		// numberingSystem: 'latn',
