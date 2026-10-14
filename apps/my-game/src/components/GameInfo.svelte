@@ -1,7 +1,6 @@
 <script lang="ts">
 	import { HeadingText } from 'components-ui-html';
-	import { stateBet, stateUrlDerived } from 'state-shared';
-	import { numberToCurrencyString } from 'utils-shared/amount';
+	import { stateUrlDerived } from 'state-shared';
 
 	import assets from '../game/assets';
 	import config from '../game/config';
@@ -81,9 +80,10 @@
 	const getPays = (symbol: PayingSymbol) =>
 		config.symbols[symbol].paytable.map((entry) => Object.entries(entry)[0] as [string, number]);
 
-	const amount = (multiplier: number) => numberToCurrencyString(stateBet.betAmount * multiplier);
 
 	const BONUS_TYPES: BonusType[] = ['normal', 'super', 'mythic'];
+	// 5 FS symbols first, like the symbol wins
+	const SCATTER_COUNTS = BONUS_TYPES.map((type) => BONUS_SCATTER_COUNT[type]).reverse();
 	const bonusTitle = (type: BonusType) =>
 		[BONUS_NAME[type], 'FREE SPINS'].filter(Boolean).join(' ');
 
@@ -117,29 +117,75 @@
 	<h2 class="heading"><HeadingText>{text}</HeadingText></h2>
 {/snippet}
 
+<!-- every paying symbol with its wins; the rules add the FS symbol with the spins it starts -->
+{#snippet symbolWins(withScatter: boolean)}
+	<section>
+		{@render heading('Symbol wins')}
+		<p class="note">
+			Wins for 3, 4 or 5 of a kind on a {words.payline}, as a multiple of the {words.bet}.
+			{#if withScatter}
+				3, 4 or 5 FS symbols anywhere on the reels start FREE SPINS.
+			{/if}
+		</p>
+		<div class="symbols">
+			{#each PAYING_SYMBOLS as symbol}
+				<div class="card symbol">
+					<img src={SYMBOL_IMAGES[symbol]} alt={symbol} />
+					<dl>
+						{#each getPays(symbol) as [count, pay]}
+							<div class="pay">
+								<dt>{count}</dt>
+								<dd>{times(pay)}</dd>
+							</div>
+						{/each}
+					</dl>
+				</div>
+			{/each}
+			{#if withScatter}
+				<div class="card symbol">
+					<img src={assets.symbolS.src} alt="FS" />
+					<dl>
+						{#each SCATTER_COUNTS as count}
+							<div class="pay">
+								<dt>{count}</dt>
+								<dd>{FREE_SPINS_AWARDED[count]} spins</dd>
+							</div>
+						{/each}
+					</dl>
+				</div>
+			{/if}
+		</div>
+	</section>
+{/snippet}
+
+{#snippet paylineList()}
+	<section>
+		{@render heading(`${paylines.length} ${words.paylines}`)}
+		<p class="note">
+			Wins count from left to right on adjacent reels, starting from the leftmost reel. WILDs stand
+			in for the symbol after them, so a line counts all the way through; a line of only WILDs wins
+			as WILDs. Wins on different {words.paylines} are added together.
+		</p>
+		<div class="paylines">
+			{#each paylines as line, index}
+				<div class="payline">
+					<span class="muted">{index + 1}</span>
+					<div class="grid" style:--reels={line.length}>
+						{#each { length: ROWS } as _, row}
+							{#each line as lineRow}
+								<span class="cell" class:on={lineRow === row}></span>
+							{/each}
+						{/each}
+					</div>
+				</div>
+			{/each}
+		</div>
+	</section>
+{/snippet}
+
 <div class="game-info">
 	{#if props.part === 'payTable'}
-		<section>
-			{@render heading('Symbol wins')}
-			<p class="note">
-				Wins for 3, 4 or 5 of a kind on a {words.payline}, at a {words.bet} of {amount(1)}.
-			</p>
-			<div class="symbols">
-				{#each PAYING_SYMBOLS as symbol}
-					<div class="card symbol">
-						<img src={SYMBOL_IMAGES[symbol]} alt={symbol} />
-						<dl>
-							{#each getPays(symbol) as [count, pay]}
-								<div class="pay">
-									<dt>{count}</dt>
-									<dd>{amount(pay)}</dd>
-								</div>
-							{/each}
-						</dl>
-					</div>
-				{/each}
-			</div>
-		</section>
+		{@render symbolWins(false)}
 
 		<section>
 			{@render heading('Wild')}
@@ -173,29 +219,11 @@
 			</div>
 		</section>
 
-		<section>
-			{@render heading(`${paylines.length} ${words.paylines}`)}
-			<p class="note">
-				Wins count from left to right on adjacent reels, starting from the leftmost reel. WILDs
-				stand in for the symbol after them, so a line counts all the way through; a line of only
-				WILDs wins as WILDs. Wins on different {words.paylines} are added together.
-			</p>
-			<div class="paylines">
-				{#each paylines as line, index}
-					<div class="payline">
-						<span class="muted">{index + 1}</span>
-						<div class="grid" style:--reels={line.length}>
-							{#each { length: ROWS } as _, row}
-								{#each line as lineRow}
-									<span class="cell" class:on={lineRow === row}></span>
-								{/each}
-							{/each}
-						</div>
-					</div>
-				{/each}
-			</div>
-		</section>
+		{@render paylineList()}
 	{:else}
+		{@render symbolWins(true)}
+		{@render paylineList()}
+
 		<section>
 			{@render heading('Free spins')}
 			<div class="card feature">
@@ -398,7 +426,7 @@
 
 	.symbols {
 		display: grid;
-		/* room for amounts like "20.00 SC" or "CA$20.00" on one line */
+		/* room for the symbol and its wins side by side */
 		grid-template-columns: repeat(auto-fill, minmax(10rem, 1fr));
 		gap: 0.75rem;
 	}

@@ -23,6 +23,8 @@ export type UiHtmlTheme = {
 	// dialogs: bet menu, auto play, settings, confirm, ...
 	panel: {
 		background: string;
+		// for long reads like the game rules, where the game showing through gets in the way
+		solidBackground: string;
 		border: string;
 		radius: string;
 		shadow: string;
@@ -126,6 +128,8 @@ export const UI_HTML_THEME_CLEAN: UiHtmlTheme = {
 	backdrop: 'rgba(8, 9, 12, 0.55)',
 	panel: {
 		background: GLASS,
+		// the glass charcoal without the see-through
+		solidBackground: 'linear-gradient(180deg, #2a2d35 0%, #1b1d23 100%)',
 		border: '1px solid rgba(255, 255, 255, 0.08)',
 		radius: '1rem',
 		shadow: 'inset 0 1px 0 rgba(255, 255, 255, 0.06), 0 1.25rem 2.5rem rgba(0, 0, 0, 0.45)',
@@ -198,6 +202,7 @@ export const uiHtmlThemeStyle = (theme: UiHtmlTheme) =>
 		'--ui-outline': theme.text.outline,
 		'--ui-backdrop': theme.backdrop,
 		'--ui-panel-bg': theme.panel.background,
+		'--ui-panel-bg-solid': theme.panel.solidBackground,
 		'--ui-panel-border': theme.panel.border,
 		'--ui-panel-radius': theme.panel.radius,
 		'--ui-panel-shadow': theme.panel.shadow,

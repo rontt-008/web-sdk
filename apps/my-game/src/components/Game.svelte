@@ -1,10 +1,11 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
+	import { Tween } from 'svelte/motion';
 
 	import { EnablePixiExtension } from 'components-pixi';
 	import { EnableHotkey } from 'components-shared';
 	import { MainContainer } from 'components-layout';
-	import { App } from 'pixi-svelte';
+	import { App, Container } from 'pixi-svelte';
 	import { stateModal } from 'state-shared';
 
 	import { UI, UiGameName } from 'components-ui-pixi';
@@ -35,9 +36,18 @@
 	import FreeSpinCounter from './FreeSpinCounter.svelte';
 	import FreeSpinRetrigger from './FreeSpinRetrigger.svelte';
 	import FreeSpinOutro from './FreeSpinOutro.svelte';
-	import Transition from './Transition.svelte';
 
 	const context = getContext();
+
+	// once the loading screen is pressed away, the board and the UI fade in over the background
+	const GAME_FADE_IN_DURATION = 600;
+	const gameAlpha = new Tween(context.stateLayout.showLoadingScreen ? 0 : 1, {
+		duration: GAME_FADE_IN_DURATION,
+	});
+
+	$effect(() => {
+		gameAlpha.target = context.stateLayout.showLoadingScreen ? 0 : 1;
+	});
 
 	setBetModeMeta();
 
@@ -66,24 +76,26 @@
 		<Background />
 
 		{#if !context.stateLayout.showLoadingScreen}
-			<MainContainer>
-				<BoardFrame />
-				<BoardParticles />
-			</MainContainer>
+			<Container alpha={gameAlpha.current}>
+				<MainContainer>
+					<BoardFrame />
+					<BoardParticles />
+				</MainContainer>
 
-			<MainContainer>
-				<GameLogo />
-				<FeatureButtons />
-			</MainContainer>
+				<MainContainer>
+					<GameLogo />
+					<FeatureButtons />
+				</MainContainer>
 
-			<MainContainer>
-				<Board />
-				<Anticipations />
-				<WildThrow />
-			</MainContainer>
+				<MainContainer>
+					<Board />
+					<Anticipations />
+					<WildThrow />
+				</MainContainer>
 
-			<!-- over the board, under the UI and the win and free spin screens -->
-			<SunShine />
+				<!-- over the board, under the UI and the win and free spin screens -->
+				<SunShine />
+			</Container>
 		{/if}
 	</SceneBlur>
 
@@ -98,13 +110,15 @@
 		-->
 		<Sound />
 
-		<UI theme={uiTheme}>
-			{#snippet gameName()}
-				<UiGameName name="CAT HUNT" />
-			{/snippet}
-			<!-- the game logo is drawn beside the board by <GameLogo /> -->
-			{#snippet logo()}{/snippet}
-		</UI>
+		<Container alpha={gameAlpha.current}>
+			<UI theme={uiTheme}>
+				{#snippet gameName()}
+					<UiGameName name="CAT HUNT" />
+				{/snippet}
+				<!-- the game logo is drawn beside the board by <GameLogo /> -->
+				{#snippet logo()}{/snippet}
+			</UI>
+		</Container>
 		<Win />
 		<FreeSpinIntro />
 		{#if ['desktop', 'landscape'].includes(context.stateLayoutDerived.layoutType())}
@@ -112,7 +126,6 @@
 		{/if}
 		<FreeSpinRetrigger />
 		<FreeSpinOutro />
-		<Transition />
 	{/if}
 </App>
 
