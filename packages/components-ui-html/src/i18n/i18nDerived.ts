@@ -34,5 +34,6 @@ export const i18nDerived = {
 	buyBonus: () => (social() ? 'PLAY BONUS' : stateI18nDerived.translate('BUY BONUS')),
 	volatility: () => stateI18nDerived.translate('VOLATILITY'),
 	notEnoughBalance: () => stateI18nDerived.translate('NOT ENOUGH BALANCE'),
+	deactivate: () => stateI18nDerived.translate('DEACTIVATE'),
 	payTable: () => (social() ? 'WIN TABLE' : stateI18nDerived.translate('PAYTABLE')),
 };

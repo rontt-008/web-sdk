@@ -10,6 +10,7 @@
 		FREE_SPINS_AWARDED,
 		FREE_SPINS_ADDED,
 		FREE_SPIN_WILD_MULTIPLIERS,
+		FEATURE_SPIN_WILD_MULTIPLIERS,
 	} from '../game/constants';
 	import {
 		BONUS_COST,
@@ -110,6 +111,8 @@
 
 	const minMultiplier = Math.min(...FREE_SPIN_WILD_MULTIPLIERS);
 	const maxMultiplier = Math.max(...FREE_SPIN_WILD_MULTIPLIERS);
+	const featureMinMultiplier = Math.min(...FEATURE_SPIN_WILD_MULTIPLIERS);
+	const featureMaxMultiplier = Math.max(...FEATURE_SPIN_WILD_MULTIPLIERS);
 	const maxWin = Math.max(...MODES.map(({ mode }) => mode.max_win));
 </script>
 
@@ -243,11 +246,25 @@
 		</section>
 
 		<section>
-			{@render heading(`Booster and ${words.bonusBuys}`)}
+			{@render heading(`Booster, feature spin and ${words.bonusBuys}`)}
 			<div class="card feature">
 				<p>
 					<strong>BOOSTER:</strong> each spin costs {BOOSTER_COST}x the {words.bet} and FREE SPINS start
 					more often.
+				</p>
+			</div>
+			<div class="card feature">
+				<p>
+					<strong>FEATURE SPIN:</strong> switched on in the {words.buyBonus} menu. Each spin costs
+					{FEATURE_COST}x the {words.bet} and has at least one BIG WILD. Every BIG WILD carries a {featureMinMultiplier}x to {featureMaxMultiplier}x
+					multiplier, and one of them throws 1 to 3 extra WILDs onto the other reels. Thrown WILDs carry
+					no multiplier. A FEATURE SPIN can't start FREE SPINS.
+				</p>
+			</div>
+			<div class="card feature">
+				<p>
+					The BOOSTER and the FEATURE SPIN stay on until they are turned off, and only one of them can
+					be on at a time.
 				</p>
 			</div>
 			<div class="card feature">
@@ -259,13 +276,6 @@
 					)} chance, SUPER with {chance(MYSTERY_CHANCES.super)} and MYTHIC with {chance(
 						MYSTERY_CHANCES.mythic,
 					)}.
-				</p>
-			</div>
-			<div class="card feature">
-				<p>
-					<strong>FEATURE SPIN:</strong> one spin for {FEATURE_COST}x the {words.bet} with at least one
-					BIG WILD, and one of them throws 1 to 3 extra WILDs onto the other reels. It wins like a base
-					game spin and can't start FREE SPINS.
 				</p>
 			</div>
 		</section>
