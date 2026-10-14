@@ -2,6 +2,7 @@
 	import { OptionsGrid } from 'components-shared';
 	import { getContextLayout } from 'utils-layout';
 	import { stateBet, stateConfig } from 'state-shared';
+	import { numberToCurrencyString } from 'utils-shared/amount';
 
 	import ButtonFace from './ButtonFace.svelte';
 	import { i18nDerived } from '../i18n/i18nDerived';
@@ -16,15 +17,8 @@
 	); //always includes last, and without duplicate
 
 	const isMaxValue = (value: number) => value === options[options.length - 1];
-	const formatValue = (value: number) => {
-		if (Math.abs(value) > 999999) {
-			return `${(Math.abs(value) / 1000000).toFixed(2)}M`;
-		}
-		if (Math.abs(value) > 999) {
-			return `${(Math.abs(value) / 1000).toFixed(2)}K`;
-		}
-		return Math.abs(value).toFixed(2);
-	};
+	// in the player's currency, like every other amount: ¥10, CA$0.50 or 5.00 SC
+	const formatValue = (value: number) => numberToCurrencyString(value);
 </script>
 
 <OptionsGrid

@@ -100,7 +100,7 @@
 
 		<UI theme={uiTheme}>
 			{#snippet gameName()}
-				<UiGameName name="CAT HUNT" />
+				<UiGameName name="LAZY EVENING" />
 			{/snippet}
 			<!-- the game logo is drawn beside the board by <GameLogo /> -->
 			{#snippet logo()}{/snippet}

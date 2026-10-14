@@ -14,9 +14,9 @@
 	import { Tween } from 'svelte/motion';
 	import { cubicOut } from 'svelte/easing';
 	import { Container, Graphics, Text } from 'pixi-svelte';
-	import { stateBetDerived, stateI18n } from 'state-shared';
+	import { stateBetDerived } from 'state-shared';
 	import { waitForTimeout } from 'utils-shared/wait';
-	import { bookEventAmountToNormalisedAmount } from 'utils-shared/amount';
+	import { bookEventAmountToCurrencyString } from 'utils-shared/amount';
 
 	import { getContext } from '../game/context';
 	import { getSymbolX } from '../game/utils';
@@ -80,12 +80,9 @@
 	// the amount sits on the middle of the line
 	const amountPosition = $derived(path[Math.round((path.length - 1) / 2)]);
 
-	// just the number, no currency sign
+	// in the player's currency, like every other amount: ¥40, $0.004 or 1.40 SC
 	const toAmountText = (bookEventAmount: number) =>
-		stateI18n.i18n.number(bookEventAmountToNormalisedAmount(bookEventAmount), {
-			minimumFractionDigits: 2,
-			maximumFractionDigits: 2,
-		});
+		bookEventAmountToCurrencyString(bookEventAmount);
 
 	// the drawn part of the path, ending part way along a step so the line grows smoothly
 	const shownPath = () => {

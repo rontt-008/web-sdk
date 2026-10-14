@@ -157,8 +157,8 @@
 			<div class="card feature">
 				<img src={assets.symbolS.src} alt="FS" class="feature-art" />
 				<p>
-					3, 4 or 5 FS symbols anywhere on the reels start FREE SPINS. FS symbols have no line wins of their
-					own, and one covered by a BIG WILD doesn't count.
+					3, 4 or 5 FS symbols anywhere on the reels start FREE SPINS. FS symbols have no line wins
+					of their own, and one covered by a BIG WILD doesn't count.
 				</p>
 			</div>
 			<div class="bonuses">
@@ -208,8 +208,8 @@
 			</div>
 			<div class="card feature">
 				<p>
-					<strong>MYTHIC FREE SPINS:</strong> every spin has at least one BIG WILD, and one of them
-					throws 1 to 3 extra WILDs instead of 0 to 3.
+					<strong>MYTHIC FREE SPINS:</strong> every spin has at least one BIG WILD, and one of them throws
+					1 to 3 extra WILDs instead of 0 to 3.
 				</p>
 			</div>
 		</section>
@@ -218,16 +218,15 @@
 			{@render heading(`Booster and ${words.bonusBuys}`)}
 			<div class="card feature">
 				<p>
-					<strong>BOOSTER:</strong> each spin costs {BOOSTER_COST}x the {words.bet} and FREE SPINS
-					start more often.
+					<strong>BOOSTER:</strong> each spin costs {BOOSTER_COST}x the {words.bet} and FREE SPINS start
+					more often.
 				</p>
 			</div>
 			<div class="card feature">
 				<p>
 					<strong>{words.buyBonus}:</strong> go straight to FREE SPINS. BONUS ({BONUS_COST}x the
-					{words.bet}),
-					SUPER BONUS ({SUPER_COST}x) and MYTHIC BONUS ({MYTHIC_COST}x) give their FREE SPINS.
-					MYSTERY BONUS ({MYSTERY_COST}x) gives the normal FREE SPINS with a {chance(
+					{words.bet}), SUPER BONUS ({SUPER_COST}x) and MYTHIC BONUS ({MYTHIC_COST}x) give their
+					FREE SPINS. MYSTERY BONUS ({MYSTERY_COST}x) gives the normal FREE SPINS with a {chance(
 						MYSTERY_CHANCES.normal,
 					)} chance, SUPER with {chance(MYSTERY_CHANCES.super)} and MYTHIC with {chance(
 						MYSTERY_CHANCES.mythic,
@@ -236,9 +235,9 @@
 			</div>
 			<div class="card feature">
 				<p>
-					<strong>FEATURE SPIN:</strong> one spin for {FEATURE_COST}x the {words.bet} with at least
-					one BIG WILD, and one of them throws 1 to 3 extra WILDs onto the other reels. It wins like a
-					base game spin and can't start FREE SPINS.
+					<strong>FEATURE SPIN:</strong> one spin for {FEATURE_COST}x the {words.bet} with at least one
+					BIG WILD, and one of them throws 1 to 3 extra WILDs onto the other reels. It wins like a base
+					game spin and can't start FREE SPINS.
 				</p>
 			</div>
 		</section>
@@ -261,8 +260,8 @@
 				</tbody>
 			</table>
 			<p class="note">
-				Wins in a round are capped at {times(maxWin)} the {words.bet}; the round ends once it reaches
-				that.
+				Wins in a round are capped at {times(maxWin)} the {words.bet}; the round ends once it
+				reaches that.
 			</p>
 		</section>
 
@@ -309,8 +308,8 @@
 				<div>
 					<dt>SOUND</dt>
 					<dd>
-						The sound button turns all sound on or off. The music and sound effect buttons, and
-						the volumes in SETTINGS, change each on its own.
+						The sound button turns all sound on or off. The music and sound effect buttons, and the
+						volumes in SETTINGS, change each on its own.
 					</dd>
 				</div>
 				<div>
@@ -323,8 +322,8 @@
 				<div>
 					<dt>BOOSTER</dt>
 					<dd>
-						The switch beside the reels, or the BOOSTER card in the bonus menu, turns the booster
-						on or off. Each spin costs {BOOSTER_COST}x the {words.bet} while it is on.
+						The switch beside the reels, or the BOOSTER card in the bonus menu, turns the booster on
+						or off. Each spin costs {BOOSTER_COST}x the {words.bet} while it is on.
 					</dd>
 				</div>
 				<div>
@@ -332,8 +331,22 @@
 					<dd>Show the balance and the win of the current round.</dd>
 				</div>
 				<div>
-					<dt>FREE SPINS screens</dt>
-					<dd>Press anywhere, or the space bar, to continue.</dd>
+					<dt>ARROW</dt>
+					<dd>
+						On phones the controls slide down out of the way during FREE SPINS; the arrow button
+						brings them back up, or slides them down again.
+					</dd>
+				</div>
+				<div>
+					<dt>PRESS ANYWHERE TO CONTINUE</dt>
+					<dd>
+						On the start screen, the FREE SPINS screens and big wins, press anywhere or the space
+						bar to continue. While a win is counting up, the first press jumps to the final amount.
+					</dd>
+				</div>
+				<div>
+					<dt>REPLAY</dt>
+					<dd>When watching a replay of a round, plays the round again from the start.</dd>
 				</div>
 			</dl>
 		</section>
@@ -343,10 +356,10 @@
 			<p class="note">
 				Malfunction voids all wins and plays. A consistent internet connection is required. In the
 				event of a disconnection, reload the game to finish any uncompleted rounds. The expected
-				return is calculated over many plays. The game display is not representative of any
-				physical device and is for illustrative purposes only. Winnings are settled according to
-				the amount received from the Remote Game Server and not from events within the web browser.
-				TM and &copy; 2026 Engine.
+				return is calculated over many plays. The game display is not representative of any physical
+				device and is for illustrative purposes only. Winnings are settled according to the amount
+				received from the Remote Game Server and not from events within the web browser. TM and
+				&copy; 2026 Engine.
 			</p>
 		</section>
 	{/if}
