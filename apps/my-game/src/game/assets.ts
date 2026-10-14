@@ -250,10 +250,12 @@ export default {
 		type: 'font',
 		src: new URL('../../assets/fonts/goldBlur/miningfont_gold_blur.xml', import.meta.url).href,
 	},
-	// a web font for Text; pixi names it after the file, so it is used as fontFamily 'Titan One'
+	// a web font for Text; pixi names it after the file, so it is used as fontFamily 'Titan One'.
+	// Loads first, as the loading bar's percentage is written in it
 	titanOne: {
 		type: 'font',
 		src: new URL('../../assets/fonts/titanOne/titan-one.ttf', import.meta.url).href,
+		preload: true,
 	},
 	silverFont: {
 		type: 'font',
@@ -337,11 +339,6 @@ export default {
 			scale: 2,
 		},
 	},
-	progressBar: {
-		type: 'sprites',
-		src: new URL('../../assets/sprites/progressBar/progressBar.json', import.meta.url).href,
-		preload: true,
-	},
 	freeSpins: {
 		type: 'sprites',
 		src: new URL('../../assets/sprites/freeSpins/freeSpins.json', import.meta.url).href,
@@ -355,14 +352,6 @@ export default {
 		src: {
 			atlas: new URL('../../assets/spines/clusterWin/clusterpay.atlas', import.meta.url).href,
 			skeleton: new URL('../../assets/spines/clusterWin/clusterpay.json', import.meta.url).href,
-			scale: 2,
-		},
-	},
-	transition: {
-		type: 'spine',
-		src: {
-			atlas: new URL('../../assets/spines/transition/transition.atlas', import.meta.url).href,
-			skeleton: new URL('../../assets/spines/transition/transition.json', import.meta.url).href,
 			scale: 2,
 		},
 	},

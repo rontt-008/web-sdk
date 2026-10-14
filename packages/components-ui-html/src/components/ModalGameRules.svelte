@@ -20,7 +20,7 @@
 
 {#if stateModal.modal?.name === 'gameRules'}
 	<Popup zIndex={zIndex.modal} onclose={() => (stateModal.modal = null)}>
-		<BaseContent maxWidth="100%">
+		<BaseContent maxWidth="100%" solid>
 			{#if props.content}
 				<BaseTitle>GAME RULES</BaseTitle>
 			{/if}

@@ -5,6 +5,8 @@
 		maxWidth: '100%' | '500px';
 		// false when the content draws its own panels, like the bonus cards
 		panel?: boolean;
+		// an opaque panel, for long reads the game showing through would get in the way of
+		solid?: boolean;
 		children: Snippet;
 	};
 
@@ -14,6 +16,7 @@
 <div
 	class="ui-popup-standard-content-wrap"
 	class:panel={props.panel ?? true}
+	class:solid={props.solid}
 	style="--maxWidth: {props.maxWidth}; --zIndex: {100}"
 >
 	{@render props.children()}
@@ -43,5 +46,9 @@
 		border-radius: var(--ui-panel-radius, 1rem);
 		border-image: var(--ui-panel-border-image, none);
 		box-shadow: var(--ui-panel-shadow, none);
+
+		&.solid {
+			background: var(--ui-panel-bg-solid, rgb(0, 0, 0));
+		}
 	}
 </style>

@@ -1052,13 +1052,13 @@ function btnGeneral() {
 	return mx.render({ reverb: false });
 }
 
+// a soft, deep thump: low body, a little mid "knock" so it carries on small speakers, and a felt-like attack
 function btnSpin() {
-	const mx = new Mix(0.8);
-	mx.add(woodblock(1300, 0.04), 0, { gain: 0.6, send: 0.05 });
-	mx.add(thump(220, 80, 0.12), 0, { gain: 0.5, send: 0 });
-	mx.add(whoosh(0.5, 350, 3200, { q: 1.4, peakAt: 0.55 }), 0.02, { gain: 0.35, send: 0.2 });
-	mx.add(glide(0.09, 600, 1100), 0.03, { gain: 0.25 });
-	return mx.render({ reverb: { size: 0.5, tail: 0.6 } });
+	const mx = new Mix(0.4);
+	mx.add(thump(150, 48, 0.25), 0, { gain: 0.8, send: 0 });
+	mx.add(thump(260, 120, 0.07), 0, { gain: 0.3, send: 0 });
+	mx.add(filter(env(noise(0.02), (t) => smooth(0, 0.001, t) * ex(t, 0.02)), 'lp', 1200), 0, { gain: 0.25, send: 0 });
+	return mx.render({ reverb: { size: 0.3, tail: 0.2 } });
 }
 
 const reelStop = (k) => () => {
