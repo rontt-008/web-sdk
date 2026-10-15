@@ -11,6 +11,13 @@
 	const { eventEmitter } = getContextEventEmitter<EmitterEventModal>();
 
 	const iconSize = '2.75rem';
+	// longer amounts, like MX$10,000.00, get smaller so they stay between the − and + buttons
+	const AMOUNT_FONT_SIZE_REM = 1.75;
+	const AMOUNT_FULL_SIZE_LENGTH = 9;
+	const amountText = $derived(numberToCurrencyString(stateBet.betAmount));
+	const amountFontSize = $derived(
+		`${AMOUNT_FONT_SIZE_REM * Math.min(1, AMOUNT_FULL_SIZE_LENGTH / amountText.length)}rem`,
+	);
 </script>
 
 <OptionsToggle
@@ -29,8 +36,8 @@
 				</ButtonFace>
 			</Button>
 
-			<span class="amount">
-				<HeadingText>{numberToCurrencyString(stateBet.betAmount)}</HeadingText>
+			<span class="amount" style:font-size={amountFontSize}>
+				<HeadingText>{amountText}</HeadingText>
 			</span>
 
 			<Button data-test="up-button" disabled={disabledUp} onclick={toggleUp}>
@@ -51,8 +58,9 @@
 	}
 
 	.amount {
+		// as wide as its text, so it never runs under the buttons
+		flex: none;
 		min-width: 7rem;
 		text-align: center;
-		font-size: 1.75rem;
 	}
 </style>

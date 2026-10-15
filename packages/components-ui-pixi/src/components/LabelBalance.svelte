@@ -14,7 +14,11 @@
 	const props: Props = $props();
 	const balanceTween = new Tween(stateBet.balanceAmount);
 	const label = $derived(i18nDerived.balance());
-	const value = $derived(numberToCurrencyString(balanceTween.current));
+	const value = $derived(
+		numberToCurrencyString(balanceTween.current, {
+			counting: balanceTween.current !== balanceTween.target,
+		}),
+	);
 
 	$effect(() => {
 		balanceTween.set(stateBet.balanceAmount);

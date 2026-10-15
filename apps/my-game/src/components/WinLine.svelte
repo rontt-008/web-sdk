@@ -80,8 +80,9 @@
 	// the amount sits on the middle of the line
 	const amountPosition = $derived(path[Math.round((path.length - 1) / 2)]);
 
-	// in the player's currency, with its own decimals (none for JPY) and more for sub-cent wins
-	const toAmountText = (bookEventAmount: number) => bookEventAmountToCurrencyString(bookEventAmount);
+	// in the player's currency, like every other amount: ¥40, $0.004 or 1.40 SC
+	const toAmountText = (bookEventAmount: number) =>
+		bookEventAmountToCurrencyString(bookEventAmount);
 
 	// the drawn part of the path, ending part way along a step so the line grows smoothly
 	const shownPath = () => {

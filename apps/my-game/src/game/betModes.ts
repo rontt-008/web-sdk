@@ -2,7 +2,7 @@ import { stateMeta, stateUrlDerived, type BetModeMeta } from 'state-shared';
 import { DEFAULT_BET_MODE_META } from 'state-shared/src/constants';
 
 import config from './config';
-import { BONUS_DESCRIPTION } from './constants';
+import { BONUS_DESCRIPTION, FEATURE_SPIN_WILD_MULTIPLIERS } from './constants';
 
 // Bet mode keys sent to the RGS with each spin. They must match the bet modes in the math.
 export const BONUS_MODE = 'BONUS';
@@ -24,6 +24,8 @@ export const BOOSTER_COST = config.betModes.ante.cost;
 export const MYSTERY_CHANCES = { normal: 0.5, super: 0.4, mythic: 0.1 };
 
 const percent = (chance: number) => `${Math.round(chance * 100)}%`;
+// "2x to 100x"
+const featureMultipliers = `${Math.min(...FEATURE_SPIN_WILD_MULTIPLIERS)}x to ${Math.max(...FEATURE_SPIN_WILD_MULTIPLIERS)}x`;
 
 // Replace the SDK's sample bet modes with the ones this game has. Icons are reused from the samples,
 // taken from the SDK's defaults: stateMeta.betModeMeta no longer has them once this has run, and it
@@ -52,7 +54,8 @@ export const setBetModeMeta = () => {
 				tickerIdle: 'BOOSTER IS ON',
 			},
 		},
-		// switched on and off like the booster
+		// switched on in the buy menu (an 'activate' mode, like the booster): every spin is a feature
+		// spin until it is switched off there
 		[FEATURE_MODE]: {
 			...samples.ANTE,
 			mode: FEATURE_MODE,
@@ -60,10 +63,11 @@ export const setBetModeMeta = () => {
 			text: {
 				...samples.ANTE.text,
 				title: 'FEATURE SPIN',
-				dialog: `Every spin has a guaranteed BIG WILD that shoots out 1 to 3 extra wilds, and can't start FREE SPINS. Each spin costs ${FEATURE_COST}x ${yourBet} while FEATURE SPIN is on. It stays on until you turn it off.`,
-				description: 'Every spin has a guaranteed BIG WILD that shoots out wilds.',
+				dialog: `Every spin has a guaranteed BIG WILD with a ${featureMultipliers} multiplier that shoots out 1 to 3 extra wilds. Each spin costs ${FEATURE_COST}x ${yourBet} while FEATURE SPIN is on. It stays on until you turn it off.`,
+				description: 'Every spin has a BIG WILD with a multiplier that shoots out wilds.',
 				betAmountLabel: 'FEATURE SPIN',
 				tickerIdle: 'FEATURE SPIN IS ON',
+				tickerSpin: 'FEATURE SPIN',
 			},
 		},
 		[BONUS_MODE]: {

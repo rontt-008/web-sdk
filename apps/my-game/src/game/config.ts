@@ -43,12 +43,11 @@ export default {
 		},
 		// switched on and off like the ante (booster), not bought once
 		feature: {
-			cost: 8.0,
+			cost: 25.0,
 			feature: true,
 			buyBonus: false,
 			rtp: 0.967,
-			// the biggest payout in lookUpTable_feature_0.csv: update it after re-running the math
-			max_win: 215.0,
+			max_win: 10000.0,
 		},
 		mystery: {
 			cost: 250.0,

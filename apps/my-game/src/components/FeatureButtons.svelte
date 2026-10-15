@@ -7,15 +7,7 @@
 	import { getContext } from '../game/context';
 	import { SYMBOL_SIZE } from '../game/constants';
 	import { createBoardTextStyle, fitBoardFontSize } from '../game/textStyles';
-	import {
-		BOOSTER_MODE,
-		BONUS_COST,
-		SUPER_COST,
-		MYTHIC_COST,
-		MYSTERY_COST,
-		FEATURE_COST,
-		BOOSTER_COST,
-	} from '../game/betModes';
+	import { BOOSTER_MODE, FEATURE_MODE, FEATURE_COST, BOOSTER_COST } from '../game/betModes';
 	import BoosterSwitch, { BOOSTER_SWITCH_SIZES } from './BoosterSwitch.svelte';
 
 	const context = getContext();
@@ -63,16 +55,14 @@
 
 	const isIdle = $derived(context.stateXstateDerived.isIdle());
 	const boosterOn = $derived(stateBet.activeBetModeKey === BOOSTER_MODE);
-	// the cheapest bonus to buy; the feature spin in the menu is cheaper, but it's switched on, not bought
-	const bonusPrice = $derived(
-		stateBet.betAmount * Math.min(BONUS_COST, SUPER_COST, MYTHIC_COST, MYSTERY_COST),
-	);
-	// the menu is still worth opening while the feature spin is affordable
-	const buyDisabled = $derived(
-		!isIdle || stateBet.betAmount * FEATURE_COST > stateBet.balanceAmount,
-	);
+	// the feature spin is the cheapest in the menu
+	const bonusPrice = $derived(stateBet.betAmount * FEATURE_COST);
+	// the feature spin is switched off in the menu, so it opens while the feature spin is on
+	const featureOn = $derived(stateBet.activeBetModeKey === FEATURE_MODE);
+	const buyDisabled = $derived(!isIdle || (bonusPrice > stateBet.balanceAmount && !featureOn));
 
-	// the SDK's buy menu, listing every bonus that can be bought (the 'buy' bet modes)
+	// the SDK's buy menu, listing every bonus that can be bought (the 'buy' bet modes) and the
+	// feature spin, which is switched on and off there (an 'activate' bet mode)
 	const openBuyMenu = () => {
 		context.eventEmitter.broadcast({ type: 'soundPressGeneral' });
 		stateModal.modal = { name: 'buyBonus' };

@@ -30,7 +30,7 @@ const fractionDigits = (value: number, minimumDigits: number) => {
 	for (let digits = minimumDigits; digits <= MAX_FRACTION_DIGITS; digits++) {
 		if (Math.abs(value - Number(value.toFixed(digits))) < 1e-9) return digits;
 	}
-	// amounts in between, e.g. during a count up, keep the currency's decimals
+	// finer than that isn't a payout: keep the currency's decimals
 	return minimumDigits;
 };
 
@@ -55,9 +55,16 @@ export const bookEventAmountToNormalisedAmount = (bookEventAmount: number) => {
 
 export const numberToFloat = (value: number) => Number.parseFloat(`${value}`);
 
-export const numberToCurrencyString = (value: number) => {
+type CurrencyStringOptions = {
+	// an in-between value of a count up: only the currency's own decimals, e.g. ¥70 instead of ¥69.6
+	counting?: boolean;
+};
+
+export const numberToCurrencyString = (value: number, options: CurrencyStringOptions = {}) => {
 	if (stateBet.currency in NO_LOCALISATION_CURRENCY_MAP) {
-		const digits = fractionDigits(numberToFloat(value), NO_LOCALISATION_FRACTION_DIGITS);
+		const digits = options.counting
+			? NO_LOCALISATION_FRACTION_DIGITS
+			: fractionDigits(numberToFloat(value), NO_LOCALISATION_FRACTION_DIGITS);
 		const number = stateI18n.i18n.number(value, {
 			minimumFractionDigits: digits,
 			maximumFractionDigits: digits,
@@ -65,7 +72,10 @@ export const numberToCurrencyString = (value: number) => {
 		return `${number} ${NO_LOCALISATION_CURRENCY_MAP[stateBet.currency]}`;
 	}
 
-	const digits = fractionDigits(numberToFloat(value), currencyFractionDigits(stateBet.currency));
+	const currencyDigits = currencyFractionDigits(stateBet.currency);
+	const digits = options.counting
+		? currencyDigits
+		: fractionDigits(numberToFloat(value), currencyDigits);
 	return stateI18n.i18n.number(value, {
 		minimumFractionDigits: digits,
 		maximumFractionDigits: digits,
@@ -88,7 +98,10 @@ export const numberToShortCurrencyString = (value: number) => {
 	return stateI18n.i18n.number(value, { ...compact, style: 'currency', currency: stateBet.currency });
 };
 
-export const bookEventAmountToCurrencyString = (bookEventAmount: number) => {
+export const bookEventAmountToCurrencyString = (
+	bookEventAmount: number,
+	options: CurrencyStringOptions = {},
+) => {
 	const normalisedAmount = bookEventAmountToNormalisedAmount(bookEventAmount);
-	return numberToCurrencyString(normalisedAmount);
+	return numberToCurrencyString(normalisedAmount, options);
 };

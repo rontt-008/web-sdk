@@ -1,7 +1,7 @@
 // Stands in for Stake Engine's RGS in Storybook, so the game can be played like the real thing: it
 // keeps a balance, takes each bet at its mode's cost and answers with a round picked by its lookup
-// table weight, from the real odds books exported from the math. Requests to the RGS endpoints are
-// answered here; everything else goes through to the network.
+// table weight (or a max win round, see startMockRgs), from the real odds books exported from the
+// math. Requests to the RGS endpoints are answered here; everything else goes through to the network.
 import { API_AMOUNT_MULTIPLIER } from 'constants-shared/bet';
 
 import config from '../game/config';
@@ -33,14 +33,20 @@ const BET_LEVELS = [
 	8, 9, 10, 12, 14, 16, 18, 20, 25, 30, 35, 40, 45, 50, 60, 70, 80, 90, 100,
 ];
 
-type Rgs = { balance: number; roundID: number; unpaid: number };
+// maxWin: every round is one of the mode's max wins instead of one picked by the real odds
+type Rgs = { balance: number; roundID: number; unpaid: number; maxWin: boolean };
 
 // amounts are kept in the API's integer units (1000000 is 1 dollar)
-const createRgs = (balance: number): Rgs => ({
+const createRgs = (balance: number, maxWin: boolean): Rgs => ({
 	balance: Math.round(balance * API_AMOUNT_MULTIPLIER),
 	roundID: 0,
 	unpaid: 0,
+	maxWin,
 });
+
+// the rounds that pay the mode's max win (the real odds books hold one for each mode)
+const maxWinBooks = (name: BetModeName) =>
+	BOOKS[name].filter((book) => book.payoutMultiplier >= config.betModes[name].max_win);
 
 const balanceObject = (rgs: Rgs) => ({ amount: rgs.balance, currency: 'USD' });
 
@@ -86,11 +92,15 @@ const HANDLERS: Record<string, (rgs: Rgs, body: Record<string, any>) => object> 
 		const name = String(mode).toLowerCase() as BetModeName;
 		if (!(name in BOOKS)) return { error: 'ERR_VAL', message: `Unknown bet mode: ${mode}` };
 
+		const books = rgs.maxWin ? maxWinBooks(name) : BOOKS[name];
+		if (books.length === 0) {
+			return { error: 'ERR_GEN', message: `No max win round for bet mode ${mode} in the story data` };
+		}
+
 		const cost = Math.round(amount * config.betModes[name].cost);
 		if (cost > rgs.balance) return { error: 'ERR_IPB', message: 'Insufficient balance' };
 		rgs.balance -= cost;
 
-		const books = BOOKS[name];
 		const book = books[pickByWeight(books)];
 		rgs.unpaid = Math.round(book.payoutMultiplier * amount);
 		rgs.roundID += 1;
@@ -139,10 +149,11 @@ const installFetch = () => {
 	};
 };
 
-// Starts a mock RGS with this balance (in dollars). Returns a function that stops it.
-export const startMockRgs = ({ balance }: { balance: number }) => {
+// Starts a mock RGS with this balance (in dollars); with maxWin every round pays the mode's max win.
+// Returns a function that stops it.
+export const startMockRgs = ({ balance, maxWin = false }: { balance: number; maxWin?: boolean }) => {
 	installFetch();
-	const rgs = createRgs(balance);
+	const rgs = createRgs(balance, maxWin);
 	activeRgs = rgs;
 
 	return () => {

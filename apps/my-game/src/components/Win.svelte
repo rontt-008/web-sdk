@@ -68,7 +68,9 @@
 								<ResponsiveBitmapText
 									anchor={0.5}
 									maxWidth={2130}
-									text={bookEventAmountToCurrencyString(countUpAmount)}
+									text={bookEventAmountToCurrencyString(countUpAmount, {
+										counting: !countUpCompleted,
+									})}
 									style={{
 										fontFamily: 'gold',
 										fontSize: SYMBOL_SIZE * 3.6,
@@ -83,7 +85,9 @@
 								anchor={0.5}
 								maxWidth={context.stateLayoutDerived.canvasSizes().width /
 									context.stateLayoutDerived.mainLayout().scale}
-								text={bookEventAmountToCurrencyString(countUpAmount)}
+								text={bookEventAmountToCurrencyString(countUpAmount, {
+									counting: !countUpCompleted,
+								})}
 								style={{
 									fontFamily: 'gold',
 									fontSize: SYMBOL_SIZE,

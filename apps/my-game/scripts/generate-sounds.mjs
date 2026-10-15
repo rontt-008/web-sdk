@@ -1,4 +1,4 @@
-// Generates Cat Hunt's sound sprite from code. Every sound below is synthesised here (no recordings
+// Generates Lazy Evening's sound sprite from code. Every sound below is synthesised here (no recordings
 // or samples), and it keeps the sound names the game already uses, so no game code has to change.
 //
 //   node scripts/generate-sounds.mjs                  (run from apps/my-game)
@@ -1504,7 +1504,7 @@ function main() {
 
 	const ffmpeg = process.env.FFMPEG || 'ffmpeg';
 	const canEncode = spawnSync(ffmpeg, ['-version']).status === 0;
-	const wavPath = canEncode ? path.join(os.tmpdir(), `cat-hunt-sounds-${process.pid}.wav`) : path.join(outDir, 'sounds.wav');
+	const wavPath = canEncode ? path.join(os.tmpdir(), `lazy-evening-sounds-${process.pid}.wav`) : path.join(outDir, 'sounds.wav');
 	fs.writeFileSync(wavPath, wav(total, totalR));
 	const formats = canEncode ? Object.keys(ENCODERS) : ['wav'];
 	if (canEncode) {

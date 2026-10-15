@@ -106,7 +106,7 @@
 						<Text
 							anchor={{ x: 0.5, y: 0 }}
 							y={AMOUNT_FONT_SIZE * 0.1}
-							text={bookEventAmountToCurrencyString(countUpAmount)}
+							text={bookEventAmountToCurrencyString(countUpAmount, { counting: !countUpCompleted })}
 							style={amountStyle}
 						/>
 					</Container>

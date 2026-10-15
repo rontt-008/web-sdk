@@ -14,7 +14,11 @@
 	const props: Props = $props();
 	const winBookEventAmountTween = new Tween(stateBet.winBookEventAmount);
 	const label = $derived(i18nDerived.win());
-	const value = $derived(bookEventAmountToCurrencyString(winBookEventAmountTween.current));
+	const value = $derived(
+		bookEventAmountToCurrencyString(winBookEventAmountTween.current, {
+			counting: winBookEventAmountTween.current !== winBookEventAmountTween.target,
+		}),
+	);
 
 	$effect(() => {
 		winBookEventAmountTween.set(stateBet.winBookEventAmount);
