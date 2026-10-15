@@ -1,3 +1,5 @@
+import { UI_FONT_FAMILY } from 'constants-shared/fonts';
+
 // The look of the HTML menus drawn over the game (buy bonus, bet, auto play, settings, ...).
 // Every value is CSS, so a theme can use colours, gradients and a game's own art and textures.
 // Spread UI_HTML_THEME_CLEAN and override what a game needs, the same way as the pixi UI's UiTheme:
@@ -114,8 +116,8 @@ const GLASS = 'linear-gradient(180deg, rgba(42, 45, 53, 0.72) 0%, rgba(27, 29, 3
 // buttons, so it sits on top of any game art. Buying is light blue, switching a mode on is gold.
 export const UI_HTML_THEME_CLEAN: UiHtmlTheme = {
 	font: {
-		body: "'proxima-nova', 'Helvetica Neue', Arial, sans-serif",
-		heading: "'proxima-nova', 'Helvetica Neue', Arial, sans-serif",
+		body: UI_FONT_FAMILY,
+		heading: UI_FONT_FAMILY,
 		headingWeight: 800,
 		headingTransform: 'uppercase',
 	},

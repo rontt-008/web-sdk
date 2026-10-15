@@ -1,3 +1,5 @@
+import { UI_FONT_FAMILY } from 'constants-shared/fonts';
+
 // Look of <LoadingBar />. Spread LOADING_BAR_THEME_CLEAN and override colours to fit a game, e.g.
 // { ...LOADING_BAR_THEME_CLEAN, fill: 0xffb53d, marker: 'paw' }.
 export type LoadingBarTheme = {
@@ -50,5 +52,5 @@ export const LOADING_BAR_THEME_CLEAN: LoadingBarTheme = {
 	marker: 'none',
 	markerFill: WHITE,
 	markerOutline: CHARCOAL,
-	percent: { fontFamily: 'proxima-nova', fontSize: 22, fill: WHITE, stroke: CHARCOAL, strokeWidth: 0 },
+	percent: { fontFamily: UI_FONT_FAMILY, fontSize: 22, fill: WHITE, stroke: CHARCOAL, strokeWidth: 0 },
 };

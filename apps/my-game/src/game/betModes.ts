@@ -52,18 +52,18 @@ export const setBetModeMeta = () => {
 				tickerIdle: 'BOOSTER IS ON',
 			},
 		},
-		// one spin, so the cheapest buy, first
+		// switched on and off like the booster
 		[FEATURE_MODE]: {
-			...samples.BONUS,
+			...samples.ANTE,
 			mode: FEATURE_MODE,
 			costMultiplier: FEATURE_COST,
 			text: {
-				...samples.BONUS.text,
+				...samples.ANTE.text,
 				title: 'FEATURE SPIN',
-				button: buyButton,
-				dialog: `One spin for ${FEATURE_COST}x ${yourBet} with a guaranteed BIG WILD that shoots out 1 to 3 extra wilds.`,
-				description: 'One spin with a guaranteed BIG WILD that shoots out wilds.',
-				tickerSpin: 'FEATURE SPIN',
+				dialog: `Every spin has a guaranteed BIG WILD that shoots out 1 to 3 extra wilds, and can't start FREE SPINS. Each spin costs ${FEATURE_COST}x ${yourBet} while FEATURE SPIN is on. It stays on until you turn it off.`,
+				description: 'Every spin has a guaranteed BIG WILD that shoots out wilds.',
+				betAmountLabel: 'FEATURE SPIN',
+				tickerIdle: 'FEATURE SPIN IS ON',
 			},
 		},
 		[BONUS_MODE]: {

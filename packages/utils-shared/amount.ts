@@ -75,6 +75,19 @@ export const numberToCurrencyString = (value: number) => {
 	});
 };
 
+// like numberToCurrencyString, but amounts of 1,000 or more are shortened where there's little
+// room, e.g. $1.5K, ¥10K or 25K SC
+export const numberToShortCurrencyString = (value: number) => {
+	if (Math.abs(value) < 1000) return numberToCurrencyString(value);
+
+	const compact = { notation: 'compact', maximumFractionDigits: 2 } as const;
+	if (stateBet.currency in NO_LOCALISATION_CURRENCY_MAP) {
+		const number = stateI18n.i18n.number(value, compact);
+		return `${number} ${NO_LOCALISATION_CURRENCY_MAP[stateBet.currency]}`;
+	}
+	return stateI18n.i18n.number(value, { ...compact, style: 'currency', currency: stateBet.currency });
+};
+
 export const bookEventAmountToCurrencyString = (bookEventAmount: number) => {
 	const normalisedAmount = bookEventAmountToNormalisedAmount(bookEventAmount);
 	return numberToCurrencyString(normalisedAmount);

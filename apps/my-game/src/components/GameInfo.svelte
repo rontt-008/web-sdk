@@ -243,11 +243,19 @@
 		</section>
 
 		<section>
-			{@render heading(`Booster and ${words.bonusBuys}`)}
+			{@render heading(`Booster, feature spin and ${words.bonusBuys}`)}
 			<div class="card feature">
 				<p>
 					<strong>BOOSTER:</strong> each spin costs {BOOSTER_COST}x the {words.bet} and FREE SPINS
 					start more often.
+				</p>
+			</div>
+			<div class="card feature">
+				<p>
+					<strong>FEATURE SPIN:</strong> while it is on, each spin costs {FEATURE_COST}x the
+					{words.bet} and has at least one BIG WILD, and one of them throws 1 to 3 extra WILDs onto
+					the other reels. These spins win like base game spins and can't start FREE SPINS. The
+					BOOSTER and FEATURE SPIN can't be on at the same time.
 				</p>
 			</div>
 			<div class="card feature">
@@ -260,13 +268,6 @@
 					)} chance, SUPER with {chance(MYSTERY_CHANCES.super)} and MYTHIC with {chance(
 						MYSTERY_CHANCES.mythic,
 					)}.
-				</p>
-			</div>
-			<div class="card feature">
-				<p>
-					<strong>FEATURE SPIN:</strong> one spin for {FEATURE_COST}x the {words.bet} with at least
-					one BIG WILD, and one of them throws 1 to 3 extra WILDs onto the other reels. It wins like a
-					base game spin and can't start FREE SPINS.
 				</p>
 			</div>
 		</section>
@@ -353,6 +354,13 @@
 					<dd>
 						The switch beside the reels, or the BOOSTER card in the bonus menu, turns the booster
 						on or off. Each spin costs {BOOSTER_COST}x the {words.bet} while it is on.
+					</dd>
+				</div>
+				<div>
+					<dt>FEATURE SPIN</dt>
+					<dd>
+						The FEATURE SPIN card in the bonus menu turns feature spins on or off. Each spin costs
+						{FEATURE_COST}x the {words.bet} while it is on.
 					</dd>
 				</div>
 				<div>

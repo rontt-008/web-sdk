@@ -63,7 +63,7 @@
 <style lang="scss">
 	/* the --ui-* colours come from components-ui-html's theme when the popup is inside its <Modals> */
 	.pop-up-wrap {
-		font-family: var(--ui-font, 'proxima-nova', sans-serif);
+		font-family: var(--ui-font, 'proxima-nova', system-ui, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif);
 		touch-action: manipulation;
 		color: var(--ui-text, white);
 		position: fixed;

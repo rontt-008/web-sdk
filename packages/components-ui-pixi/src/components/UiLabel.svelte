@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { Rectangle, Text } from 'pixi-svelte';
+	import { UI_FONT_FAMILY } from 'constants-shared/fonts';
 	import { WHITE } from 'constants-shared/colors';
 
 	import UiSprite from './UiSprite.svelte';
@@ -17,13 +18,13 @@
 	const theme = getUiTheme();
 
 	const labelStyle = {
-		fontFamily: 'proxima-nova',
+		fontFamily: UI_FONT_FAMILY,
 		fontSize: UI_BASE_FONT_SIZE,
 		fill: WHITE,
 	} as const;
 
 	const valueStyle = {
-		fontFamily: 'proxima-nova',
+		fontFamily: UI_FONT_FAMILY,
 		fontSize: UI_BASE_FONT_SIZE,
 		fill: WHITE,
 	} as const;
@@ -56,6 +57,9 @@
 			borderRadius={PILL_HEIGHT * 0.5}
 			backgroundColor={theme.label.panel}
 			backgroundAlpha={theme.label.panelAlpha}
+			borderColor={theme.outline}
+			borderWidth={theme.outlineWidth}
+			borderAlpha={theme.outlineAlpha}
 		/>
 		<Text anchor={{ x: 0.5, y: 0 }} text={props.label} style={themedLabelStyle} />
 		<Text
@@ -73,6 +77,9 @@
 			borderRadius={PILL_HEIGHT * 0.375}
 			backgroundColor={theme.label.panel}
 			backgroundAlpha={theme.label.panelAlpha}
+			borderColor={theme.outline}
+			borderWidth={theme.outlineWidth}
+			borderAlpha={theme.outlineAlpha}
 		/>
 		<Text anchor={{ x: 0, y: 0.5 }} text={props.label} style={themedLabelStyle} />
 		<Text

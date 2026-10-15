@@ -37,6 +37,8 @@
 	const notEnoughBalance = $derived(stateBet.balanceAmount < cost);
 	const isActivate = $derived(betModeData.type === 'activate');
 	const active = $derived(stateBet.activeBetModeKey === betModeData.mode);
+	// a mode that is switched on is switched off from its card, straight away
+	const canDisable = $derived(isActivate && active);
 	const hasLevels = $derived(props.levels.length > 1);
 
 	const select = (levelIndex: number) => {
@@ -107,11 +109,15 @@
 
 	<Button
 		onclick={() => {
-			stateBonus.selectedBetModeKey = betModeData.mode;
-			eventEmitter.broadcast({ type: 'buyBonusConfirm' });
+			if (canDisable) {
+				stateBet.activeBetModeKey = 'BASE';
+			} else {
+				stateBonus.selectedBetModeKey = betModeData.mode;
+				eventEmitter.broadcast({ type: 'buyBonusConfirm' });
+			}
 			eventEmitter.broadcast({ type: 'soundPressGeneral' });
 		}}
-		disabled={stateBet.betAmount <= 0 || notEnoughBalance}
+		disabled={!canDisable && (stateBet.betAmount <= 0 || notEnoughBalance)}
 	>
 		<ButtonFace
 			variant={isActivate ? 'activate' : 'primary'}
@@ -119,7 +125,11 @@
 			height="3.4rem"
 			fontSize="1.3rem"
 		>
-			{notEnoughBalance ? i18nDerived.notEnoughBalance() : betModeData.text.button}
+			{canDisable
+				? i18nDerived.disable()
+				: notEnoughBalance
+					? i18nDerived.notEnoughBalance()
+					: betModeData.text.button}
 		</ButtonFace>
 	</Button>
 </div>

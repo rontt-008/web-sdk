@@ -35,9 +35,11 @@ export type UiTheme = {
 		label: number;
 		value: number;
 	};
+	// around the round buttons, and the balance, win and bet panels
 	outline: number;
 	outlineDisabled: number;
 	outlineWidth: number;
+	outlineAlpha: number;
 	fontFamily: string;
 	// replace the default layout for some screen types
 	layouts?: Partial<Record<UiLayoutType, Component<LayoutUiProps>>>;

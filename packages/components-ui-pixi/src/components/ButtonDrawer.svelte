@@ -3,6 +3,7 @@
 
 	import { stateUi } from 'state-shared';
 	import { Text } from 'pixi-svelte';
+	import { UI_FONT_FAMILY } from 'constants-shared/fonts';
 	import { Button, type ButtonProps } from 'components-pixi';
 
 	import UiSprite from './UiSprite.svelte';
@@ -73,7 +74,7 @@
 				align: 'center',
 				wordWrap: true,
 				wordWrapWidth: 200,
-				fontFamily: 'proxima-nova',
+				fontFamily: UI_FONT_FAMILY,
 				fontWeight: '600',
 				fontSize: UI_BASE_FONT_SIZE * 0.9,
 				fill: 0xffffff,

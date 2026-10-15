@@ -41,10 +41,11 @@ export default {
 			rtp: 0.967,
 			max_win: 10000.0,
 		},
+		// switched on and off like the ante (booster), not bought once
 		feature: {
 			cost: 8.0,
-			feature: false,
-			buyBonus: true,
+			feature: true,
+			buyBonus: false,
 			rtp: 0.967,
 			// the biggest payout in lookUpTable_feature_0.csv: update it after re-running the math
 			max_win: 215.0,

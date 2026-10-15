@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { Text, Rectangle } from 'pixi-svelte';
+	import { UI_FONT_FAMILY } from 'constants-shared/fonts';
 	import { stateBet } from 'state-shared';
 	import { WHITE } from 'constants-shared/colors';
 
@@ -38,7 +39,7 @@
 		anchor={0.5}
 		text={stateBet.autoSpinsCounter === Infinity ? '∞' : stateBet.autoSpinsCounter}
 		style={{
-			fontFamily: theme?.fontFamily ?? 'proxima-nova',
+			fontFamily: theme?.fontFamily ?? UI_FONT_FAMILY,
 			fill: theme?.button.iconActive ?? WHITE,
 			fontWeight: 'bold',
 			fontSize: fontSizeMultiplier * UI_BASE_SIZE * (theme ? 0.16 : 0.2),

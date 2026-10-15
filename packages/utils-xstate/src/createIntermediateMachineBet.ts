@@ -9,10 +9,12 @@ const checkSpaceHold = fromPromise(async () => {
 	if (stateBet.isSpaceHold) {
 		if (stateBetDerived.activeBetMode()?.type === 'buy') {
 			stateBet.activeBetModeKey = 'BASE';
-			return;
 		}
 
-		return;
+		// the balance no longer covers the next spin: stop here, without asking the RGS, and leave the
+		// bet button to say why
+		if (stateBetDerived.isBetCostAvailable()) return;
+		stateBet.isSpaceHold = false;
 	}
 	throw Error('end bet');
 });

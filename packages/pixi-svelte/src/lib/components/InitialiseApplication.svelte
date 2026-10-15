@@ -4,7 +4,6 @@
 	import { devicePixelRatio } from 'svelte/reactivity/window';
 
 	import { getContextApp } from '../context.svelte';
-	import { preloadFont } from '../utils.svelte';
 
 	type Props = { children: Snippet };
 
@@ -13,13 +12,18 @@
 
 	let wrap: HTMLDivElement;
 	let initialised = $state(false);
+	// The component can be destroyed and mounted again while its application is still initialising
+	// (e.g. a story rendering twice), so each instance only touches its own application, and only
+	// shares it once it is ready.
+	let application: PIXI.Application<PIXI.Renderer<HTMLCanvasElement>> | undefined;
+	let destroyed = false;
 
 	const initialiseApplication = async () => {
 		PIXI.Assets.reset();
 
-		await preloadFont();
-		context.stateApp.pixiApplication = new PIXI.Application<PIXI.Renderer<HTMLCanvasElement>>();
-		await context.stateApp.pixiApplication.init({
+		const app = new PIXI.Application<PIXI.Renderer<HTMLCanvasElement>>();
+		application = app;
+		await app.init({
 			autoDensity: true,
 			backgroundAlpha: 0,
 			hello: true,
@@ -32,27 +36,34 @@
 			resizeTo: window,
 		});
 
-		wrap.appendChild(context.stateApp.pixiApplication.canvas);
+		// destroyed while initialising: a newer instance has its own application
+		if (destroyed) {
+			app.destroy();
+			return false;
+		}
+
+		context.stateApp.pixiApplication = app;
+		wrap.appendChild(app.canvas);
 
 		// to prevent that you can't scroll the page with touch on the canvas. https://github.com/pixijs/pixijs/issues/4824
 		// manipulation still lets the page scroll, but stops double-tap zoom on mobile
-		context.stateApp.pixiApplication.renderer.events.autoPreventDefault = false;
-		context.stateApp.pixiApplication.renderer.canvas.style.touchAction = 'manipulation';
+		app.renderer.events.autoPreventDefault = false;
+		app.renderer.canvas.style.touchAction = 'manipulation';
+		return true;
 	};
 
 	onMount(async () => {
 		try {
-			if (!initialised) await initialiseApplication();
-			initialised = true;
+			if (!initialised) initialised = await initialiseApplication();
 		} catch (error) {
 			console.error(error);
 		}
 	});
 
 	onDestroy(() => {
-		if (context.stateApp.pixiApplication) {
-			context.stateApp.pixiApplication.destroy();
-		}
+		destroyed = true;
+		// one still initialising is destroyed by initialiseApplication once it's ready
+		if (initialised) application?.destroy();
 	});
 </script>
 

@@ -2,6 +2,7 @@
 	import { Container, Rectangle } from 'pixi-svelte';
 
 	import UiIcon, { type UiIconName } from './UiIcon.svelte';
+	import { getUiTheme } from '../theme';
 
 	type Props = {
 		center: { x: number; y: number };
@@ -15,6 +16,7 @@
 	};
 
 	const props: Props = $props();
+	const theme = getUiTheme();
 </script>
 
 <!-- round button face for themed UIs: soft drop shadow, filled circle with outline, icon -->
@@ -36,6 +38,7 @@
 		backgroundColor={props.fill}
 		borderColor={props.outline}
 		borderWidth={props.outlineWidth}
+		borderAlpha={theme?.outlineAlpha}
 	/>
 	{#if props.icon}
 		<UiIcon

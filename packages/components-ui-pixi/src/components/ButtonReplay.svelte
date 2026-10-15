@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { Container, Text } from 'pixi-svelte';
+	import { UI_FONT_FAMILY } from 'constants-shared/fonts';
 	import { Button, type ButtonProps } from 'components-pixi';
 	import { stateBet, stateReplay } from 'state-shared';
 
@@ -61,7 +62,7 @@
 			y={center.y + sizes.height * 0.55}
 			text="REPLAY"
 			style={{
-				fontFamily: theme?.fontFamily ?? 'proxima-nova',
+				fontFamily: theme?.fontFamily ?? UI_FONT_FAMILY,
 				fontWeight: '700',
 				fontSize: UI_BASE_FONT_SIZE * 0.6,
 				letterSpacing: 2,

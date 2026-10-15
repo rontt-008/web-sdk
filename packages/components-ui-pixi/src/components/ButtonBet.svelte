@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { Container, Text } from 'pixi-svelte';
+	import { UI_FONT_FAMILY } from 'constants-shared/fonts';
 	import { Button, type ButtonProps } from 'components-pixi';
 	import { OnHotkey } from 'components-shared';
 	import { stateBet, stateBetDerived, stateModal, stateUi } from 'state-shared';
@@ -37,7 +38,7 @@
 				align: 'center',
 				wordWrap: true,
 				wordWrapWidth: sizes.width * 0.9,
-				fontFamily: theme?.fontFamily ?? 'proxima-nova',
+				fontFamily: theme?.fontFamily ?? UI_FONT_FAMILY,
 				fontWeight: '800',
 				fontSize: UI_BASE_FONT_SIZE * 0.55,
 				fill: 0xffffff,
@@ -97,7 +98,7 @@
 								align: 'center',
 								wordWrap: true,
 								wordWrapWidth: 200,
-								fontFamily: 'proxima-nova',
+								fontFamily: UI_FONT_FAMILY,
 								fontWeight: '600',
 								fontSize: UI_BASE_FONT_SIZE * 0.9,
 								fill: 0xffffff,

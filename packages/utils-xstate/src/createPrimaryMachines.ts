@@ -1,13 +1,24 @@
 import { fromPromise } from 'xstate';
 
 import { API_AMOUNT_MULTIPLIER } from 'constants-shared/bet';
-import { stateBet, stateUrlDerived, stateModal } from 'state-shared';
+import { stateBet, stateBetDerived, stateUrlDerived, stateModal } from 'state-shared';
 import { requestBet, requestEndRound } from 'rgs-requests';
 
 import type { BaseBet } from './types';
 
+// what the next play costs: the bet times its mode's cost, for bonus buys as well as modes switched on
+const nextPlayCost = () =>
+	stateBet.betAmount * (stateBetDerived.activeBetMode()?.costMultiplier ?? 1);
+
 const handleRequestBet = async ({ onError }: { onError: () => void }) => {
 	try {
+		// the controls already check this; this stops any other way in from sending a play the
+		// balance can't cover
+		if (nextPlayCost() > stateBet.balanceAmount) {
+			stateBet.isSpaceHold = false;
+			throw { error: 'ERR_IPB', message: 'NOT ENOUGH BALANCE' };
+		}
+
 		const data = await requestBet({
 			rgsUrl: stateUrlDerived.rgsUrl(),
 			sessionID: stateUrlDerived.sessionID(),
