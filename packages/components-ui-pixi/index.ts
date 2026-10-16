@@ -10,5 +10,7 @@ export * from './src/types';
 export type { UiTheme, UiLayoutType } from './src/theme';
 export { UI_THEME_CLEAN } from './src/themeClean';
 export { PORTRAIT_UI_HEIGHT } from './src/constants';
+// where LayoutDesktopBar's bar is, for games to place things on or around it
+export { getDesktopBarBounds } from './src/desktopBar';
 
 export { messagesMap, i18nDerived, UI, UiGameName, LayoutDesktopBar };

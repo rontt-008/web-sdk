@@ -8,6 +8,7 @@ import type { EmitterEventSound } from '../components/Sound.svelte';
 import type { EmitterEventWildThrow } from '../components/WildThrow.svelte';
 import type { EmitterEventWalkingWilds } from '../components/WalkingWilds.svelte';
 import type { EmitterEventWinLine } from '../components/WinLine.svelte';
+import type { EmitterEventYarnBall } from '../components/YarnBall.svelte';
 
 export type EmitterEventGame =
 	| EmitterEventBoard
@@ -19,4 +20,5 @@ export type EmitterEventGame =
 	| EmitterEventSound
 	| EmitterEventWildThrow
 	| EmitterEventWalkingWilds
-	| EmitterEventWinLine;
+	| EmitterEventWinLine
+	| EmitterEventYarnBall;

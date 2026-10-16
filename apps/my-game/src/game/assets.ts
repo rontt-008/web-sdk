@@ -149,6 +149,16 @@ export default {
 		type: 'sprite',
 		src: new URL('../../assets/logo-cat-shadow.png', import.meta.url).href,
 	},
+	// the yarn ball symbol without its tail, cropped to the round ball, for the ball that rolls across
+	// the screen (see YarnBall), and its soft shadow
+	yarnBall: {
+		type: 'sprite',
+		src: new URL('../../assets/yarn-ball.png', import.meta.url).href,
+	},
+	yarnBallShadow: {
+		type: 'sprite',
+		src: new URL('../../assets/yarn-ball-shadow.png', import.meta.url).href,
+	},
 	sunGlow: {
 		type: 'sprite',
 		src: new URL('../../assets/sun-glow.png', import.meta.url).href,

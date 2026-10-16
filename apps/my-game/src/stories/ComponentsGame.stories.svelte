@@ -56,6 +56,19 @@
 	{template}
 />
 
+<!-- the rare ball of yarn bouncing across under the board, rolled now rather than waiting for it -->
+<Story
+	name="emitterEvent: yarnBallRoll"
+	args={templateArgs({
+		skipLoadingScreen: true,
+		data: {},
+		action: async () => {
+			eventEmitter.broadcast({ type: 'yarnBallRoll' });
+		},
+	})}
+	{template}
+/>
+
 <Story
 	name="emitterEvent: boardHide"
 	args={templateArgs({

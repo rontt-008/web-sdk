@@ -2,12 +2,13 @@ import _ from 'lodash';
 import type { Tween } from 'svelte/motion';
 
 import { stateBet } from 'state-shared';
-import { PORTRAIT_UI_HEIGHT } from 'components-ui-pixi';
+import { PORTRAIT_UI_HEIGHT, LayoutDesktopBar, getDesktopBarBounds } from 'components-ui-pixi';
 import { createEnhanceBoard, createReelForSpinning } from 'utils-slots';
 import { createGetWinLevelDataByWinLevelAlias } from 'utils-shared/winLevel';
 
 import type { BonusType, GameType, Position, RawSymbol, SymbolState } from './types';
 import { stateLayoutDerived } from './stateLayout';
+import { uiTheme } from './uiTheme';
 import { winLevelMap } from './winLevelMap';
 import { eventEmitter } from './eventEmitter';
 import {
@@ -132,15 +133,36 @@ const boardLayout = () => ({
 	...BOARD_SIZES,
 });
 
-// the screen's left and bottom edges, in the game's layout (which is scaled about the screen's
+// the screen's edges, in the game's layout (which is scaled about the screen's
 // middle, see MainContainer)
 const screenEdges = () => {
 	const main = stateLayoutDerived.mainLayout();
 	const canvas = stateLayoutDerived.canvasSizes();
 	return {
 		left: main.width * 0.5 - (canvas.width * 0.5) / main.scale,
+		right: main.width * 0.5 + (canvas.width * 0.5) / main.scale,
+		top: main.height * 0.5 - (canvas.height * 0.5) / main.scale,
 		bottom: main.height * 0.5 + (canvas.height * 0.5) / main.scale,
 	};
+};
+
+// Where the UI's bar along the bottom of the screen is, in the game's layout: its two ends and the
+// top of its panels. Only on the screens where the UI is drawn as that bar (see uiTheme's layouts).
+const uiBarBounds = () => {
+	const layoutType = stateLayoutDerived.layoutType();
+	if (uiTheme.layouts?.[layoutType] !== LayoutDesktopBar) return undefined;
+	const standard = stateLayoutDerived.mainLayoutStandard();
+	const main = stateLayoutDerived.mainLayout();
+	const canvas = stateLayoutDerived.canvasSizes();
+	const bar = getDesktopBarBounds({ theme: uiTheme, layoutType, standard });
+	// the UI's standard layout is centred across the screen and drawn against its bottom; the game's
+	// is centred on the screen (see MainContainer)
+	const toGameX = (x: number) =>
+		main.width * 0.5 + ((x - standard.width * 0.5) * standard.scale) / main.scale;
+	const toGameY = (y: number) =>
+		main.height * 0.5 +
+		(canvas.height * 0.5 - (standard.height - y) * standard.scale) / main.scale;
+	return { left: toGameX(bar.left), right: toGameX(bar.right), top: toGameY(bar.top) };
 };
 
 const LOGO_RATIO = 1400 / 596;
@@ -210,6 +232,7 @@ export const stateGameDerived = {
 	onSymbolLand,
 	boardLayout,
 	screenEdges,
+	uiBarBounds,
 	isLogoBesideBoard,
 	logoLayout,
 	boardRaw,

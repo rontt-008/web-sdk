@@ -29,6 +29,7 @@
 	import Anticipations from './Anticipations.svelte';
 	import WildThrow from './WildThrow.svelte';
 	import WalkingWilds from './WalkingWilds.svelte';
+	import YarnBall from './YarnBall.svelte';
 	import SunShine from './SunShine.svelte';
 	import SceneBlur from './SceneBlur.svelte';
 	import BigWin from './BigWin.svelte';
@@ -86,6 +87,8 @@
 					<WalkingWilds />
 					<Anticipations />
 					<WildThrow />
+					<!-- now and then rolls across under the board, in front of its frame -->
+					<YarnBall />
 				</MainContainer>
 
 				<!-- over the board, under the UI and the win and free spin screens -->
