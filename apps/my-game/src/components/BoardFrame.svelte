@@ -4,15 +4,14 @@
 
 	import { getContext } from '../game/context';
 	import { getSymbolX } from '../game/utils';
-	import { SYMBOL_SIZE, REEL_WIDTH, BOARD_DIMENSIONS } from '../game/constants';
+	import { SYMBOL_SIZE, REEL_WIDTH, BOARD_DIMENSIONS, BOARD_FRAME } from '../game/constants';
 
 	const context = getContext();
 
-	// board-frame.png is 1174x772; the inner wooden panel (where the reels sit) was measured from the image.
-	const FRAME_IMAGE = { width: 1174, height: 772 };
-	const FRAME_INNER = { x: 140, y: 135, width: 881, height: 530 };
+	const FRAME_IMAGE = BOARD_FRAME.image;
+	const FRAME_INNER = BOARD_FRAME.inner;
 	// wood visible between the reels and the frame border
-	const FRAME_PADDING = SYMBOL_SIZE * 0.1;
+	const FRAME_PADDING = BOARD_FRAME.padding;
 	// anchor on the centre of the inner panel so it lines up with the centre of the board
 	const FRAME_ANCHOR = {
 		x: (FRAME_INNER.x + FRAME_INNER.width / 2) / FRAME_IMAGE.width,

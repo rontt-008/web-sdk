@@ -120,6 +120,11 @@ export default {
 		type: 'sprite',
 		src: new URL('../../assets/board-frame.png', import.meta.url).href,
 	},
+	// the cat paws that carry a walking big wild in SUPER free spins
+	hands: {
+		type: 'sprite',
+		src: new URL('../../assets/hands.png', import.meta.url).href,
+	},
 	// also shown on the loading screen, so it loads first
 	gameLogo: {
 		type: 'sprite',

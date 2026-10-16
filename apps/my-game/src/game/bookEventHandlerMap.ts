@@ -109,6 +109,8 @@ export const bookEventHandlerMap: BookEventHandlerMap<BookEvent, BookEventContex
 			.map(({ to }) => to)
 			.filter((reel) => bookEvent.moves.some(({ from }) => from === reel));
 		walkingWildMoves = bookEvent.moves;
+		// cat paws grab them before the reels spin, then carry them over (see reveal)
+		await eventEmitter.broadcastAsync({ type: 'walkingWildsGrab' });
 	},
 	bigWildThrow: async (bookEvent: BookEventOfType<'bigWildThrow'>) => {
 		if (bookEvent.positions.length === 0) return;

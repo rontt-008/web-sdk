@@ -121,6 +121,14 @@ export const BOARD_SIZES = {
 	height: SYMBOL_SIZE * BOARD_DIMENSIONS.y,
 };
 
+// board-frame.png is 1174x772; the inner wooden panel (where the reels sit) was measured from the
+// image, and it is stretched to wrap the board with some wood (padding) around the reels
+export const BOARD_FRAME = {
+	image: { width: 1174, height: 772 },
+	inner: { x: 140, y: 135, width: 881, height: 530 },
+	padding: SYMBOL_SIZE * 0.1,
+};
+
 export const BACKGROUND_RATIO = 2039 / 1000;
 export const PORTRAIT_BACKGROUND_RATIO = 1242 / 2208;
 const PORTRAIT_RATIO = 800 / 1422;
