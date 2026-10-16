@@ -34,6 +34,13 @@ export const DESKTOP_BACKGROUND_WIDTH_LIST = [
 // portrait
 export const PORTRAIT_BASE_SIZE = UI_BASE_SIZE * 1.32;
 
+// the win sits this far up from the bottom of the standard layout, at the top of the portrait UI
+export const PORTRAIT_WIN_OFFSET = 670;
+
+// how far up from the bottom of the standard layout the portrait UI reaches (the top of the win's
+// panel), for a game to fit its board just above it
+export const PORTRAIT_UI_HEIGHT = PORTRAIT_WIN_OFFSET + UI_BASE_FONT_SIZE * 0.35;
+
 // landscape
 export const LANDSCAPE_BASE_SIZE = UI_BASE_SIZE * 1.1;
 

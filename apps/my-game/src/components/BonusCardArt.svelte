@@ -6,7 +6,6 @@
 	import {
 		BONUS_MODE,
 		SUPER_MODE,
-		MYTHIC_MODE,
 		MYSTERY_MODE,
 		BOOSTER_MODE,
 		FEATURE_MODE,
@@ -23,7 +22,6 @@
 	const SCATTER_COUNT: Record<string, number> = {
 		[BONUS_MODE]: 3,
 		[SUPER_MODE]: 4,
-		[MYTHIC_MODE]: 5,
 	};
 	const BADGE: Record<string, string> = {
 		[MYSTERY_MODE]: '?',

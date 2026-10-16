@@ -2,19 +2,18 @@ import { stateMeta, stateUrlDerived, type BetModeMeta } from 'state-shared';
 import { DEFAULT_BET_MODE_META } from 'state-shared/src/constants';
 
 import config from './config';
-import { BONUS_DESCRIPTION, FEATURE_SPIN_WILD_MULTIPLIERS } from './constants';
+import { FEATURE_SPIN_WILD_MULTIPLIERS } from './constants';
 
-// Bet mode keys sent to the RGS with each spin. They must match the bet modes in the math.
+// Bet mode keys sent to the RGS with each spin. They must match the bet modes in the math. The
+// math's 'mythic' mode can't be bought: MYTHIC FREE SPINS come from 5 FS symbols or the mystery bonus.
 export const BONUS_MODE = 'BONUS';
 export const SUPER_MODE = 'SUPER';
-export const MYTHIC_MODE = 'MYTHIC';
 export const MYSTERY_MODE = 'MYSTERY';
 export const FEATURE_MODE = 'FEATURE';
 export const BOOSTER_MODE = 'ANTE';
 
 export const BONUS_COST = config.betModes.bonus.cost;
 export const SUPER_COST = config.betModes.super.cost;
-export const MYTHIC_COST = config.betModes.mythic.cost;
 export const MYSTERY_COST = config.betModes.mystery.cost;
 export const FEATURE_COST = config.betModes.feature.cost;
 // cost of each spin while the booster is on, as a multiple of the bet (the math's 'ante' mode)
@@ -94,19 +93,6 @@ export const setBetModeMeta = () => {
 				dialog: `Go straight to SUPER FREE SPINS for ${SUPER_COST}x ${yourBet}.`,
 				description: 'Go straight to SUPER FREE SPINS.',
 				tickerSpin: 'SUPER BONUS ACTIVATED',
-			},
-		},
-		[MYTHIC_MODE]: {
-			...samples.SUPER,
-			mode: MYTHIC_MODE,
-			costMultiplier: MYTHIC_COST,
-			text: {
-				...samples.SUPER.text,
-				title: 'MYTHIC BONUS',
-				button: buyButton,
-				dialog: `Go straight to MYTHIC FREE SPINS for ${MYTHIC_COST}x ${yourBet}. ${BONUS_DESCRIPTION.mythic}`,
-				description: 'Go straight to MYTHIC FREE SPINS.',
-				tickerSpin: 'MYTHIC BONUS ACTIVATED',
 			},
 		},
 		[MYSTERY_MODE]: {

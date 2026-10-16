@@ -14,7 +14,7 @@
 	import type { LayoutUiProps } from '../types';
 	import { getContext } from '../context';
 	import { getMenuButtons, getUiTheme } from '../theme';
-	import { UI_BASE_SIZE } from '../constants';
+	import { PORTRAIT_WIN_OFFSET, UI_BASE_SIZE } from '../constants';
 
 	const props: LayoutUiProps = $props();
 	const context = getContext();
@@ -155,7 +155,7 @@
 	<Container y={Math.min(drawerTween.current, 350)}>
 		<Container
 			x={context.stateLayoutDerived.mainLayoutStandard().width * 0.5}
-			y={context.stateLayoutDerived.mainLayoutStandard().height - 670}
+			y={context.stateLayoutDerived.mainLayoutStandard().height - PORTRAIT_WIN_OFFSET}
 		>
 			{@render props.amountWin({ stacked: true })}
 		</Container>

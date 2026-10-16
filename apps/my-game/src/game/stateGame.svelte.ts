@@ -2,6 +2,7 @@ import _ from 'lodash';
 import type { Tween } from 'svelte/motion';
 
 import { stateBet } from 'state-shared';
+import { PORTRAIT_UI_HEIGHT } from 'components-ui-pixi';
 import { createEnhanceBoard, createReelForSpinning } from 'utils-slots';
 import { createGetWinLevelDataByWinLevelAlias } from 'utils-shared/winLevel';
 
@@ -85,17 +86,41 @@ export const stateGame = $state({
 });
 
 // vertical position of the board's centre; raised on screens where the bottom UI would overlap it
-const BOARD_Y_RATIO = { desktop: 0.47, portrait: 0.41, landscape: 0.5, tablet: 0.5 };
+// (portrait places it from the UI instead, see portraitBoardY)
+const BOARD_Y_RATIO = { desktop: 0.47, landscape: 0.5, tablet: 0.5 };
 
 // on desktop the board sits right of centre so the logo beside it and the board are centred together
 // (landscape keeps it centred, clear of the spin buttons on the right)
 const BOARD_X_OFFSET = { desktop: SYMBOL_SIZE, portrait: 0, landscape: 0, tablet: 0 };
 
+// On phones held upright the UI keeps to the bottom of the screen, so a fixed board height leaves a
+// gap above it that grows with the screen's height. The board's frame ends this far above the UI's
+// top instead.
+const PORTRAIT_GAP_ABOVE_UI = SYMBOL_SIZE * 0.35;
+// the board frame, with its leaves, reaches this far below the board (see BoardFrame)
+const FRAME_BELOW_BOARD = SYMBOL_SIZE * 0.95;
+
+const portraitBoardY = () => {
+	const canvas = stateLayoutDerived.canvasSizes();
+	const main = stateLayoutDerived.mainLayout();
+	// the UI's top on the screen, which keeps to the bottom, then in the board's units (the board's
+	// layout is centred on the screen)
+	const uiTop = canvas.height - PORTRAIT_UI_HEIGHT * stateLayoutDerived.mainLayoutStandard().scale;
+	const uiTopOnBoard = main.height * 0.5 + (uiTop - canvas.height * 0.5) / main.scale;
+	return uiTopOnBoard - PORTRAIT_GAP_ABOVE_UI - FRAME_BELOW_BOARD - BOARD_SIZES.height * 0.5;
+};
+
+const boardY = () => {
+	const layoutType = stateLayoutDerived.layoutType();
+	if (layoutType === 'portrait') return portraitBoardY();
+	return stateLayoutDerived.mainLayout().height * BOARD_Y_RATIO[layoutType];
+};
+
 const boardLayout = () => ({
 	x:
 		stateLayoutDerived.mainLayout().width * 0.5 +
 		BOARD_X_OFFSET[stateLayoutDerived.layoutType()],
-	y: stateLayoutDerived.mainLayout().height * BOARD_Y_RATIO[stateLayoutDerived.layoutType()],
+	y: boardY(),
 	anchor: { x: 0.5, y: 0.5 },
 	pivot: { x: BOARD_SIZES.width / 2, y: BOARD_SIZES.height / 2 },
 	...BOARD_SIZES,

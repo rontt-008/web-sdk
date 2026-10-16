@@ -8,7 +8,6 @@
 		setBetModeMeta,
 		BONUS_MODE,
 		SUPER_MODE,
-		MYTHIC_MODE,
 		MYSTERY_MODE,
 		BOOSTER_MODE,
 	} from '../game/betModes';
@@ -25,7 +24,7 @@
 			| 'gameRules';
 		// made-up volatility to show the meter; the game's bet modes do not have it yet
 		sampleVolatility?: boolean;
-		// shows the super and mythic bonuses as levels of the bonus, on one card
+		// shows the super bonus as a level of the bonus, on one card
 		sampleLevels?: boolean;
 	};
 
@@ -42,7 +41,6 @@
 			[BOOSTER_MODE]: 2,
 			[BONUS_MODE]: 3,
 			[SUPER_MODE]: 4,
-			[MYTHIC_MODE]: 5,
 			[MYSTERY_MODE]: 4,
 		};
 		for (const [mode, volatility] of Object.entries(SAMPLE_VOLATILITY)) {
@@ -51,9 +49,7 @@
 	}
 
 	if (props.sampleLevels) {
-		for (const mode of [SUPER_MODE, MYTHIC_MODE]) {
-			stateMeta.betModeMeta[mode] = { ...stateMeta.betModeMeta[mode], parent: BONUS_MODE };
-		}
+		stateMeta.betModeMeta[SUPER_MODE] = { ...stateMeta.betModeMeta[SUPER_MODE], parent: BONUS_MODE };
 	}
 
 	stateBet.betAmount = 1;

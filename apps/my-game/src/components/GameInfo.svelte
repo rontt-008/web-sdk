@@ -15,7 +15,6 @@
 	import {
 		BONUS_COST,
 		SUPER_COST,
-		MYTHIC_COST,
 		MYSTERY_COST,
 		FEATURE_COST,
 		BOOSTER_COST,
@@ -95,7 +94,6 @@
 		{ name: 'Booster', cost: BOOSTER_COST, mode: config.betModes.ante },
 		{ name: 'Bonus', cost: BONUS_COST, mode: config.betModes.bonus },
 		{ name: 'Super bonus', cost: SUPER_COST, mode: config.betModes.super },
-		{ name: 'Mythic bonus', cost: MYTHIC_COST, mode: config.betModes.mythic },
 		{ name: 'Mystery bonus', cost: MYSTERY_COST, mode: config.betModes.mystery },
 		{ name: 'Feature spin', cost: FEATURE_COST, mode: config.betModes.feature },
 	];
@@ -229,8 +227,7 @@
 		<div class="card feature">
 			<p>
 				<strong>{words.buyBonus}:</strong> go straight to FREE SPINS. BONUS ({BONUS_COST}x the
-				{words.bet}), SUPER BONUS ({SUPER_COST}x) and MYTHIC BONUS ({MYTHIC_COST}x) give their
-				FREE SPINS. MYSTERY BONUS ({MYSTERY_COST}x) gives the normal FREE SPINS with a {chance(
+				{words.bet}) and SUPER BONUS ({SUPER_COST}x) give their FREE SPINS. MYSTERY BONUS ({MYSTERY_COST}x) gives the normal FREE SPINS with a {chance(
 					MYSTERY_CHANCES.normal,
 				)} chance, SUPER with {chance(MYSTERY_CHANCES.super)} and MYTHIC with {chance(
 					MYSTERY_CHANCES.mythic,
