@@ -213,6 +213,12 @@ export default {
 		amount: 400,
 		winLevel: 4,
 	},
+	// 22x the bet on a free spin: the big win screen, with the free spin counter hidden under it
+	setWinBig: {
+		type: 'setWin',
+		amount: 2200,
+		winLevel: 6,
+	},
 	freeSpinEnd: {
 		type: 'freeSpinEnd',
 		amount: 400,

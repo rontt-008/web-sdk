@@ -1,8 +1,19 @@
 <script lang="ts" module>
+	import { SYMBOL_SIZE } from '../game/constants';
+
 	export type EmitterEventFreeSpinCounter =
 		| { type: 'freeSpinCounterShow' }
 		| { type: 'freeSpinCounterHide' }
 		| { type: 'freeSpinCounterUpdate'; current?: number; total?: number };
+
+	// During free spins the buy bonus button's wooden sign, a bit bigger, takes the place of the
+	// feature buttons under the logo and shows how many spins have been played.
+	const SIGN_WIDTH = SYMBOL_SIZE * 3;
+	const SIGN_SIZES = { width: SIGN_WIDTH, height: (SIGN_WIDTH * 209) / 800 };
+	// between the logo and the sign, as for the feature buttons
+	const GAP = SYMBOL_SIZE * 0.15;
+	// how far below the logo's bottom the sign reaches (things under the logo keep below it)
+	export const FREE_SPIN_COUNTER_SPACE = GAP + SIGN_SIZES.height;
 </script>
 
 <script lang="ts">
@@ -13,18 +24,12 @@
 	import { stateBetDerived } from 'state-shared';
 
 	import { getContext } from '../game/context';
-	import { SYMBOL_SIZE, BONUS_NAME } from '../game/constants';
+	import { BONUS_NAME } from '../game/constants';
 	import { popOut } from '../game/motion';
 	import { createBoardTextStyle, fitBoardFontSize } from '../game/textStyles';
 
-	// During free spins the buy bonus button's wooden sign, a bit bigger, takes the place of the
-	// feature buttons under the logo and shows how many spins have been played.
-	const SIGN_WIDTH = SYMBOL_SIZE * 3;
-	const SIGN_SIZES = { width: SIGN_WIDTH, height: (SIGN_WIDTH * 209) / 800 };
 	// the leaves stick out past the panel, so the text only gets the middle of it
 	const TEXT_MAX_WIDTH = SIGN_WIDTH * 0.68;
-	// between the logo and the sign, as for the feature buttons
-	const GAP = SYMBOL_SIZE * 0.15;
 	// it is wider than the logo, so it sits a little left of the logo's centre to keep its leaves
 	// clear of the board's frame
 	const SHIFT_LEFT = SYMBOL_SIZE * 0.12;
