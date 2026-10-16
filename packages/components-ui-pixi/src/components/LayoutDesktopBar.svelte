@@ -18,9 +18,9 @@
 	const theme = getUiTheme();
 	const menuButtons = $derived(getMenuButtons(props, theme));
 
-	// One centred bar along the bottom of the standard layout: three panels with their buttons drawn
+	// One centred bar along the bottom of the standard layout: four panels with their buttons drawn
 	// as bare icons, the spin button over the end of the last one and the buy bonus button after it:
-	// (menu, mute music, mute sounds | balance        win) (bet ⌃⌄) (turbo, auto spin  SPIN) BUY BONUS
+	// (menu, mute music, mute sounds) (balance      win) (bet ⌃⌄) (turbo, auto spin  SPIN) BUY BONUS
 	// Sizes below are before the whole bar (and the menu over it) is scaled by BAR_SCALE.
 	const BAR_SCALE = 1.18;
 	const BAR_OFFSET = 70; // from the bottom of the screen to the middle of the bar
@@ -30,8 +30,6 @@
 	// the end
 	const PANEL_END = PANEL_HEIGHT * 0.5;
 	const TEXT_INSET = 32;
-	// the line between the first panel's icons and the balance, in the outline colour
-	const DIVIDER_WIDTH = 3;
 	const ICON_SCALE = 0.62;
 	const ICON_STEP = 88; // between neighbouring icons
 	const ARROW_SCALE = 0.4;
@@ -64,12 +62,14 @@
 		const menu = PANEL_END;
 		const muteMusic = menu + ICON_STEP;
 		const muteSounds = muteMusic + ICON_STEP;
-		const divider = (showMuteButtons ? muteSounds : menu) + iconRadius + GAP.medium;
-		const balance = divider + GAP.medium;
-		const win = balance + LABEL_WIDTH.balance + GAP.large + LABEL_WIDTH.win;
-		const info = { left: 0, width: win + TEXT_INSET };
+		const controls = { left: 0, width: (showMuteButtons ? muteSounds : menu) + PANEL_END };
 
-		const betLeft = info.width + PANEL_GAP;
+		const infoLeft = controls.width + PANEL_GAP;
+		const balance = infoLeft + TEXT_INSET;
+		const win = balance + LABEL_WIDTH.balance + GAP.large + LABEL_WIDTH.win;
+		const info = { left: infoLeft, width: win + TEXT_INSET - infoLeft };
+
+		const betLeft = info.left + info.width + PANEL_GAP;
 		const bet = betLeft + TEXT_INSET;
 		const betArrows = bet + LABEL_WIDTH.bet + GAP.small + arrowRadius;
 		const betPanel = { left: betLeft, width: betArrows + PANEL_END - betLeft };
@@ -88,11 +88,10 @@
 
 		return {
 			left,
-			panels: [info, betPanel, play],
+			panels: [controls, info, betPanel, play],
 			menu,
 			muteMusic,
 			muteSounds,
-			divider,
 			balance,
 			win,
 			bet,
@@ -149,15 +148,6 @@
 				{@render props.buttonMuteSounds({ anchor: 0.5, bare: true })}
 			</Container>
 		{/if}
-
-		<Rectangle
-			x={bar.divider}
-			anchor={0.5}
-			width={DIVIDER_WIDTH}
-			height={PANEL_HEIGHT * 0.5}
-			backgroundColor={theme?.outline}
-			backgroundAlpha={theme?.outlineAlpha}
-		/>
 
 		<Container x={bar.balance} scale={LABEL_SCALE}>
 			{@render props.amountBalance({
