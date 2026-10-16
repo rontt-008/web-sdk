@@ -1,6 +1,8 @@
 import { locales } from 'config-lingui';
 import { page } from '$app/state';
 
+import { stateConfig } from './stateConfig.svelte';
+
 export type Language = (typeof locales)[number];
 
 export type Key =
@@ -28,7 +30,9 @@ const lang = () =>
 	getUrlSearchParam('lang') === 'br' ? 'pt' : (getUrlSearchParam('lang') as Language) || 'en';
 const sessionID = () => getUrlSearchParam('sessionID') || '';
 const rgsUrl = () => getUrlSearchParam('rgs_url') || '';
-const social = () => getUrlSearchParam('social') === 'true';
+// social casino (Stake.US): social=true in the url, or socialCasino in the game server's config
+const social = () =>
+	getUrlSearchParam('social')?.toLowerCase() === 'true' || !!stateConfig.jurisdiction?.socialCasino;
 const currency = () => getUrlSearchParam('currency') || '';
 
 // params for replay

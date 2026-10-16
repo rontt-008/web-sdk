@@ -20,6 +20,8 @@
 		active?: boolean;
 		children?: Snippet;
 		variant?: 'dark' | 'light';
+		// see UiButtonOptions
+		bare?: boolean;
 	};
 
 	const {
@@ -27,11 +29,14 @@
 		themeIcon,
 		active,
 		variant = 'dark',
+		bare,
 		children: childrenFromParent,
 		...buttonProps
 	}: Props = $props();
 
 	const theme = getUiTheme();
+	// a bare button's circle while hovered: a faint wash of the outline colour
+	const BARE_HOVER_ALPHA = 0.15;
 </script>
 
 {#if theme}
@@ -41,19 +46,29 @@
 			<UiThemeButtonFace
 				{center}
 				{pressed}
+				{bare}
+				fillAlpha={bare && !active
+					? !buttonProps.disabled && (pressed || hovered)
+						? BARE_HOVER_ALPHA
+						: 0
+					: 1}
 				icon={themeIcon ?? icon}
 				diameter={buttonProps.sizes.width * colors.scale}
 				outlineWidth={theme.outlineWidth}
 				outline={buttonProps.disabled ? theme.outlineDisabled : theme.outline}
-				fill={buttonProps.disabled
-					? colors.fillDisabled
-					: active
+				fill={bare
+					? active
 						? colors.fillActive
-						: pressed
-							? colors.fillPressed
-							: hovered
-								? colors.fillHovered
-								: colors.fill}
+						: theme.outline
+					: buttonProps.disabled
+						? colors.fillDisabled
+						: active
+							? colors.fillActive
+							: pressed
+								? colors.fillPressed
+								: hovered
+									? colors.fillHovered
+									: colors.fill}
 				iconColor={buttonProps.disabled
 					? colors.iconDisabled
 					: active

@@ -6,12 +6,9 @@
 	import UiLabel from './UiLabel.svelte';
 	import { getContext } from '../context';
 	import { i18nDerived } from '../i18n/i18nDerived';
+	import type { UiLabelOptions } from '../types';
 
-	type Props = {
-		stacked?: boolean;
-	};
-
-	const props: Props = $props();
+	const props: UiLabelOptions = $props();
 	const context = getContext();
 	const label = $derived(stateBetDerived.activeBetMode()?.text.betAmountLabel || i18nDerived.bet());
 	const value = $derived(numberToCurrencyString(stateBetDerived.betCost()));
@@ -25,5 +22,5 @@
 </script>
 
 <Container eventMode="static" cursor={disabled ? 'not-allowed' : 'pointer'} onpointerup={onpress}>
-	<UiLabel tiled {label} {value} stacked={props.stacked} />
+	<UiLabel tiled {label} {value} stacked={props.stacked} plain={props.plain} />
 </Container>

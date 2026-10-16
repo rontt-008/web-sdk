@@ -4,7 +4,7 @@
 	import { Container, Rectangle } from 'pixi-svelte';
 
 	import { getContext } from '../context';
-	import { getMenuButtons, getUiTheme } from '../theme';
+	import { getBuyBonusExtraWidth, getMenuButtons, getUiTheme } from '../theme';
 	import { UI_BASE_FONT_SIZE, UI_BASE_SIZE, UI_THEMED_LABEL_SIZES } from '../constants';
 	import type { LayoutUiProps } from '../types';
 
@@ -14,8 +14,8 @@
 	const menuButtons = $derived(getMenuButtons(props, theme));
 
 	// One centred row along the bottom of the 1920x1080 standard layout:
-	// menu, mute music, mute sounds | balance | win | bet, with up and down arrows stacked on its right | auto spin, SPIN,
-	// turbo | buy bonus
+	// menu, mute music, mute sounds | balance | win | bet, with up and down arrows stacked on its right |
+	// auto spin, turbo, SPIN, buy bonus
 	const BAR_OFFSET = 80; // from the bottom of the screen to the middle of the row
 	const BUTTON_SCALE = 0.7;
 	// the two arrows together are about as tall as the bet's panel
@@ -36,7 +36,9 @@
 	const spinWidth = UI_BASE_SIZE * (theme?.spin.scale ?? 1);
 	const labelWidth = UI_THEMED_LABEL_SIZES.width * LABEL_SCALE;
 
-	const showBuyBonus = $derived(!theme?.hideBuyBonusOn?.includes('desktop'));
+	const buyBonusWidth = buttonWidth + getBuyBonusExtraWidth(theme);
+
+	const showBuyBonus = !theme?.hideBuyBonusOn?.includes('desktop');
 	const showMuteButtons = !!theme?.muteButtons;
 
 	// [key, visible width, gap before it]
@@ -53,9 +55,9 @@
 		['bet', labelWidth, GAP.large],
 		['betArrows', buttonWidth * BET_ARROW_SCALE, GAP.small],
 		['autoSpin', buttonWidth * BUTTON_SCALE, GAP.large],
-		['spin', spinWidth * SPIN_SCALE, GAP.medium],
 		['turbo', buttonWidth * BUTTON_SCALE, GAP.medium],
-		...(showBuyBonus ? [['buyBonus', buttonWidth * BUTTON_SCALE, GAP.large] as const] : []),
+		['spin', spinWidth * SPIN_SCALE, GAP.medium],
+		...(showBuyBonus ? [['buyBonus', buyBonusWidth * BUTTON_SCALE, GAP.medium] as const] : []),
 	] as const);
 
 	// centre x of each item, with the whole row centred on the screen
@@ -123,12 +125,12 @@
 		{@render props.buttonAutoSpin({ anchor: 0.5 })}
 	</Container>
 
-	<Container x={x.spin} y={barY} scale={SPIN_SCALE}>
-		{@render props.buttonBet({ anchor: 0.5 })}
-	</Container>
-
 	<Container x={x.turbo} y={barY} scale={BUTTON_SCALE}>
 		{@render props.buttonTurbo({ anchor: 0.5 })}
+	</Container>
+
+	<Container x={x.spin} y={barY} scale={SPIN_SCALE}>
+		{@render props.buttonBet({ anchor: 0.5 })}
 	</Container>
 
 	{#if showBuyBonus}

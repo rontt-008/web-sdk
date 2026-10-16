@@ -1,17 +1,18 @@
 <script lang="ts">
+	import { CanvasTextMetrics, TextStyle, type TextStyleOptions } from 'pixi.js';
 	import { Rectangle, Text } from 'pixi-svelte';
 	import { UI_FONT_FAMILY } from 'constants-shared/fonts';
 	import { WHITE } from 'constants-shared/colors';
 
 	import UiSprite from './UiSprite.svelte';
 	import { UI_BASE_FONT_SIZE, UI_THEMED_LABEL_SIZES } from '../constants';
-	import { getUiTheme } from '../theme';
+	import { getPanelCornerRadius, getUiTheme } from '../theme';
+	import type { UiLabelOptions } from '../types';
 
-	type Props = {
+	type Props = UiLabelOptions & {
 		label: string;
 		value: string;
 		tiled?: boolean;
-		stacked?: boolean;
 	};
 
 	const props: Props = $props();
@@ -45,16 +46,51 @@
 		fontWeight: '800',
 		fill: theme?.label.value,
 	} as const);
+
+	// long values, like MX$1,234,567.89 or a big balance, shrink to stay inside the pill: stacked
+	// they get the pill's width, in a row what the label leaves of it, plain the box's width
+	const textWidth = (text: string, style: TextStyleOptions) =>
+		CanvasTextMetrics.measureText(text, new TextStyle(style)).width;
+	const valueRoom = $derived.by(() => {
+		if (props.plain) return props.plain.width;
+		if (props.stacked) return PILL_WIDTH - UI_BASE_FONT_SIZE;
+		return UI_BASE_FONT_SIZE * 9.6 - textWidth(props.label, themedLabelStyle);
+	});
+	const valueScale = $derived(
+		Math.min(1, valueRoom / Math.max(1, textWidth(props.value, themedValueStyle))),
+	);
+	// plain, a long label (like a bet mode's name over the bet) shrinks too
+	const labelScale = $derived(
+		props.plain
+			? Math.min(1, props.plain.width / Math.max(1, textWidth(props.label, themedLabelStyle)))
+			: 1,
+	);
 </script>
 
 {#if theme}
-	{#if props.stacked}
+	{#if props.plain}
+		{@const anchorX = props.plain.align === 'left' ? 0 : 1}
+		<Text
+			anchor={{ x: anchorX, y: 1 }}
+			y={-UI_BASE_FONT_SIZE * 0.12}
+			scale={labelScale}
+			text={props.label}
+			style={themedLabelStyle}
+		/>
+		<Text
+			anchor={{ x: anchorX, y: 0 }}
+			y={-UI_BASE_FONT_SIZE * 0.2}
+			scale={valueScale}
+			text={props.value}
+			style={themedValueStyle}
+		/>
+	{:else if props.stacked}
 		<Rectangle
 			anchor={{ x: 0.5, y: 0 }}
 			y={-UI_BASE_FONT_SIZE * 0.35}
 			width={PILL_WIDTH}
 			height={PILL_HEIGHT}
-			borderRadius={PILL_HEIGHT * 0.5}
+			borderRadius={getPanelCornerRadius(theme, PILL_HEIGHT)}
 			backgroundColor={theme.label.panel}
 			backgroundAlpha={theme.label.panelAlpha}
 			borderColor={theme.outline}
@@ -65,6 +101,7 @@
 		<Text
 			anchor={{ x: 0.5, y: 0 }}
 			y={UI_BASE_FONT_SIZE * 0.6}
+			scale={valueScale}
 			text={props.value}
 			style={themedValueStyle}
 		/>
@@ -74,7 +111,7 @@
 			anchor={{ x: 0, y: 0.5 }}
 			width={UI_BASE_FONT_SIZE * 11.6}
 			height={PILL_HEIGHT * 0.75}
-			borderRadius={PILL_HEIGHT * 0.375}
+			borderRadius={getPanelCornerRadius(theme, PILL_HEIGHT * 0.75)}
 			backgroundColor={theme.label.panel}
 			backgroundAlpha={theme.label.panelAlpha}
 			borderColor={theme.outline}
@@ -85,6 +122,7 @@
 		<Text
 			anchor={{ x: 1, y: 0.5 }}
 			x={UI_BASE_FONT_SIZE * 10}
+			scale={valueScale}
 			text={props.value}
 			style={themedValueStyle}
 		/>

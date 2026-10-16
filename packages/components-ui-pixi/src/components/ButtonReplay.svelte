@@ -10,7 +10,7 @@
 	import { getContext } from '../context';
 	import { getUiTheme } from '../theme';
 
-	// plays the replayed round again once it has finished
+	// plays the replayed round: PLAY until it has started once, then REPLAY to watch it again
 	const props: Partial<Omit<ButtonProps, 'children'>> = $props();
 	const context = getContext();
 	const theme = getUiTheme();
@@ -60,7 +60,7 @@
 			anchor={{ x: 0.5, y: 0 }}
 			x={center.x}
 			y={center.y + sizes.height * 0.55}
-			text="REPLAY"
+			text={stateReplay.played ? 'REPLAY' : 'PLAY'}
 			style={{
 				fontFamily: theme?.fontFamily ?? UI_FONT_FAMILY,
 				fontWeight: '700',

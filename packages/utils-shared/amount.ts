@@ -90,7 +90,8 @@ export const numberToCurrencyString = (value: number, options: CurrencyStringOpt
 export const numberToShortCurrencyString = (value: number) => {
 	if (Math.abs(value) < 1000) return numberToCurrencyString(value);
 
-	const compact = { notation: 'compact', maximumFractionDigits: 2 } as const;
+	// $1K and $1.5K, not $1.00K
+	const compact = { notation: 'compact', minimumFractionDigits: 0, maximumFractionDigits: 2 } as const;
 	if (stateBet.currency in NO_LOCALISATION_CURRENCY_MAP) {
 		const number = stateI18n.i18n.number(value, compact);
 		return `${number} ${NO_LOCALISATION_CURRENCY_MAP[stateBet.currency]}`;

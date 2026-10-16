@@ -1,12 +1,12 @@
 <script lang="ts">
-	import type { ButtonProps } from 'components-pixi';
 	import { stateBet, stateBetDerived, stateConfig } from 'state-shared';
 
 	import UiButton from './UiButton.svelte';
 	import { getContext } from '../context';
 	import { UI_BASE_SIZE } from '../constants';
+	import type { UiButtonOptions } from '../types';
 
-	type Props = Partial<Omit<ButtonProps, 'children'>> & {
+	type Props = UiButtonOptions & {
 		// an up arrow instead of a plus, for a pair of arrows stacked beside the bet
 		arrow?: boolean;
 	};

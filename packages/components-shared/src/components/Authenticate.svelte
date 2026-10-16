@@ -34,7 +34,8 @@
 				// 		"amount": 10000000000000000,
 				// 		"currency": "USD"
 				// },
-				stateBet.currency = authenticateData.balance.currency;
+				// upper case, so a social currency like "xsc" still shows as SC
+				stateBet.currency = authenticateData.balance.currency.toUpperCase();
 				stateBet.balanceAmount = authenticateData.balance.amount / API_AMOUNT_MULTIPLIER;
 			}
 
@@ -173,11 +174,9 @@
 		}
 	};
 
-	// what the error screen shows
-	const failureText = (error: any) => {
-		if (error?.error || error?.message) return [error.error, error.message].filter(Boolean).join(': ');
-		return `${error}`;
-	};
+	// what the error screen shows: the RGS error code only, as its message can use words social mode
+	// can't (the whole error is in the console)
+	const failureText = (error: any) => (typeof error?.error === 'string' ? error.error : `${error}`);
 
 	onMount(async () => {
 		if(stateUrlDerived.replay()) {

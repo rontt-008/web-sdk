@@ -5,15 +5,28 @@
 	import { Container, Rectangle, anchorToPivot } from 'pixi-svelte';
 
 	import { getContext } from '../context';
-	import { getMenuButtons, getUiTheme } from '../theme';
+	import { getBuyBonusExtraWidth, getMenuButtons, getUiTheme } from '../theme';
 	import type { LayoutUiProps } from '../types';
 	import LabelFreeSpinCounter from './LabelFreeSpinCounter.svelte';
-	import { DESKTOP_BASE_SIZE, DESKTOP_BACKGROUND_WIDTH_LIST } from '../constants';
+	import { DESKTOP_BASE_SIZE, DESKTOP_BACKGROUND_WIDTH_LIST, UI_BASE_SIZE } from '../constants';
 
 	const props: LayoutUiProps = $props();
 	const context = getContext();
 	const theme = getUiTheme();
 	const menuButtons = $derived(getMenuButtons(props, theme));
+
+	// a buy bonus pill (see buyBonusPill) is too wide for the round button's spot, so it sits right of
+	// SPIN, with auto spin and turbo before it, as on the compact desktop layout
+	const SPIN_X = -10 + 180 * 5;
+	const PILL_GAP = 24;
+	const buyBonusX = theme?.buyBonusPill
+		? SPIN_X +
+			(UI_BASE_SIZE * (theme.spin.scale + theme.button.scale) + getBuyBonusExtraWidth(theme)) *
+				0.5 +
+			PILL_GAP
+		: 20 + 180 * (theme?.muteButtons ? 3 : 1);
+	const autoSpinX = theme?.buyBonusPill ? -10 + 180 * 3 : -10 + 180 * 4;
+	const turboX = theme?.buyBonusPill ? -10 + 180 * 4 : -10 + 180 * 6;
 </script>
 
 <Container x={20}>
@@ -62,19 +75,19 @@
 			</Container>
 		{/if}
 
-		<Container y={DESKTOP_BASE_SIZE * 0.5} x={20 + 180 * (theme?.muteButtons ? 3 : 1)}>
+		<Container y={DESKTOP_BASE_SIZE * 0.5} x={buyBonusX}>
 			{@render props.buttonBuyBonus({ anchor: 0.5 })}
 		</Container>
 
-		<Container y={DESKTOP_BASE_SIZE * 0.5} x={-10 + 180 * 4}>
+		<Container y={DESKTOP_BASE_SIZE * 0.5} x={autoSpinX}>
 			{@render props.buttonAutoSpin({ anchor: 0.5 })}
 		</Container>
 
-		<Container y={DESKTOP_BASE_SIZE * 0.5} x={-10 + 180 * 5}>
+		<Container y={DESKTOP_BASE_SIZE * 0.5} x={SPIN_X}>
 			{@render props.buttonBet({ anchor: 0.5 })}
 		</Container>
 
-		<Container y={DESKTOP_BASE_SIZE * 0.5} x={-10 + 180 * 6}>
+		<Container y={DESKTOP_BASE_SIZE * 0.5} x={turboX}>
 			{@render props.buttonTurbo({ anchor: 0.5 })}
 		</Container>
 

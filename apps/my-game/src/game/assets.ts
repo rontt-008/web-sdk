@@ -138,10 +138,6 @@ export default {
 		type: 'sprite',
 		src: new URL('../../assets/button-buy-bonus.png', import.meta.url).href,
 	},
-	buttonBooster: {
-		type: 'sprite',
-		src: new URL('../../assets/button-booster.png', import.meta.url).href,
-	},
 	symbolH1: {
 		type: 'sprite',
 		src: new URL('../../assets/symbols/h1.png', import.meta.url).href,

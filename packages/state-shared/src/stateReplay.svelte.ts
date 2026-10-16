@@ -4,4 +4,6 @@ import type { BetToResume } from './stateBet.svelte';
 export const stateReplay = $state({
 	bet: null as BetToResume,
 	costMultiplier: 1,
+	// whether the round has started once: its button then says REPLAY instead of PLAY
+	played: false,
 });

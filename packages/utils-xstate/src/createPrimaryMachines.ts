@@ -1,7 +1,7 @@
 import { fromPromise } from 'xstate';
 
 import { API_AMOUNT_MULTIPLIER } from 'constants-shared/bet';
-import { stateBet, stateBetDerived, stateUrlDerived, stateModal } from 'state-shared';
+import { stateBet, stateBetDerived, stateUrlDerived, stateModal, stateReplay } from 'state-shared';
 import { requestBet, requestEndRound } from 'rgs-requests';
 
 import type { BaseBet } from './types';
@@ -175,6 +175,7 @@ function createPrimaryMachines<TBet extends BaseBet>(options: Options<TBet>) {
 		if (betToResume && betToResume.active) {
 			// Optional chaining doesn't work here with build-node. 🤷‍♂️
 			stateBet.betToResume = null;
+			if (stateUrlDerived.replay()) stateReplay.played = true;
 
 			//End Round resumed active bet
 			const bet = betToResume as TBet;

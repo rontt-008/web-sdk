@@ -14,6 +14,7 @@
 	import type { LayoutUiProps } from '../types';
 	import { getContext } from '../context';
 	import { getMenuButtons, getUiTheme } from '../theme';
+	import { UI_BASE_SIZE } from '../constants';
 
 	const props: LayoutUiProps = $props();
 	const context = getContext();
@@ -22,6 +23,13 @@
 
 	// the row beside the menu is full, so the mute buttons sit as a smaller pair just under it
 	const MUTE_SCALE = 0.7;
+
+	// a buy bonus pill (see buyBonusPill) sits right of SPIN, centred between it and the turbo button
+	// at the end of the row; a round buy bonus button ends the row after turbo
+	const turboX = theme?.buyBonusPill ? 440 : 180;
+	const buyBonusX = theme?.buyBonusPill
+		? (UI_BASE_SIZE * theme.spin.scale * 0.5 + 440 - UI_BASE_SIZE * theme.button.scale * 0.5) * 0.5
+		: 440;
 
 	const DRAWER_Y = {
 		unfold: 0,
@@ -109,7 +117,7 @@
 		{/if}
 
 		<Container
-			x={context.stateLayoutDerived.mainLayoutStandard().width * 0.5 + 440}
+			x={context.stateLayoutDerived.mainLayoutStandard().width * 0.5 + buyBonusX}
 			y={context.stateLayoutDerived.mainLayoutStandard().height - 400}
 		>
 			{@render props.buttonBuyBonus({ anchor: 0.5 })}
@@ -130,7 +138,7 @@
 		</Container>
 
 		<Container
-			x={context.stateLayoutDerived.mainLayoutStandard().width * 0.5 + 180}
+			x={context.stateLayoutDerived.mainLayoutStandard().width * 0.5 + turboX}
 			y={context.stateLayoutDerived.mainLayoutStandard().height - 400}
 		>
 			{@render props.buttonTurbo({ anchor: 0.5 })}

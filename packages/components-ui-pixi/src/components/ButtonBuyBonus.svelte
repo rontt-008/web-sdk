@@ -9,21 +9,29 @@
 	import { UI_BASE_FONT_SIZE, UI_BASE_SIZE } from '../constants';
 	import { getContext } from '../context';
 	import { i18nDerived } from '../i18n/i18nDerived';
-	import { getUiTheme } from '../theme';
+	import { getBuyBonusExtraWidth, getPanelCornerRadius, getUiTheme } from '../theme';
 
 	const props: Partial<Omit<ButtonProps, 'children'>> = $props();
 	const { stateXstateDerived, eventEmitter } = getContext();
-	const sizes = { width: UI_BASE_SIZE, height: UI_BASE_SIZE };
 	const disabled = $derived(!stateXstateDerived.isIdle());
 	const active = $derived(stateBetDerived.activeBetMode()?.type === 'activate');
 	const theme = getUiTheme();
+	const pill = theme?.buyBonusPill;
+
+	// a pill keeps the margin a round button's hit area has around its circle
+	const sizes = {
+		width: UI_BASE_SIZE + getBuyBonusExtraWidth(theme),
+		height: UI_BASE_SIZE,
+	};
 
 	const openModal = () => (stateModal.modal = { name: 'buyBonus' });
 	const disableActiveBetMode = () => (stateBet.activeBetModeKey = 'BASE');
+	// themed, it always opens the buy menu, where a bet mode that is switched on (like a booster) is
+	// switched off from its card; the default button says DISABLE and switches it off itself
 	const onpress = () => {
 		eventEmitter.broadcast({ type: 'soundPressGeneral' });
 
-		if (active) {
+		if (active && !theme) {
 			disableActiveBetMode();
 		} else {
 			openModal();
@@ -47,11 +55,17 @@
 {#if theme}
 	<Button {...props} {sizes} {disabled} {onpress}>
 		{#snippet children({ center, hovered, pressed })}
+			{@const colors = pill ?? theme.button}
 			<UiThemeButtonFace
 				{center}
 				{pressed}
 				icon="buyBonus"
-				diameter={sizes.width * theme.button.scale}
+				text={pill ? i18nDerived.buyBonus() : undefined}
+				diameter={UI_BASE_SIZE * theme.button.scale}
+				width={UI_BASE_SIZE * theme.button.scale + getBuyBonusExtraWidth(theme)}
+				cornerRadius={pill
+					? getPanelCornerRadius(theme, UI_BASE_SIZE * theme.button.scale)
+					: undefined}
 				outlineWidth={theme.outlineWidth}
 				outline={disabled ? theme.outlineDisabled : theme.outline}
 				fill={disabled
@@ -59,15 +73,15 @@
 					: active
 						? theme.button.fillActive
 						: pressed
-							? theme.button.fillPressed
+							? colors.fillPressed
 							: hovered
-								? theme.button.fillHovered
-								: theme.button.fill}
+								? colors.fillHovered
+								: colors.fill}
 				iconColor={disabled
 					? theme.button.iconDisabled
 					: active
 						? theme.button.iconActive
-						: theme.button.icon}
+						: (pill?.text ?? theme.button.icon)}
 			/>
 		{/snippet}
 	</Button>

@@ -7,7 +7,7 @@
 	import { LANDSCAPE_BASE_SIZE, LANDSCAPE_BACKGROUND_WIDTH_LIST } from '../constants';
 	import type { LayoutUiProps } from '../types';
 	import { getContext } from '../context';
-	import { getMenuButtons, getUiTheme } from '../theme';
+	import { getBuyBonusExtraWidth, getMenuButtons, getUiTheme } from '../theme';
 
 	const props: LayoutUiProps = $props();
 	const context = getContext();
@@ -49,9 +49,10 @@
 			</Container>
 		{/if}
 
+		<!-- a wider buy bonus button (a pill) grows to the right, away from the buttons before it -->
 		<Container
 			y={LANDSCAPE_BASE_SIZE * 0.5 - 90}
-			x={(theme?.muteButtons ? 490 : 220) + 20}
+			x={(theme?.muteButtons ? 490 : 220) + 20 + getBuyBonusExtraWidth(theme) * 0.5 * 0.8}
 			scale={0.8}
 		>
 			{@render props.buttonBuyBonus({ anchor: 0.5 })}

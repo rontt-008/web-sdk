@@ -33,6 +33,13 @@
 
 	const betModeData = $derived(props.levels[Math.min(index, props.levels.length - 1)]);
 	const cost = $derived(stateBet.betAmount * betModeData.costMultiplier);
+	// longer prices, like MX$1,000,000.00, get smaller so they stay inside the card
+	const PRICE_FONT_SIZE_REM = 1.75;
+	const PRICE_FULL_SIZE_LENGTH = 12;
+	const priceText = $derived(numberToCurrencyString(cost));
+	const priceFontSize = $derived(
+		`${PRICE_FONT_SIZE_REM * Math.min(1, PRICE_FULL_SIZE_LENGTH / priceText.length)}rem`,
+	);
 	// the card says why it can't be picked, instead of only being greyed out
 	const notEnoughBalance = $derived(stateBet.balanceAmount < cost);
 	const isActivate = $derived(betModeData.type === 'activate');
@@ -81,8 +88,8 @@
 			<VolatilityMeter value={betModeData.volatility} />
 		{/if}
 
-		<div class="price">
-			<HeadingText fill="var(--ui-card-price, white)">{numberToCurrencyString(cost)}</HeadingText>
+		<div class="price" style:font-size={priceFontSize}>
+			<HeadingText fill="var(--ui-card-price, white)">{priceText}</HeadingText>
 		</div>
 	</div>
 
@@ -200,7 +207,6 @@
 	}
 
 	.price {
-		font-size: 1.75rem;
 		white-space: nowrap;
 	}
 

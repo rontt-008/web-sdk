@@ -35,25 +35,41 @@ export type ButtonIcon =
 	| 'soundOff'
 	| 'menuExit';
 
+// what a layout can pass to a round button
+export type UiButtonOptions = Partial<Omit<ButtonProps, 'children'>> & {
+	// with a theme: the icon alone, without its circle, for a button on a panel (a circle shows behind
+	// it while hovered, and while it is switched on)
+	bare?: boolean;
+};
+
+// what a layout can pass to the balance, win and bet
+export type UiLabelOptions = {
+	stacked?: boolean;
+	// with a theme: without its own pill, for a label on a panel. The label sits over the value, both
+	// lined up on one side of a box this wide (they shrink to fit it); the label is drawn from that
+	// side, centred vertically.
+	plain?: { width: number; align: 'left' | 'right' };
+};
+
 export type LayoutUiProps = {
 	gameName: Snippet;
 	logo: Snippet;
-	amountBalance: Snippet<[{ stacked?: boolean }]>;
-	amountWin: Snippet<[{ stacked?: boolean }]>;
-	amountBet: Snippet<[{ stacked?: boolean }]>;
+	amountBalance: Snippet<[UiLabelOptions]>;
+	amountWin: Snippet<[UiLabelOptions]>;
+	amountBet: Snippet<[UiLabelOptions]>;
 	buttonBuyBonus: Snippet<[Partial<ButtonProps>]>;
 	buttonBet: Snippet<[Partial<ButtonProps>]>;
-	buttonTurbo: Snippet<[Partial<ButtonProps>]>;
-	buttonAutoSpin: Snippet<[Partial<ButtonProps>]>;
+	buttonTurbo: Snippet<[UiButtonOptions]>;
+	buttonAutoSpin: Snippet<[UiButtonOptions]>;
 	// `arrow` draws an up / down arrow instead of a plus / minus
-	buttonIncrease: Snippet<[Partial<ButtonProps> & { arrow?: boolean }]>;
-	buttonDecrease: Snippet<[Partial<ButtonProps> & { arrow?: boolean }]>;
-	buttonMenu: Snippet<[Partial<ButtonProps>]>;
+	buttonIncrease: Snippet<[UiButtonOptions & { arrow?: boolean }]>;
+	buttonDecrease: Snippet<[UiButtonOptions & { arrow?: boolean }]>;
+	buttonMenu: Snippet<[UiButtonOptions]>;
 	buttonMenuClose: Snippet<[Partial<ButtonProps>]>;
 	buttonPayTable: Snippet<[Partial<ButtonProps>]>;
 	buttonGameRules: Snippet<[Partial<ButtonProps>]>;
 	buttonSettings: Snippet<[Partial<ButtonProps>]>;
 	buttonSoundSwitch: Snippet<[Partial<ButtonProps>]>;
-	buttonMuteMusic: Snippet<[Partial<ButtonProps>]>;
-	buttonMuteSounds: Snippet<[Partial<ButtonProps>]>;
+	buttonMuteMusic: Snippet<[UiButtonOptions]>;
+	buttonMuteSounds: Snippet<[UiButtonOptions]>;
 };

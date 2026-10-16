@@ -103,7 +103,7 @@ const boardLayout = () => ({
 
 const LOGO_RATIO = 1400 / 596;
 
-// wide screens have room for the logo (and the feature buttons under it) beside the board
+// wide screens have room for the logo (and the free spin counter under it) beside the board
 const isLogoBesideBoard = () => ['desktop', 'landscape'].includes(stateLayoutDerived.layoutType());
 
 const logoLayout = () => {
@@ -113,7 +113,7 @@ const logoLayout = () => {
 
 	if (isLogoBesideBoard()) {
 		// left of the board, above its middle
-		const width = SYMBOL_SIZE * 2.5;
+		const width = SYMBOL_SIZE * 2.75;
 		return {
 			x: boardLeft - SYMBOL_SIZE * 2.05,
 			y: board.y - board.height * 0.38,
@@ -124,7 +124,7 @@ const logoLayout = () => {
 
 	// no room beside the board on narrow screens, so sit above it instead, leaving room for the frame
 	const spaceAbove = boardTop - SYMBOL_SIZE;
-	const height = Math.min(SYMBOL_SIZE * 1.7, spaceAbove * 0.9);
+	const height = Math.min(SYMBOL_SIZE * 1.9, spaceAbove * 0.95);
 	return {
 		x: board.x,
 		y: spaceAbove * 0.5,

@@ -312,15 +312,15 @@
 			<div>
 				<dt>{words.buyBonus}</dt>
 				<dd>
-					The sign beside the reels, or the button on smaller screens, opens the bonus menu: pick a
-					bonus, check what it costs and confirm.
+					The orange button right of the spin button opens the bonus menu: pick a bonus, check what
+					it costs and confirm. The button turns white while the BOOSTER or the FEATURE SPIN is on.
 				</dd>
 			</div>
 			<div>
 				<dt>BOOSTER</dt>
 				<dd>
-					The switch beside the reels, or the BOOSTER card in the bonus menu, turns the booster on or
-					off. Each spin costs {BOOSTER_COST}x the {words.bet} while it is on.
+					The BOOSTER card in the bonus menu turns the booster on or off. Each spin costs
+					{BOOSTER_COST}x the {words.bet} while it is on.
 				</dd>
 			</div>
 			<div>
@@ -349,8 +349,11 @@
 				</dd>
 			</div>
 			<div>
-				<dt>REPLAY</dt>
-				<dd>When watching a replay of a round, plays the round again from the start.</dd>
+				<dt>PLAY and REPLAY</dt>
+				<dd>
+					When watching a replay of a round, PLAY starts the round; once it has played, REPLAY plays
+					it again from the start.
+				</dd>
 			</div>
 		</dl>
 	</section>

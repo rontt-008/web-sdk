@@ -1,4 +1,5 @@
-import { UI_THEME_CLEAN, type UiTheme } from 'components-ui-pixi';
+import { UI_THEME_CLEAN, LayoutDesktopBar, type UiTheme } from 'components-ui-pixi';
+import { UI_HTML_THEME_CLEAN, type UiHtmlTheme } from 'components-ui-html';
 import { LOADING_BAR_THEME_CLEAN, type LoadingBarTheme } from 'components-pixi';
 
 // the logo's colours: a wooden sign with a dark brown outline, cream and orange lettering
@@ -27,15 +28,64 @@ export const loadingBarTheme: LoadingBarTheme = {
 	percent: { fontFamily: 'Titan One', fontSize: 26, fill: CREAM, stroke: DARK_BROWN, strokeWidth: 4.5 },
 };
 
+// the UI is black instead of the clean theme's charcoal
+const BLACK = 0x000000;
+
 export const uiTheme: UiTheme = {
 	...UI_THEME_CLEAN,
-	// darker panels behind the balance, win and bet (BOOSTER) amounts so they read on the background
-	label: { ...UI_THEME_CLEAN.label, panelAlpha: 0.82 },
-	// the buy bonus and booster buttons under the logo replace the UI's buy bonus button here
-	hideBuyBonusOn: ['desktop', 'landscape'],
+	button: {
+		...UI_THEME_CLEAN.button,
+		fill: BLACK,
+		fillHovered: 0x262626,
+		fillPressed: 0x141414,
+		iconActive: BLACK,
+	},
+	// a dark grey spin button with a white icon, a little lighter than the black panels around it
+	spin: {
+		...UI_THEME_CLEAN.spin,
+		fill: 0x2b2b2b,
+		fillHovered: 0x3a3a3a,
+		fillPressed: 0x1f1f1f,
+		fillDisabled: 0x45474e,
+		icon: 0xffffff,
+	},
+	// dark panels behind the balance, win and bet (BOOSTER) amounts so they read on the background
+	label: { ...UI_THEME_CLEAN.label, panel: BLACK, panelAlpha: 0.92 },
+	// no outlines around the buttons and panels, and slightly rounded corners on the panels and the BUY
+	// BONUS button
+	outlineWidth: 0,
+	panelCornerRadius: 0.12,
+	// on wide and almost square screens, a bar of panels along the bottom
+	layouts: { desktop: LayoutDesktopBar, tablet: LayoutDesktopBar },
+	// one BUY BONUS button right of the spin button, in the orange of the logo; it opens the buy menu,
+	// which has the bonuses, the feature spin and the booster
+	buyBonusPill: {
+		width: 1.8,
+		fill: 0xffb53d,
+		fillHovered: 0xffc566,
+		fillPressed: 0xe9a02c,
+		text: DARK_BROWN,
+	},
 	// mute music and mute sounds buttons beside the menu button, instead of the menu's sound switch
 	muteButtons: true,
 	hideSoundSwitch: true,
 	// the rules (the info button) hold the symbol wins and paylines too
 	hidePayTable: true,
+};
+
+// the menus (buy bonus, bet, auto play, settings, rules) in the same black as the UI
+const MENU_BLACK = 'rgba(0, 0, 0, 0.88)';
+
+export const uiHtmlTheme: UiHtmlTheme = {
+	...UI_HTML_THEME_CLEAN,
+	backdrop: 'rgba(0, 0, 0, 0.65)',
+	panel: { ...UI_HTML_THEME_CLEAN.panel, background: MENU_BLACK, solidBackground: '#0a0a0a' },
+	card: { ...UI_HTML_THEME_CLEAN.card, background: MENU_BLACK },
+	dock: { ...UI_HTML_THEME_CLEAN.dock, background: 'rgba(0, 0, 0, 0.8)' },
+	control: {
+		...UI_HTML_THEME_CLEAN.control,
+		background: '#1c1c1c',
+		backgroundHovered: '#2a2a2a',
+		selectedText: '#000000',
+	},
 };
