@@ -180,6 +180,14 @@
 		</div>
 		<div class="card feature">
 			<p>
+				<strong>SUPER FREE SPINS:</strong> every BIG WILD stays: each spin it moves one reel to the
+				left, keeps its multiplier and throws 0 to 3 WILDs again, until it moves left from the first
+				reel. The reel it moves onto doesn't spin, so nothing lands there; the reel it leaves spins
+				as usual and can land a new BIG WILD.
+			</p>
+		</div>
+		<div class="card feature">
+			<p>
 				<strong>MYTHIC FREE SPINS:</strong> every spin has at least one BIG WILD, and at least one of
 				them throws 1 to 3 extra WILDs instead of 0 to 3.
 			</p>

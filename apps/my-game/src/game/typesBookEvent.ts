@@ -103,6 +103,16 @@ type BookEventBigWildThrow = {
 	positions: Position[];
 };
 
+// SUPER free spins, sent before a reveal: the big wilds of the spin before each move one reel left,
+// carrying their multiplier. The reels they move onto don't spin; the reveal's board already has
+// them there.
+type BookEventBigWildWalk = {
+	index: number;
+	type: 'bigWildWalk';
+	// reels; to is -1 when the big wild walks off the first reel
+	moves: { from: number; to: number; multiplier: number }[];
+};
+
 type BookEventCreateBonusSnapshot = {
 	index: number;
 	type: 'createBonusSnapshot';
@@ -123,6 +133,7 @@ export type BookEvent =
 	| BookEventFreeSpinEnd
 	// customised
 	| BookEventBigWildThrow
+	| BookEventBigWildWalk
 	| BookEventCreateBonusSnapshot;
 
 export type Bet = BetType<BookEvent>;

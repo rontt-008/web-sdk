@@ -86,6 +86,9 @@ export const stateGame = $state({
 	// while a win is shown, the positions in it (big wilds by their top row): the rest of the board
 	// is shaded (see ReelSymbol)
 	winHighlight: undefined as Position[] | undefined,
+	// SUPER free spins: reels that show nothing while big wilds walk (one walks off a reel another is
+	// moving onto)
+	hiddenReels: [] as number[],
 });
 
 // vertical position of the board's centre; raised on screens where the bottom UI would overlap it

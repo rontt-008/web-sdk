@@ -6,6 +6,7 @@ import type { EmitterEventFreeSpinRetrigger } from '../components/FreeSpinRetrig
 import type { EmitterEventBigWin } from '../components/BigWin.svelte';
 import type { EmitterEventSound } from '../components/Sound.svelte';
 import type { EmitterEventWildThrow } from '../components/WildThrow.svelte';
+import type { EmitterEventWalkingWilds } from '../components/WalkingWilds.svelte';
 import type { EmitterEventWinLine } from '../components/WinLine.svelte';
 
 export type EmitterEventGame =
@@ -17,4 +18,5 @@ export type EmitterEventGame =
 	| EmitterEventFreeSpinRetrigger
 	| EmitterEventSound
 	| EmitterEventWildThrow
+	| EmitterEventWalkingWilds
 	| EmitterEventWinLine;
