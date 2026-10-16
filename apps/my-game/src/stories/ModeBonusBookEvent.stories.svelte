@@ -106,6 +106,16 @@
 />
 
 <Story
+	name="setWin (big)"
+	args={templateArgs({
+		skipLoadingScreen: true,
+		data: [events.updateFreeSpin, events.setWinBig],
+		action: async (data) => await playBookEvents(data),
+	})}
+	{template}
+/>
+
+<Story
 	name="freeSpinEnd"
 	args={templateArgs({
 		skipLoadingScreen: true,

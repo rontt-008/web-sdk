@@ -231,6 +231,12 @@ export const bookEventHandlerMap: BookEventHandlerMap<BookEvent, BookEventContex
 		const winLevelData = winLevelMap[bookEvent.winLevel as WinLevel];
 		if (winLevelData?.type !== 'big') return;
 
+		// in free spins, the counter (drawn over the blurred scene) goes while the big win shows
+		const counterShown = stateUi.freeSpinCounterShow;
+		if (counterShown) {
+			eventEmitter.broadcast({ type: 'freeSpinCounterHide' });
+			stateUi.freeSpinCounterShow = false;
+		}
 		await eventEmitter.broadcastAsync({ type: 'uiHide' });
 		winLevelSoundsPlay({ winLevelData });
 		await eventEmitter.broadcastAsync({
@@ -239,6 +245,10 @@ export const bookEventHandlerMap: BookEventHandlerMap<BookEvent, BookEventContex
 			winLevelData,
 		});
 		winLevelSoundsStop();
+		if (counterShown) {
+			eventEmitter.broadcast({ type: 'freeSpinCounterShow' });
+			stateUi.freeSpinCounterShow = true;
+		}
 	},
 	finalWin: async (bookEvent: BookEventOfType<'finalWin'>) => {
 		// Do nothing

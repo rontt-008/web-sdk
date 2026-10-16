@@ -195,9 +195,12 @@ const SYMBOL_ART_MAX_HEIGHT = 0.96;
 const SYMBOL_ART_MAX_WIDTH = (0.9 * REEL_WIDTH) / SYMBOL_SIZE;
 // widened a little to suit the wide reels (round art can opt out, see sStatic)
 const SYMBOL_ART_STRETCH_X = 1.1;
-// The sizes of the symbol images and of their soft shadow images (`<key>Shadow`): the same art
-// blurred, with padding around it, so it shares the symbol's centre and scale.
+// The sizes of the symbol images (and of the cat and its rock under the logo) and of their soft
+// shadow images (`<key>Shadow`): the same art blurred, with padding around it, so it shares the
+// art's centre and scale.
 export const SYMBOL_IMAGES = {
+	logoCat: { image: [470, 555], shadow: [554, 639] },
+	logoRock: { image: [560, 335], shadow: [660, 435] },
 	symbolH1: { image: [277, 290], shadow: [329, 342] },
 	symbolH2: { image: [329, 288], shadow: [387, 346] },
 	symbolH3: { image: [296, 223], shadow: [348, 275] },

@@ -132,7 +132,30 @@ const boardLayout = () => ({
 	...BOARD_SIZES,
 });
 
+// the screen's left and bottom edges, in the game's layout (which is scaled about the screen's
+// middle, see MainContainer)
+const screenEdges = () => {
+	const main = stateLayoutDerived.mainLayout();
+	const canvas = stateLayoutDerived.canvasSizes();
+	return {
+		left: main.width * 0.5 - (canvas.width * 0.5) / main.scale,
+		bottom: main.height * 0.5 + (canvas.height * 0.5) / main.scale,
+	};
+};
+
 const LOGO_RATIO = 1400 / 596;
+
+// Beside the board, the logo keeps close to the screen's left edge, but on very wide screens no
+// further than this from the board. Its top is up level with the top of the board's frame, clear
+// of the game's name in the screen's corner, so the free spin counter under it keeps clear of the
+// cat on its rock below (see LogoCat).
+const LOGO_BESIDE_BOARD = {
+	width: SYMBOL_SIZE * 3.25,
+	screenMargin: SYMBOL_SIZE * 0.1,
+	maxGapToBoard: SYMBOL_SIZE * 1.5,
+	// down from the board's middle, in board heights
+	top: 0.71,
+};
 
 // wide screens have room for the logo (and the free spin counter under it) beside the board
 const isLogoBesideBoard = () => ['desktop', 'landscape'].includes(stateLayoutDerived.layoutType());
@@ -143,13 +166,16 @@ const logoLayout = () => {
 	const boardTop = board.y - board.height * 0.5;
 
 	if (isLogoBesideBoard()) {
-		// left of the board, above its middle
-		const width = SYMBOL_SIZE * 2.75;
+		const { width, screenMargin, maxGapToBoard, top } = LOGO_BESIDE_BOARD;
+		const height = width / LOGO_RATIO;
 		return {
-			x: boardLeft - SYMBOL_SIZE * 2.05,
-			y: board.y - board.height * 0.38,
+			x: Math.max(
+				screenEdges().left + screenMargin + width * 0.5,
+				boardLeft - maxGapToBoard - width * 0.5,
+			),
+			y: board.y - board.height * top + height * 0.5,
 			width,
-			height: width / LOGO_RATIO,
+			height,
 		};
 	}
 
@@ -183,6 +209,7 @@ export const { getWinLevelDataByWinLevelAlias } = createGetWinLevelDataByWinLeve
 export const stateGameDerived = {
 	onSymbolLand,
 	boardLayout,
+	screenEdges,
 	isLogoBesideBoard,
 	logoLayout,
 	boardRaw,

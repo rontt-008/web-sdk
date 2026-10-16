@@ -126,6 +126,24 @@ export default {
 		src: new URL('../../assets/game-logo.png', import.meta.url).href,
 		preload: true,
 	},
+	// the cat sitting on a rock under the logo, cropped to their edges, and their soft shadows like
+	// the symbols'
+	logoRock: {
+		type: 'sprite',
+		src: new URL('../../assets/logo-rock.png', import.meta.url).href,
+	},
+	logoRockShadow: {
+		type: 'sprite',
+		src: new URL('../../assets/logo-rock-shadow.png', import.meta.url).href,
+	},
+	logoCat: {
+		type: 'sprite',
+		src: new URL('../../assets/logo-cat.png', import.meta.url).href,
+	},
+	logoCatShadow: {
+		type: 'sprite',
+		src: new URL('../../assets/logo-cat-shadow.png', import.meta.url).href,
+	},
 	sunGlow: {
 		type: 'sprite',
 		src: new URL('../../assets/sun-glow.png', import.meta.url).href,
