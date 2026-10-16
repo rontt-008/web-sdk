@@ -15,18 +15,18 @@
 	const theme = getUiTheme();
 	const menuButtons = $derived(getMenuButtons(props, theme));
 
-	// a buy bonus pill (see buyBonusPill) is too wide for the round button's spot, so it sits right of
-	// SPIN, with auto spin and turbo before it, as on the compact desktop layout
+	// themed, the buy bonus button (round or a pill, see buyBonus) sits right of SPIN, with auto spin
+	// and turbo before it, as on the compact desktop layout; without a theme it is after the menu
 	const SPIN_X = -10 + 180 * 5;
-	const PILL_GAP = 24;
-	const buyBonusX = theme?.buyBonusPill
+	const BUY_BONUS_GAP = 24;
+	const buyBonusX = theme
 		? SPIN_X +
 			(UI_BASE_SIZE * (theme.spin.scale + theme.button.scale) + getBuyBonusExtraWidth(theme)) *
 				0.5 +
-			PILL_GAP
-		: 20 + 180 * (theme?.muteButtons ? 3 : 1);
-	const autoSpinX = theme?.buyBonusPill ? -10 + 180 * 3 : -10 + 180 * 4;
-	const turboX = theme?.buyBonusPill ? -10 + 180 * 4 : -10 + 180 * 6;
+			BUY_BONUS_GAP
+		: 20 + 180;
+	const autoSpinX = theme ? -10 + 180 * 3 : -10 + 180 * 4;
+	const turboX = theme ? -10 + 180 * 4 : -10 + 180 * 6;
 </script>
 
 <Container x={20}>

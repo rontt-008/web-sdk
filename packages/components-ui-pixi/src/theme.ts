@@ -49,16 +49,29 @@ export type UiTheme = {
 	layouts?: Partial<Record<UiLayoutType, Component<LayoutUiProps>>>;
 	// screen types where the game shows its own buy bonus controls instead of the UI's button
 	hideBuyBonusOn?: UiLayoutType[];
-	// the buy bonus button as a pill with its name on it, as tall as the round buttons' circle, instead
-	// of a round button with an icon. It is greyed out and turns `button.fillActive` (with
-	// `button.iconActive` text) like the round buttons do.
-	buyBonusPill?: {
-		// relative to its height
-		width: number;
+	// the buy bonus button in its own colours, so it stands out from the other round buttons. It is
+	// greyed out and turns `button.fillActive` (with a `button.iconActive` icon) like they do.
+	buyBonus?: {
 		fill: number;
 		fillHovered: number;
 		fillPressed: number;
-		text: number;
+		// how see-through those fills are (1 = solid, the default)
+		fillAlpha?: number;
+		// false: no soft drop shadow under it
+		shadow?: boolean;
+		// the icon's (or the name's) colour
+		icon: number;
+		// a pill this wide (relative to its height) with the button's name on it, instead of a round
+		// button with an icon
+		pillWidth?: number;
+		// a game's own icon instead of the gift: the key of a sprite the game loads, square white art on
+		// a transparent background (it is tinted `icon`)
+		sprite?: string;
+		// an outline around that icon: the key of the same art grown by the outline's width, drawn
+		// behind it in `color` (not while the button is switched on or greyed out)
+		spriteOutline?: { key: string; color: number };
+		// a solid ring around the button, instead of the UI's outline (greyed out like it)
+		ring?: { color: number; width: number };
 	};
 	// no pay table button in the menu, for a game whose rules (the info button) cover the pay table
 	hidePayTable?: boolean;
@@ -79,10 +92,10 @@ export const getUiTheme = () => getContext<UiTheme | undefined>(KEY);
 export const getPanelCornerRadius = (theme: UiTheme | undefined, height: number) =>
 	height * (theme?.panelCornerRadius ?? 0.5);
 
-// how much wider than a round button the buy bonus button is (see buyBonusPill), for the layouts to
-// make room for it
+// how much wider than a round button the buy bonus button is (see buyBonus.pillWidth), for the
+// layouts to make room for it
 export const getBuyBonusExtraWidth = (theme: UiTheme | undefined) =>
-	UI_BASE_SIZE * (theme?.button.scale ?? 1) * ((theme?.buyBonusPill?.width ?? 1) - 1);
+	UI_BASE_SIZE * (theme?.button.scale ?? 1) * ((theme?.buyBonus?.pillWidth ?? 1) - 1);
 
 // the buttons the menu stacks above its close button, top first, without the ones the theme hides
 export const getMenuButtons = (props: LayoutUiProps, theme: UiTheme | undefined) => [

@@ -24,10 +24,10 @@
 	// the row beside the menu is full, so the mute buttons sit as a smaller pair just under it
 	const MUTE_SCALE = 0.7;
 
-	// a buy bonus pill (see buyBonusPill) sits right of SPIN, centred between it and the turbo button
-	// at the end of the row; a round buy bonus button ends the row after turbo
-	const turboX = theme?.buyBonusPill ? 440 : 180;
-	const buyBonusX = theme?.buyBonusPill
+	// themed, the buy bonus button (round or a pill, see buyBonus) sits right of SPIN, centred between
+	// it and the turbo button at the end of the row; without a theme it ends the row after turbo
+	const turboX = theme ? 440 : 180;
+	const buyBonusX = theme
 		? (UI_BASE_SIZE * theme.spin.scale * 0.5 + 440 - UI_BASE_SIZE * theme.button.scale * 0.5) * 0.5
 		: 440;
 

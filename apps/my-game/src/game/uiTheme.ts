@@ -51,20 +51,23 @@ export const uiTheme: UiTheme = {
 	},
 	// dark panels behind the balance, win and bet (BOOSTER) amounts so they read on the background
 	label: { ...UI_THEME_CLEAN.label, panel: BLACK, panelAlpha: 0.92 },
-	// no outlines around the buttons and panels, and slightly rounded corners on the panels and the BUY
-	// BONUS button
+	// no outlines around the buttons and panels, and slightly rounded corners on the panels
 	outlineWidth: 0,
 	panelCornerRadius: 0.12,
 	// on wide and almost square screens, a bar of panels along the bottom
 	layouts: { desktop: LayoutDesktopBar, tablet: LayoutDesktopBar },
-	// one BUY BONUS button right of the spin button, in the orange of the logo; it opens the buy menu,
-	// which has the bonuses, the feature spin and the booster
-	buyBonusPill: {
-		width: 1.8,
-		fill: 0xffb53d,
-		fillHovered: 0xffc566,
-		fillPressed: 0xe9a02c,
-		text: DARK_BROWN,
+	// one round buy bonus button right of the spin button: the bonus logo in red with a thin black
+	// outline, on solid near-black in a thin white ring, with no shadow; it opens the buy menu, which
+	// has the bonuses, the feature spin and the booster
+	buyBonus: {
+		fill: 0x0c0c0c,
+		fillHovered: 0x1f1f1f,
+		fillPressed: 0x050505,
+		shadow: false,
+		icon: 0xb50208,
+		sprite: 'buyBonusLogo',
+		spriteOutline: { key: 'buyBonusLogoOutline', color: BLACK },
+		ring: { color: 0xffffff, width: 3 },
 	},
 	// mute music and mute sounds buttons beside the menu button, instead of the menu's sound switch
 	muteButtons: true,

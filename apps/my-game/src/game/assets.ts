@@ -138,6 +138,16 @@ export default {
 		type: 'sprite',
 		src: new URL('../../assets/button-buy-bonus.png', import.meta.url).href,
 	},
+	// white on transparent, tinted by the UI's buy bonus button (see uiTheme's buyBonus)
+	buyBonusLogo: {
+		type: 'sprite',
+		src: new URL('../../assets/buy-bonus-logo.png', import.meta.url).href,
+	},
+	// the same logo grown by its outline's width, drawn white behind it
+	buyBonusLogoOutline: {
+		type: 'sprite',
+		src: new URL('../../assets/buy-bonus-logo-outline.png', import.meta.url).href,
+	},
 	symbolH1: {
 		type: 'sprite',
 		src: new URL('../../assets/symbols/h1.png', import.meta.url).href,

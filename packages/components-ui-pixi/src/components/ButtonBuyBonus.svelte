@@ -16,7 +16,7 @@
 	const disabled = $derived(!stateXstateDerived.isIdle());
 	const active = $derived(stateBetDerived.activeBetMode()?.type === 'activate');
 	const theme = getUiTheme();
-	const pill = theme?.buyBonusPill;
+	const pill = !!theme?.buyBonus?.pillWidth;
 
 	// a pill keeps the margin a round button's hit area has around its circle
 	const sizes = {
@@ -55,19 +55,25 @@
 {#if theme}
 	<Button {...props} {sizes} {disabled} {onpress}>
 		{#snippet children({ center, hovered, pressed })}
-			{@const colors = pill ?? theme.button}
+			{@const colors = theme.buyBonus ?? theme.button}
 			<UiThemeButtonFace
 				{center}
 				{pressed}
 				icon="buyBonus"
+				sprite={theme.buyBonus?.sprite}
+				spriteOutline={theme.buyBonus?.spriteOutline}
+				hideSpriteOutline={disabled || active}
 				text={pill ? i18nDerived.buyBonus() : undefined}
 				diameter={UI_BASE_SIZE * theme.button.scale}
 				width={UI_BASE_SIZE * theme.button.scale + getBuyBonusExtraWidth(theme)}
 				cornerRadius={pill
 					? getPanelCornerRadius(theme, UI_BASE_SIZE * theme.button.scale)
 					: undefined}
-				outlineWidth={theme.outlineWidth}
-				outline={disabled ? theme.outlineDisabled : theme.outline}
+				outlineWidth={theme.buyBonus?.ring?.width ?? theme.outlineWidth}
+				outline={disabled ? theme.outlineDisabled : (theme.buyBonus?.ring?.color ?? theme.outline)}
+				outlineAlpha={theme.buyBonus?.ring ? 1 : undefined}
+				fillAlpha={disabled || active ? 1 : theme.buyBonus?.fillAlpha}
+				shadow={theme.buyBonus?.shadow}
 				fill={disabled
 					? theme.button.fillDisabled
 					: active
@@ -81,7 +87,7 @@
 					? theme.button.iconDisabled
 					: active
 						? theme.button.iconActive
-						: (pill?.text ?? theme.button.icon)}
+						: colors.icon}
 			/>
 		{/snippet}
 	</Button>
