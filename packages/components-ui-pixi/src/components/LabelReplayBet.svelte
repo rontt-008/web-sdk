@@ -13,7 +13,12 @@
 	};
 
 	const props: Props = $props();
-	const multiplier = $derived(stateReplay.costMultiplier);
+	// from the replay's response, or the mode's own cost when the response doesn't say
+	const multiplier = $derived(
+		stateReplay.costMultiplier > 1
+			? stateReplay.costMultiplier
+			: (stateBetDerived.activeBetMode()?.costMultiplier ?? 1),
+	);
 	const modeTitle = $derived(multiplier > 1 ? stateBetDerived.activeBetMode()?.text?.title : undefined);
 	const label = $derived(
 		props.realCost ? `REAL COST · ${multiplier}x` : modeTitle || i18nDerived.bet(),

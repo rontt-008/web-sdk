@@ -66,7 +66,8 @@ export const requestBet = async (options: {
 			mode: options.mode,
 			currency: options.currency,
 			sessionID: options.sessionID,
-			amount: options.amount * API_AMOUNT_MULTIPLIER,
+			// whole micro-units: a level like 4.1 comes back from 4100000 / 1e6 as 4.0999999…
+			amount: Math.round(options.amount * API_AMOUNT_MULTIPLIER),
 		},
 	});
 

@@ -9,6 +9,17 @@
 			content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no"
 		/>
 		%sveltekit.head%
+		<!-- the page never scrolls: the game fills the window exactly -->
+		<style>
+			html {
+				overflow: hidden;
+				height: 100%;
+				overscroll-behavior: none;
+			}
+			canvas {
+				display: block;
+			}
+		</style>
 	</head>
 	<body
 		style="margin: 0; padding: 0; overflow: hidden; height: 100%; touch-action: manipulation; background-color: black"

@@ -15,7 +15,10 @@
 
 	const props: Partial<Omit<ButtonProps, 'children'>> = $props();
 	const context = getContext();
-	const disabled = $derived(!stateBetDerived.isBetCostAvailable());
+	// only a new spin needs the balance: stopping the reels (or autoplay) always works
+	const disabled = $derived(
+		context.stateXstateDerived.isIdle() && !stateBetDerived.isBetCostAvailable(),
+	);
 	// the space bar does nothing while a menu or a modal is open over the game
 	const hotkeyDisabled = $derived(disabled || !!stateModal.modal || stateUi.menuOpen);
 	// why the button is disabled when the balance doesn't cover the next bet

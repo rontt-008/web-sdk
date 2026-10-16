@@ -9,7 +9,6 @@ import baseBooks from './data/base_books_real';
 import anteBooks from './data/ante_books_real';
 import bonusBooks from './data/bonus_books_real';
 import superBooks from './data/super_books_real';
-import mythicBooks from './data/mythic_books_real';
 import mysteryBooks from './data/mystery_books_real';
 import featureBooks from './data/feature_books_real';
 import { pickByWeight } from './pickByWeight';
@@ -22,7 +21,6 @@ const BOOKS: Record<BetModeName, Book[]> = {
 	ante: anteBooks,
 	bonus: bonusBooks,
 	super: superBooks,
-	mythic: mythicBooks,
 	mystery: mysteryBooks,
 	feature: featureBooks,
 };

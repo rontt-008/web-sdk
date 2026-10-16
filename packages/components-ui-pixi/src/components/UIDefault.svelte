@@ -51,7 +51,9 @@
 	);
 </script>
 
-<EnableSpaceHold />
+{#if theme?.spaceHoldSpins !== false}
+	<EnableSpaceHold />
+{/if}
 
 <UiFadeContainer>
 	<LayoutComponent>

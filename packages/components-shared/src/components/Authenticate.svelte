@@ -143,8 +143,13 @@
 		stateBet.betAmount = (stateUrlDerived.amount() / API_AMOUNT_MULTIPLIER) || 0;
 		stateBet.wageredBetAmount = (stateUrlDerived.amount() / API_AMOUNT_MULTIPLIER) || 0;
 		stateBet.activeBetModeKey = stateUrlDerived.mode();
-		// a replay has no session to get the currency from: it comes in the url, the default if invalid
-		if (isCurrency(stateUrlDerived.currency())) stateBet.currency = stateUrlDerived.currency().toUpperCase();
+		// a replay has no session to get the currency from: it comes in the url. Without a valid one, a
+		// social replay shows SC (never "$"), others the default.
+		if (isCurrency(stateUrlDerived.currency())) {
+			stateBet.currency = stateUrlDerived.currency().toUpperCase();
+		} else if (stateUrlDerived.social()) {
+			stateBet.currency = 'XSC';
+		}
 
 		try {
 			const data = await requestReplay({

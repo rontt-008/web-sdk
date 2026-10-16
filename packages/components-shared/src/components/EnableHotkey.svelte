@@ -12,11 +12,15 @@
 	const getValidElement = (e: KeyboardEvent) =>
 		!EXCLUDED_TAGS.includes(e?.target?.tagName?.toLowerCase());
 
+	// A held key repeats its keydown; only the first one is a press, so a key held down from before
+	// (e.g. through the loading screen) can't press a button that appears under it. Holding is told
+	// from the time between keydown and keyup (see OnHotkey).
 	function handleKeydown(e: KeyboardEvent) {
 		if (getValidElement(e)) {
 			const isSpace = e.key === ' ';
 			const key = isSpace ? 'Space' : e.key;
 			if (PREVENT_DEFAULT_KEYS.includes(key)) e.preventDefault();
+			if (e.repeat) return;
 			if (key) context.eventEmitter.broadcast({ type: 'hotKey', key, action: 'keyDown' });
 		}
 	}

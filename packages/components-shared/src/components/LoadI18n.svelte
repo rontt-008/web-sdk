@@ -28,8 +28,11 @@
 
 	onMount(() => {
 		try {
-			// an unknown language (e.g. lang=zz) falls back to English
-			const lang = stateUrlDerived.lang() in props.messagesMap ? stateUrlDerived.lang() : 'en';
+			// an unknown language (e.g. lang=zz) falls back to English; own keys only, so a code like
+			// lang=constructor isn't taken for a language
+			const lang = Object.prototype.hasOwnProperty.call(props.messagesMap, stateUrlDerived.lang())
+				? stateUrlDerived.lang()
+				: 'en';
 			const messages = loadMessages(lang);
 			stateI18nDerived.init(lang, messages);
 		} catch (error) {

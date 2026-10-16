@@ -34,13 +34,6 @@ export default {
 			rtp: 0.967,
 			max_win: 10000.0,
 		},
-		mythic: {
-			cost: 1000.0,
-			feature: false,
-			buyBonus: true,
-			rtp: 0.967,
-			max_win: 10000.0,
-		},
 		// switched on and off like the ante (booster), not bought once
 		feature: {
 			cost: 25.0,

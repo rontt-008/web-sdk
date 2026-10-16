@@ -71,6 +71,8 @@ export const uiTheme: UiTheme = {
 	},
 	// mute music and mute sounds buttons beside the menu button, instead of the menu's sound switch
 	muteButtons: true,
+	// the space bar does exactly what the spin button does (Engine's guideline 228)
+	spaceHoldSpins: false,
 	hideSoundSwitch: true,
 	// the rules (the info button) hold the symbol wins and paylines too
 	hidePayTable: true,

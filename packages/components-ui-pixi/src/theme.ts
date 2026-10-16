@@ -81,6 +81,9 @@ export type UiTheme = {
 	// mute music and mute sounds buttons beside the menu button (compact desktop, portrait, landscape
 	// and tablet layouts)
 	muteButtons?: boolean;
+	// false: holding the space bar doesn't spin again and again, so the space bar does exactly what the
+	// spin button does
+	spaceHoldSpins?: boolean;
 };
 
 const KEY = Symbol('uiTheme');

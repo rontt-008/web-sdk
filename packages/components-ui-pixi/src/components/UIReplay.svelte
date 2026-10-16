@@ -18,6 +18,7 @@
 	import { Container, Rectangle } from 'pixi-svelte';
 	import { getContext } from '../context';
 	import { getUiTheme } from '../theme';
+	import { getSmallScreenBoost } from '../smallScreen';
 	import type { LayoutUiProps } from '../types';
 	import LabelFreeSpinCounter from './LabelFreeSpinCounter.svelte';
 	import { UI_BASE_FONT_SIZE, UI_BASE_SIZE, UI_THEMED_LABEL_SIZES } from '../constants';
@@ -39,9 +40,42 @@
 	// half a button (UI_BASE_SIZE at scale 0.7), and the middle of a stacked label (at scale 0.8)
 	const BUTTON_HALF = UI_BASE_SIZE * 0.7 * 0.5;
 	const LABEL_CENTER = (UI_THEMED_LABEL_SIZES.height * 0.5 - UI_BASE_FONT_SIZE * 0.35) * 0.8;
+
+	// on very small screens the row is drawn bigger (see getSmallScreenBoost) and packed closer
+	// around the middle so it still fits: menu, turbo | win, bet, real cost | replay
+	const boost = $derived(
+		getSmallScreenBoost(context.stateLayoutDerived.mainLayoutStandard().scale),
+	);
+	// the menu opens over the menu button at its size
+	const menuBoost = $derived(wide ? boost : 1);
+	const ROW_GAP = 24;
+	const rowX = $derived.by(() => {
+		if (boost === 1) {
+			return {
+				menu: center - 720,
+				turbo: center - 600,
+				win: center - 330,
+				realCost: center + 330,
+				replay: center + 600,
+			};
+		}
+		const button = UI_BASE_SIZE * (theme?.button.scale ?? 1) * 0.7 * boost;
+		const replay = UI_BASE_SIZE * (theme?.spin.scale ?? 1) * 0.7 * boost;
+		const label = (theme ? UI_THEMED_LABEL_SIZES.width : UI_BASE_FONT_SIZE * 3 * (326 / 73)) * 0.8 * boost;
+		const labelStep = label + ROW_GAP;
+		return {
+			menu: center - labelStep - label * 0.5 - ROW_GAP * 2 - button * 1.5,
+			turbo: center - labelStep - label * 0.5 - ROW_GAP - button * 0.5,
+			win: center - labelStep,
+			realCost: center + labelStep,
+			replay: center + labelStep + label * 0.5 + ROW_GAP + replay * 0.5,
+		};
+	});
 </script>
 
-<EnableSpaceHold />
+{#if theme?.spaceHoldSpins !== false}
+	<EnableSpaceHold />
+{/if}
 
 <UiFadeContainer>
 	<Container x={20}>
@@ -61,23 +95,23 @@
 
 		{#if wide}
 			<!-- one row under the board: menu, turbo, win, bet, real cost, replay -->
-			<Container x={center - 720 - BUTTON_HALF} y={rowY - BUTTON_HALF} scale={0.7}>
-				<ButtonMenu />
+			<Container x={rowX.menu} y={rowY} scale={0.7 * boost}>
+				<ButtonMenu anchor={0.5} />
 			</Container>
-			<Container x={center - 600 - BUTTON_HALF} y={rowY - BUTTON_HALF} scale={0.7}>
-				<ButtonTurbo />
+			<Container x={rowX.turbo} y={rowY} scale={0.7 * boost}>
+				<ButtonTurbo anchor={0.5} />
 			</Container>
-			<Container x={center - 330} y={rowY - LABEL_CENTER} scale={0.8}>
+			<Container x={rowX.win} y={rowY - LABEL_CENTER * boost} scale={0.8 * boost}>
 				<LabelWin stacked />
 			</Container>
-			<Container x={center} y={rowY - LABEL_CENTER} scale={0.8}>
+			<Container x={center} y={rowY - LABEL_CENTER * boost} scale={0.8 * boost}>
 				<LabelReplayBet stacked />
 			</Container>
-			<Container x={center + 330} y={rowY - LABEL_CENTER} scale={0.8}>
+			<Container x={rowX.realCost} y={rowY - LABEL_CENTER * boost} scale={0.8 * boost}>
 				<LabelReplayBet realCost stacked />
 			</Container>
 			<!-- raised a little so its caption underneath stays on screen -->
-			<Container x={center + 600} y={rowY - 20} scale={0.7}>
+			<Container x={rowX.replay} y={rowY - 20 * boost} scale={0.7 * boost}>
 				<ButtonReplay anchor={0.5} />
 			</Container>
 		{:else}
@@ -119,26 +153,26 @@
 
 		<MainContainer standard alignVertical="bottom">
 			<!-- over the menu button, with its close button where the menu button is -->
-			<Container x={wide ? center - 720 : center - 350} y={wide ? rowY : height - 390 - 15}>
+			<Container x={wide ? rowX.menu : center - 350} y={wide ? rowY : height - 390 - 15}>
 				{#if !theme?.hidePayTable}
-					<Container scale={0.8} y={0 * 0.5 - 150 - 170 * 3}>
+					<Container scale={0.8 * menuBoost} y={-(150 + 170 * 3) * menuBoost}>
 						<ButtonPayTable anchor={0.5} />
 					</Container>
 				{/if}
 
-				<Container scale={0.8} y={0 * 0.5 - 150 - 170 * 2}>
+				<Container scale={0.8 * menuBoost} y={-(150 + 170 * 2) * menuBoost}>
 					<ButtonGameRules anchor={0.5} />
 				</Container>
 
-				<Container scale={0.8} y={0 * 0.5 - 150 - 170 * 1}>
+				<Container scale={0.8 * menuBoost} y={-(150 + 170 * 1) * menuBoost}>
 					<ButtonSettings anchor={0.5} />
 				</Container>
 
-				<Container scale={0.8} y={0 * 0.5 - 150}>
+				<Container scale={0.8 * menuBoost} y={-150 * menuBoost}>
 					<ButtonSoundSwitch anchor={0.5} />
 				</Container>
 
-				<Container scale={0.8} y={0 * 0.5}>
+				<Container scale={0.8 * menuBoost}>
 					<ButtonMenuClose anchor={0.5} />
 				</Container>
 			</Container>

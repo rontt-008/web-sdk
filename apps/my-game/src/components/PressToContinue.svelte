@@ -2,6 +2,7 @@
 	import { MainContainer, OnPressFullScreen } from 'components-layout';
 	import { OnHotkey } from 'components-shared';
 	import { Text } from 'pixi-svelte';
+	import { stateModal, stateUi } from 'state-shared';
 
 	import { getContext } from '../game/context';
 
@@ -33,5 +34,10 @@
 		style={STYLE}
 	/>
 </MainContainer>
-<OnHotkey hotkey="Space" onpress={() => props.onpress()} />
+<!-- the space bar does nothing to the screen behind a menu or a modal -->
+<OnHotkey
+	hotkey="Space"
+	disabled={!!stateModal.modal || stateUi.menuOpen}
+	onpress={() => props.onpress()}
+/>
 <OnPressFullScreen onpress={() => props.onpress()} />

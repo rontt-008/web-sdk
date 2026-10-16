@@ -84,9 +84,15 @@
 	const percent = (value: number) => `${(value * 100).toFixed(2)}%`;
 	const chance = (value: number) => `${Math.round(value * 100)}%`;
 	const times = (value: number) => `${value.toLocaleString('en-US')}x`;
-	// "2, 3, 4 or 5"
-	const either = (items: (string | number)[]) =>
-		`${items.slice(0, -1).join(', ')} or ${items[items.length - 1]}`;
+	// "a, b and c"
+	const all = (items: string[]) => `${items.slice(0, -1).join(', ')} and ${items[items.length - 1]}`;
+	// "2 FS symbols add 3 spins, 3 add 5, 4 add 8 and 5 add 12"
+	const retriggers = all(
+		Object.entries(FREE_SPINS_ADDED).map(([count, spins], index) =>
+			index === 0 ? `${count} FS symbols add ${spins} spins` : `${count} add ${spins}`,
+		),
+	);
+	const spinsFor = (type: BonusType) => FREE_SPINS_AWARDED[BONUS_SCATTER_COUNT[type]];
 
 	// every way to play, with its cost, RTP and max win
 	const MODES = [
@@ -137,8 +143,10 @@
 		<div class="card feature">
 			<img src={assets.bigWild.src} alt="Big wild" class="feature-art tall" />
 			<p>
-				The WILD stands in for every symbol except FS. A WILD anywhere on a reel turns the whole
-				reel into a BIG WILD, and every BIG WILD throws 0 to 3 extra WILDs onto the other reels.
+				The WILD stands in for every symbol except FS. A WILD that lands anywhere on a reel turns the
+				whole reel into a BIG WILD, and every BIG WILD throws 0 to 3 extra WILDs onto the other
+				reels. Thrown WILDs stay where they land: they don't turn their reel into a BIG WILD and
+				don't throw more WILDs. Outside FREE SPINS and the FEATURE SPIN, WILDs carry no multiplier.
 			</p>
 		</div>
 	</section>
@@ -164,16 +172,16 @@
 		</div>
 		<div class="card feature">
 			<p>
-				During FREE SPINS, {either(Object.keys(FREE_SPINS_ADDED))} FS symbols add
-				{either(Object.values(FREE_SPINS_ADDED))} more spins. Every WILD carries a {minMultiplier}x
-				to {maxMultiplier}x multiplier, and the multipliers of the WILDs on a winning line are
-				added together. Thrown WILDs carry no multiplier.
+				During FREE SPINS, more FS symbols add more spins: {retriggers}. Every WILD carries a
+				{minMultiplier}x to {maxMultiplier}x multiplier; when several WILDs land on one reel, its
+				BIG WILD takes the highest of their multipliers. The multipliers of the BIG WILDs that are
+				part of a win are added together and multiply that win. Thrown WILDs carry no multiplier.
 			</p>
 		</div>
 		<div class="card feature">
 			<p>
-				<strong>MYTHIC FREE SPINS:</strong> every spin has at least one BIG WILD, and one of them throws
-				1 to 3 extra WILDs instead of 0 to 3.
+				<strong>MYTHIC FREE SPINS:</strong> every spin has at least one BIG WILD, and at least one of
+				them throws 1 to 3 extra WILDs instead of 0 to 3.
 			</p>
 		</div>
 	</section>
@@ -181,9 +189,11 @@
 	<section>
 		{@render heading(`${paylines.length} ${words.paylines}`)}
 		<p class="note">
-			Wins count from left to right on adjacent reels, starting from the leftmost reel. WILDs stand
-			in for the symbol after them, so a line counts all the way through; a line of only WILDs wins
-			as WILDs. Wins on different {words.paylines} are added together.
+			All {paylines.length} {words.paylines} are always played. Wins count from left to right on
+			adjacent reels, starting from the leftmost reel. WILDs stand in for the symbol after them, so a
+			line counts all the way through. WILDs at the start of a line win as WILDs when the line is
+			only WILDs, or when the next symbol is an FS symbol. Wins on different {words.paylines} are
+			added together.
 		</p>
 		<div class="paylines">
 			{#each paylines as line, index}
@@ -212,26 +222,27 @@
 		<div class="card feature">
 			<p>
 				<strong>FEATURE SPIN:</strong> switched on in the {words.buyBonus} menu. Each spin costs
-				{FEATURE_COST}x the {words.bet} and has at least one BIG WILD. Every BIG WILD carries a
-				{featureMinMultiplier}x to {featureMaxMultiplier}x multiplier, and one of them throws 1 to 3
-				extra WILDs onto the other reels. Thrown WILDs carry no multiplier. A FEATURE SPIN can't
-				start FREE SPINS.
+				{FEATURE_COST}x the {words.bet} and has at least one BIG WILD that throws 1 to 3 extra WILDs
+				onto the other reels. Every BIG WILD carries a {featureMinMultiplier}x to
+				{featureMaxMultiplier}x multiplier, and the multipliers of the BIG WILDs that are part of a
+				win are added together and multiply that win. Thrown WILDs carry no multiplier. A FEATURE
+				SPIN can't start FREE SPINS.
 			</p>
 		</div>
 		<div class="card feature">
 			<p>
-				The BOOSTER and the FEATURE SPIN stay on until they are turned off, and only one of them can
-				be on at a time.
+				The BOOSTER and the FEATURE SPIN stay on until they are turned off, or until a bonus from the
+				{words.buyBonus} menu starts, which turns them off. Only one of them can be on at a time.
 			</p>
 		</div>
 		<div class="card feature">
 			<p>
 				<strong>{words.buyBonus}:</strong> go straight to FREE SPINS. BONUS ({BONUS_COST}x the
-				{words.bet}) and SUPER BONUS ({SUPER_COST}x) give their FREE SPINS. MYSTERY BONUS ({MYSTERY_COST}x) gives the normal FREE SPINS with a {chance(
-					MYSTERY_CHANCES.normal,
-				)} chance, SUPER with {chance(MYSTERY_CHANCES.super)} and MYTHIC with {chance(
-					MYSTERY_CHANCES.mythic,
-				)}.
+				{words.bet}) gives FREE SPINS ({spinsFor('normal')} spins). SUPER BONUS ({SUPER_COST}x)
+				gives SUPER FREE SPINS ({spinsFor('super')} spins). MYSTERY BONUS ({MYSTERY_COST}x) gives
+				FREE SPINS with a {chance(MYSTERY_CHANCES.normal)} chance, SUPER FREE SPINS with
+				{chance(MYSTERY_CHANCES.super)} and MYTHIC FREE SPINS ({spinsFor('mythic')} spins) with
+				{chance(MYSTERY_CHANCES.mythic)}.
 			</p>
 		</div>
 	</section>
@@ -265,52 +276,65 @@
 			<div>
 				<dt>SPIN</dt>
 				<dd>
-					The big round button starts a spin at the current {words.bet}. While the reels spin, press
-					it again or tap the reels to stop them sooner. The space bar does the same; hold it down
-					for quick spins one after another.
+					The big round button with two arrows starts a spin at the current {words.bet}. While the
+					reels spin it shows a square: press it again, or tap the reels, to stop them sooner. During
+					autoplay it stops autoplay. The space bar does the same as this button.
 				</dd>
 			</div>
 			<div>
-				<dt>&minus; and +</dt>
-				<dd>Lower or raise the {words.bet}, one level at a time.</dd>
+				<dt>{words.bet.toUpperCase()} UP and DOWN</dt>
+				<dd>
+					On wide and square screens, the up and down arrows beside the {words.bet} raise or lower it
+					one level at a time. On tall screens and small wide ones (a phone held either way, or a
+					small window), the &minus; and + buttons do the same.
+				</dd>
 			</div>
 			<div>
 				<dt>{words.bet.toUpperCase()}</dt>
 				<dd>
-					Shows the {words.bet} of the next spin; press it to pick a {words.bet} from the menu.
+					Shows the {words.bet} of the next spin; press it to pick a {words.bet} from the menu. While
+					the BOOSTER or the FEATURE SPIN is on, it reads BOOSTER or FEATURE SPIN and shows what each
+					spin costs.
 				</dd>
 			</div>
 			<div>
 				<dt>AUTOPLAY</dt>
 				<dd>
-					Opens the autoplay settings: choose the number of spins and, under ADVANCED, a loss limit
-					and a single win limit, then start. Press it again to stop autoplay.
+					The circular arrow button opens the autoplay settings: choose the number of spins and,
+					under ADVANCED, a loss limit and a single win limit, then start. ADVANCED can't be opened
+					while the BOOSTER or the FEATURE SPIN is on, and switching either on clears both limits.
+					While autoplay runs, the button shows the spins left; press it again to stop autoplay.
 				</dd>
 			</div>
 			<div>
 				<dt>TURBO</dt>
-				<dd>Turns faster spins and animations on and off.</dd>
+				<dd>The lightning button turns faster spins and animations on and off.</dd>
 			</div>
 			<div>
 				<dt>MENU</dt>
 				<dd>
-					Opens the menu: INFO (these rules) and SETTINGS (master, music and sound effect volume).
-					The close button closes it.
+					The button with three lines opens the menu: the i button opens these rules and the gear
+					button opens SETTINGS (master, music and sound effect volume). The close button (X) closes
+					the menu. The X at the top right of a window, or the Escape key, closes the window.
 				</dd>
 			</div>
 			<div>
 				<dt>SOUND</dt>
 				<dd>
-					The music and sound effect buttons beside the menu button turn music and sound effects on
-					or off. SETTINGS turns all sound on or off, and sets each volume on its own. When watching
-					a replay, the sound button in the menu turns all sound on or off.
+					The music note and speaker buttons next to the menu button turn music and sound effects
+					on or off. SETTINGS turns all sound on or off, and sets each volume on its own. When
+					watching a replay, the sound button in the menu turns all sound on or off.
 				</dd>
 			</div>
 			<div>
 				<dt>{words.buyBonus}</dt>
 				<dd>
-					The orange button right of the spin button opens the bonus menu: pick a bonus, check what
-					it costs and confirm. The button turns white while the BOOSTER or the FEATURE SPIN is on.
+					The round black button with the red S, right of the spin button (at the bottom left on
+					small wide screens), opens the bonus menu. It shows the balance and the {words.bet}, with
+					&minus; and + to change the {words.bet} the prices are worked out from. Pick a bonus, check
+					what it costs and confirm; the BOOSTER and FEATURE SPIN cards switch them on the same way,
+					and while one is on, its card's DISABLE button switches it off. The button is greyed out
+					while a round plays, and turns white while the BOOSTER or the FEATURE SPIN is on.
 				</dd>
 			</div>
 			<div>
@@ -334,22 +358,25 @@
 			<div>
 				<dt>ARROW</dt>
 				<dd>
-					On phones the controls slide down out of the way during FREE SPINS; the arrow button
-					brings them back up, or slides them down again.
+					On tall screens (like a phone held upright), the controls slide down out of the way during
+					FREE SPINS; the arrow button brings them back up, or slides them down again.
 				</dd>
 			</div>
 			<div>
 				<dt>PRESS ANYWHERE TO CONTINUE</dt>
 				<dd>
-					On the start screen, the FREE SPINS screens and big wins, press anywhere or the space bar
-					to continue. While a win is counting up, the first press jumps to the final amount.
+					On the start screen and the FREE SPINS screens, press anywhere or the space bar to
+					continue. While the FREE SPINS total is counting up, the first press jumps to the final
+					amount.
 				</dd>
 			</div>
 			<div>
 				<dt>PLAY and REPLAY</dt>
 				<dd>
 					When watching a replay of a round, PLAY starts the round; once it has played, REPLAY plays
-					it again from the start.
+					it again from the start. The replay shows the round's {words.bet} and, for a mode that
+					costs more than the {words.bet}, REAL COST with the mode's multiplier and what the round
+					cost.
 				</dd>
 			</div>
 		</dl>

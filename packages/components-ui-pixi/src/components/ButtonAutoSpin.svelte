@@ -15,7 +15,8 @@
 	const disabled = $derived.by(() => {
 		if (stateBet.isSpaceHold) return true;
 		if (!context.stateXstateDerived.isIdle() && !stateBetDerived.hasAutoBetCounter()) return true;
-		if (!stateBetDerived.isBetCostAvailable()) return true;
+		// starting autoplay needs the balance, stopping it doesn't
+		if (!stateBetDerived.isBetCostAvailable() && !stateBetDerived.hasAutoBetCounter()) return true;
 		return false;
 	});
 
