@@ -6,9 +6,11 @@
 
 	import { DESKTOP_BASE_SIZE, DESKTOP_BACKGROUND_WIDTH_LIST } from '../constants';
 	import { getContext } from '../context';
+	import { getMenuButtons, getUiTheme } from '../theme';
 	import type { LayoutUiProps } from '../types';
 
 	const props: LayoutUiProps = $props();
+	const menuButtons = $derived(getMenuButtons(props, getUiTheme()));
 	const context = getContext();
 </script>
 
@@ -93,21 +95,14 @@
 			x={298}
 			y={context.stateLayoutDerived.mainLayoutStandard().height - DESKTOP_BASE_SIZE - 10}
 		>
-			<Container scale={0.8} y={DESKTOP_BASE_SIZE * 0.5 - 150 - 170 * 3}>
-				{@render props.buttonPayTable({ anchor: 0.5 })}
-			</Container>
-
-			<Container scale={0.8} y={DESKTOP_BASE_SIZE * 0.5 - 150 - 170 * 2}>
-				{@render props.buttonGameRules({ anchor: 0.5 })}
-			</Container>
-
-			<Container scale={0.8} y={DESKTOP_BASE_SIZE * 0.5 - 150 - 170 * 1}>
-				{@render props.buttonSettings({ anchor: 0.5 })}
-			</Container>
-
-			<Container scale={0.8} y={DESKTOP_BASE_SIZE * 0.5 - 150}>
-				{@render props.buttonSoundSwitch({ anchor: 0.5 })}
-			</Container>
+			{#each menuButtons as button, index}
+				<Container
+					scale={0.8}
+					y={DESKTOP_BASE_SIZE * 0.5 - 150 - 170 * (menuButtons.length - 1 - index)}
+				>
+					{@render button({ anchor: 0.5 })}
+				</Container>
+			{/each}
 
 			<Container scale={0.8} y={DESKTOP_BASE_SIZE * 0.5}>
 				{@render props.buttonMenuClose({ anchor: 0.5 })}

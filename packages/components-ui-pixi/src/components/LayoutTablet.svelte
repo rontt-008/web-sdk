@@ -5,7 +5,7 @@
 	import { Container, Rectangle, anchorToPivot } from 'pixi-svelte';
 
 	import { getContext } from '../context';
-	import { getUiTheme } from '../theme';
+	import { getMenuButtons, getUiTheme } from '../theme';
 	import type { LayoutUiProps } from '../types';
 	import LabelFreeSpinCounter from './LabelFreeSpinCounter.svelte';
 	import { DESKTOP_BASE_SIZE, DESKTOP_BACKGROUND_WIDTH_LIST } from '../constants';
@@ -13,6 +13,7 @@
 	const props: LayoutUiProps = $props();
 	const context = getContext();
 	const theme = getUiTheme();
+	const menuButtons = $derived(getMenuButtons(props, theme));
 </script>
 
 <Container x={20}>
@@ -112,21 +113,11 @@
 			x={100}
 			y={context.stateLayoutDerived.mainLayoutStandard().height - DESKTOP_BASE_SIZE - 30}
 		>
-			<Container y={DESKTOP_BASE_SIZE * 0.5 - 185 - 210 * 3}>
-				{@render props.buttonPayTable({ anchor: 0.5 })}
-			</Container>
-
-			<Container y={DESKTOP_BASE_SIZE * 0.5 - 185 - 210 * 2}>
-				{@render props.buttonGameRules({ anchor: 0.5 })}
-			</Container>
-
-			<Container y={DESKTOP_BASE_SIZE * 0.5 - 185 - 210 * 1}>
-				{@render props.buttonSettings({ anchor: 0.5 })}
-			</Container>
-
-			<Container y={DESKTOP_BASE_SIZE * 0.5 - 185}>
-				{@render props.buttonSoundSwitch({ anchor: 0.5 })}
-			</Container>
+			{#each menuButtons as button, index}
+				<Container y={DESKTOP_BASE_SIZE * 0.5 - 185 - 210 * (menuButtons.length - 1 - index)}>
+					{@render button({ anchor: 0.5 })}
+				</Container>
+			{/each}
 
 			<Container y={DESKTOP_BASE_SIZE * 0.5}>
 				{@render props.buttonMenuClose({ anchor: 0.5 })}

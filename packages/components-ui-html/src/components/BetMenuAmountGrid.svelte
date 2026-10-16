@@ -9,14 +9,19 @@
 
 	const { stateLayoutDerived } = getContextLayout();
 	const count = $derived(stateLayoutDerived.layoutType() === 'landscape' ? 15 : 18);
-	const options = $derived(
-		[
-			...stateConfig.betMenuOptions.slice(0, count - 1),
-			...stateConfig.betMenuOptions.slice(-1),
-		].filter((value, index, array) => array.indexOf(value) === index),
-	); //always includes last, and without duplicate
+	// every RGS bet level if they fit, otherwise ones spread evenly from the lowest to the highest
+	const options = $derived.by(() => {
+		const levels = stateConfig.betAmountOptions;
+		if (levels.length <= count) return levels;
+		const indexes = Array.from({ length: count }, (_, i) =>
+			Math.round((i * (levels.length - 1)) / (count - 1)),
+		);
+		return [...new Set(indexes)].map((index) => levels[index]);
+	});
 
-	const isMaxValue = (value: number) => value === options[options.length - 1];
+	// only the highest bet level is MAX
+	const isMaxValue = (value: number) =>
+		value === stateConfig.betAmountOptions[stateConfig.betAmountOptions.length - 1];
 </script>
 
 <OptionsGrid

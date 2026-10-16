@@ -23,12 +23,8 @@
 	} from '../game/betModes';
 	import type { BonusType } from '../game/types';
 
-	type Props = {
-		// the pay table (symbols, the FS symbol, paylines) or the rules (features, RTP, max win)
-		part: 'payTable' | 'gameRules';
-	};
-
-	const props: Props = $props();
+	// The game rules (the menu's info button), which hold the pay table too: symbol wins, the wild,
+	// free spins, paylines, the booster, feature spin and bonuses, RTP, the controls and the disclaimer.
 
 	// social mode (social=true) can't use words like bet, buy or pay
 	const words = stateUrlDerived.social()
@@ -36,7 +32,6 @@
 				bet: 'play amount',
 				payline: 'win line',
 				paylines: 'win lines',
-				payTable: 'WIN TABLE',
 				buyBonus: 'PLAY BONUS',
 				bonusBuys: 'bonuses',
 			}
@@ -44,7 +39,6 @@
 				bet: 'bet',
 				payline: 'payline',
 				paylines: 'paylines',
-				payTable: 'PAYTABLE',
 				buyBonus: 'BUY BONUS',
 				bonusBuys: 'bonus buys',
 			};
@@ -81,10 +75,7 @@
 	const getPays = (symbol: PayingSymbol) =>
 		config.symbols[symbol].paytable.map((entry) => Object.entries(entry)[0] as [string, number]);
 
-
 	const BONUS_TYPES: BonusType[] = ['normal', 'super', 'mythic'];
-	// 5 FS symbols first, like the symbol wins
-	const SCATTER_COUNTS = BONUS_TYPES.map((type) => BONUS_SCATTER_COUNT[type]).reverse();
 	const bonusTitle = (type: BonusType) =>
 		[BONUS_NAME[type], 'FREE SPINS'].filter(Boolean).join(' ');
 
@@ -120,15 +111,11 @@
 	<h2 class="heading"><HeadingText>{text}</HeadingText></h2>
 {/snippet}
 
-<!-- every paying symbol with its wins; the rules add the FS symbol with the spins it starts -->
-{#snippet symbolWins(withScatter: boolean)}
+<div class="game-info">
 	<section>
 		{@render heading('Symbol wins')}
 		<p class="note">
 			Wins for 3, 4 or 5 of a kind on a {words.payline}, as a multiple of the {words.bet}.
-			{#if withScatter}
-				3, 4 or 5 FS symbols anywhere on the reels start FREE SPINS.
-			{/if}
 		</p>
 		<div class="symbols">
 			{#each PAYING_SYMBOLS as symbol}
@@ -144,24 +131,55 @@
 					</dl>
 				</div>
 			{/each}
-			{#if withScatter}
-				<div class="card symbol">
-					<img src={assets.symbolS.src} alt="FS" />
-					<dl>
-						{#each SCATTER_COUNTS as count}
-							<div class="pay">
-								<dt>{count}</dt>
-								<dd>{FREE_SPINS_AWARDED[count]} spins</dd>
-							</div>
-						{/each}
-					</dl>
-				</div>
-			{/if}
 		</div>
 	</section>
-{/snippet}
 
-{#snippet paylineList()}
+	<section>
+		{@render heading('Wild')}
+		<div class="card feature">
+			<img src={assets.bigWild.src} alt="Big wild" class="feature-art tall" />
+			<p>
+				The WILD stands in for every symbol except FS. A WILD anywhere on a reel turns the whole
+				reel into a BIG WILD, and every BIG WILD throws 0 to 3 extra WILDs onto the other reels.
+			</p>
+		</div>
+	</section>
+
+	<section>
+		{@render heading('Free spins')}
+		<div class="card feature">
+			<img src={assets.symbolS.src} alt="FS" class="feature-art" />
+			<p>
+				3, 4 or 5 FS symbols anywhere on the reels start FREE SPINS. FS symbols have no line wins
+				of their own, and one covered by a BIG WILD doesn't count.
+			</p>
+		</div>
+		<div class="bonuses">
+			{#each BONUS_TYPES as type}
+				{@const scatters = BONUS_SCATTER_COUNT[type]}
+				<div class="card bonus">
+					<HeadingText>{bonusTitle(type)}</HeadingText>
+					<span class="big">{FREE_SPINS_AWARDED[scatters]} spins</span>
+					<span class="muted">{scatters} FS symbols</span>
+				</div>
+			{/each}
+		</div>
+		<div class="card feature">
+			<p>
+				During FREE SPINS, {either(Object.keys(FREE_SPINS_ADDED))} FS symbols add
+				{either(Object.values(FREE_SPINS_ADDED))} more spins. Every WILD carries a {minMultiplier}x
+				to {maxMultiplier}x multiplier, and the multipliers of the WILDs on a winning line are
+				added together. Thrown WILDs carry no multiplier.
+			</p>
+		</div>
+		<div class="card feature">
+			<p>
+				<strong>MYTHIC FREE SPINS:</strong> every spin has at least one BIG WILD, and one of them throws
+				1 to 3 extra WILDs instead of 0 to 3.
+			</p>
+		</div>
+	</section>
+
 	<section>
 		{@render heading(`${paylines.length} ${words.paylines}`)}
 		<p class="note">
@@ -184,238 +202,170 @@
 			{/each}
 		</div>
 	</section>
-{/snippet}
 
-<div class="game-info">
-	{#if props.part === 'payTable'}
-		{@render symbolWins(false)}
+	<section>
+		{@render heading(`Booster, feature spin and ${words.bonusBuys}`)}
+		<div class="card feature">
+			<p>
+				<strong>BOOSTER:</strong> each spin costs {BOOSTER_COST}x the {words.bet} and FREE SPINS start
+				more often.
+			</p>
+		</div>
+		<div class="card feature">
+			<p>
+				<strong>FEATURE SPIN:</strong> switched on in the {words.buyBonus} menu. Each spin costs
+				{FEATURE_COST}x the {words.bet} and has at least one BIG WILD. Every BIG WILD carries a
+				{featureMinMultiplier}x to {featureMaxMultiplier}x multiplier, and one of them throws 1 to 3
+				extra WILDs onto the other reels. Thrown WILDs carry no multiplier. A FEATURE SPIN can't
+				start FREE SPINS.
+			</p>
+		</div>
+		<div class="card feature">
+			<p>
+				The BOOSTER and the FEATURE SPIN stay on until they are turned off, and only one of them can
+				be on at a time.
+			</p>
+		</div>
+		<div class="card feature">
+			<p>
+				<strong>{words.buyBonus}:</strong> go straight to FREE SPINS. BONUS ({BONUS_COST}x the
+				{words.bet}), SUPER BONUS ({SUPER_COST}x) and MYTHIC BONUS ({MYTHIC_COST}x) give their
+				FREE SPINS. MYSTERY BONUS ({MYSTERY_COST}x) gives the normal FREE SPINS with a {chance(
+					MYSTERY_CHANCES.normal,
+				)} chance, SUPER with {chance(MYSTERY_CHANCES.super)} and MYTHIC with {chance(
+					MYSTERY_CHANCES.mythic,
+				)}.
+			</p>
+		</div>
+	</section>
 
-		<section>
-			{@render heading('Wild')}
-			<div class="card feature">
-				<img src={assets.bigWild.src} alt="Big wild" class="feature-art tall" />
-				<p>
-					The WILD stands in for every symbol except FS. A WILD anywhere on a reel turns the whole
-					reel into a BIG WILD, and every BIG WILD throws 0 to 3 extra WILDs onto the other reels.
-				</p>
-			</div>
-		</section>
-
-		<section>
-			{@render heading('Free spins')}
-			<div class="card feature">
-				<img src={assets.symbolS.src} alt="FS" class="feature-art" />
-				<p>
-					3, 4 or 5 FS symbols anywhere on the reels start FREE SPINS. FS symbols have no line wins
-					of their own, and one covered by a BIG WILD doesn't count.
-				</p>
-			</div>
-			<div class="bonuses">
-				{#each BONUS_TYPES as type}
-					{@const scatters = BONUS_SCATTER_COUNT[type]}
-					<div class="card bonus">
-						<HeadingText>{bonusTitle(type)}</HeadingText>
-						<span class="big">{FREE_SPINS_AWARDED[scatters]} spins</span>
-						<span class="muted">{scatters} FS symbols</span>
-					</div>
+	<section>
+		{@render heading('Return to player')}
+		<table class="card modes">
+			<thead>
+				<tr><th>Mode</th><th>Cost</th><th>RTP</th><th>Max win</th></tr>
+			</thead>
+			<tbody>
+				{#each MODES as { name, cost, mode }}
+					<tr>
+						<td>{name}</td>
+						<td>{times(cost)}</td>
+						<td>{percent(mode.rtp)}</td>
+						<td>{times(mode.max_win)}</td>
+					</tr>
 				{/each}
-			</div>
-		</section>
+			</tbody>
+		</table>
+		<p class="note">
+			Wins in a round are capped at {times(maxWin)} the {words.bet}; the round ends once it reaches
+			that.
+		</p>
+	</section>
 
-		{@render paylineList()}
-	{:else}
-		{@render symbolWins(true)}
-		{@render paylineList()}
+	<section>
+		{@render heading('Controls')}
+		<dl class="card controls">
+			<div>
+				<dt>SPIN</dt>
+				<dd>
+					The big round button starts a spin at the current {words.bet}. While the reels spin, press
+					it again or tap the reels to stop them sooner. The space bar does the same; hold it down
+					for quick spins one after another.
+				</dd>
+			</div>
+			<div>
+				<dt>&minus; and +</dt>
+				<dd>Lower or raise the {words.bet}, one level at a time.</dd>
+			</div>
+			<div>
+				<dt>{words.bet.toUpperCase()}</dt>
+				<dd>
+					Shows the {words.bet} of the next spin; press it to pick a {words.bet} from the menu.
+				</dd>
+			</div>
+			<div>
+				<dt>AUTOPLAY</dt>
+				<dd>
+					Opens the autoplay settings: choose the number of spins and, under ADVANCED, a loss limit
+					and a single win limit, then start. Press it again to stop autoplay.
+				</dd>
+			</div>
+			<div>
+				<dt>TURBO</dt>
+				<dd>Turns faster spins and animations on and off.</dd>
+			</div>
+			<div>
+				<dt>MENU</dt>
+				<dd>
+					Opens the menu: INFO (these rules) and SETTINGS (master, music and sound effect volume).
+					The close button closes it.
+				</dd>
+			</div>
+			<div>
+				<dt>SOUND</dt>
+				<dd>
+					The music and sound effect buttons beside the menu button turn music and sound effects on
+					or off. SETTINGS turns all sound on or off, and sets each volume on its own. When watching
+					a replay, the sound button in the menu turns all sound on or off.
+				</dd>
+			</div>
+			<div>
+				<dt>{words.buyBonus}</dt>
+				<dd>
+					The sign beside the reels, or the button on smaller screens, opens the bonus menu: pick a
+					bonus, check what it costs and confirm.
+				</dd>
+			</div>
+			<div>
+				<dt>BOOSTER</dt>
+				<dd>
+					The switch beside the reels, or the BOOSTER card in the bonus menu, turns the booster on or
+					off. Each spin costs {BOOSTER_COST}x the {words.bet} while it is on.
+				</dd>
+			</div>
+			<div>
+				<dt>FEATURE SPIN</dt>
+				<dd>
+					The FEATURE SPIN card in the bonus menu turns feature spins on or off. Each spin costs
+					{FEATURE_COST}x the {words.bet} while it is on.
+				</dd>
+			</div>
+			<div>
+				<dt>BALANCE and WIN</dt>
+				<dd>Show the balance and the win of the current round.</dd>
+			</div>
+			<div>
+				<dt>ARROW</dt>
+				<dd>
+					On phones the controls slide down out of the way during FREE SPINS; the arrow button
+					brings them back up, or slides them down again.
+				</dd>
+			</div>
+			<div>
+				<dt>PRESS ANYWHERE TO CONTINUE</dt>
+				<dd>
+					On the start screen, the FREE SPINS screens and big wins, press anywhere or the space bar
+					to continue. While a win is counting up, the first press jumps to the final amount.
+				</dd>
+			</div>
+			<div>
+				<dt>REPLAY</dt>
+				<dd>When watching a replay of a round, plays the round again from the start.</dd>
+			</div>
+		</dl>
+	</section>
 
-		<section>
-			{@render heading('Free spins')}
-			<div class="card feature">
-				<p>
-					During FREE SPINS, {either(Object.keys(FREE_SPINS_ADDED))} FS symbols add
-					{either(Object.values(FREE_SPINS_ADDED))} more spins. Every WILD carries a {minMultiplier}x
-					to {maxMultiplier}x multiplier, and the multipliers of the WILDs on a winning line are
-					added together. Thrown WILDs carry no multiplier.
-				</p>
-			</div>
-			<div class="card feature">
-				<p>
-					<strong>MYTHIC FREE SPINS:</strong> every spin has at least one BIG WILD, and one of them throws
-					1 to 3 extra WILDs instead of 0 to 3.
-				</p>
-			</div>
-		</section>
-
-		<section>
-			{@render heading(`Booster, feature spin and ${words.bonusBuys}`)}
-			<div class="card feature">
-				<p>
-					<strong>BOOSTER:</strong> each spin costs {BOOSTER_COST}x the {words.bet} and FREE SPINS start
-					more often.
-				</p>
-			</div>
-			<div class="card feature">
-				<p>
-					<strong>FEATURE SPIN:</strong> switched on in the {words.buyBonus} menu. Each spin costs
-					{FEATURE_COST}x the {words.bet} and has at least one BIG WILD. Every BIG WILD carries a {featureMinMultiplier}x to {featureMaxMultiplier}x
-					multiplier, and one of them throws 1 to 3 extra WILDs onto the other reels. Thrown WILDs carry
-					no multiplier. A FEATURE SPIN can't start FREE SPINS.
-				</p>
-			</div>
-			<div class="card feature">
-				<p>
-					The BOOSTER and the FEATURE SPIN stay on until they are turned off, and only one of them can
-					be on at a time.
-				</p>
-			</div>
-			<div class="card feature">
-				<p>
-					<strong>FEATURE SPIN:</strong> while it is on, each spin costs {FEATURE_COST}x the
-					{words.bet} and has at least one BIG WILD, and one of them throws 1 to 3 extra WILDs onto
-					the other reels. These spins win like base game spins and can't start FREE SPINS. The
-					BOOSTER and FEATURE SPIN can't be on at the same time.
-				</p>
-			</div>
-			<div class="card feature">
-				<p>
-					<strong>{words.buyBonus}:</strong> go straight to FREE SPINS. BONUS ({BONUS_COST}x the
-					{words.bet}), SUPER BONUS ({SUPER_COST}x) and MYTHIC BONUS ({MYTHIC_COST}x) give their
-					FREE SPINS. MYSTERY BONUS ({MYSTERY_COST}x) gives the normal FREE SPINS with a {chance(
-						MYSTERY_CHANCES.normal,
-					)} chance, SUPER with {chance(MYSTERY_CHANCES.super)} and MYTHIC with {chance(
-						MYSTERY_CHANCES.mythic,
-					)}.
-				</p>
-			</div>
-		</section>
-
-		<section>
-			{@render heading('Return to player')}
-			<table class="card modes">
-				<thead>
-					<tr><th>Mode</th><th>Cost</th><th>RTP</th><th>Max win</th></tr>
-				</thead>
-				<tbody>
-					{#each MODES as { name, cost, mode }}
-						<tr>
-							<td>{name}</td>
-							<td>{times(cost)}</td>
-							<td>{percent(mode.rtp)}</td>
-							<td>{times(mode.max_win)}</td>
-						</tr>
-					{/each}
-				</tbody>
-			</table>
-			<p class="note">
-				Wins in a round are capped at {times(maxWin)} the {words.bet}; the round ends once it
-				reaches that.
-			</p>
-		</section>
-
-		<section>
-			{@render heading('Controls')}
-			<dl class="card controls">
-				<div>
-					<dt>SPIN</dt>
-					<dd>
-						The big round button starts a spin at the current {words.bet}. While the reels spin,
-						press it again or tap the reels to stop them sooner. The space bar does the same; hold
-						it down for quick spins one after another.
-					</dd>
-				</div>
-				<div>
-					<dt>&minus; and +</dt>
-					<dd>Lower or raise the {words.bet}, one level at a time.</dd>
-				</div>
-				<div>
-					<dt>{words.bet.toUpperCase()}</dt>
-					<dd>
-						Shows the {words.bet} of the next spin; press it to pick a {words.bet} from the menu.
-					</dd>
-				</div>
-				<div>
-					<dt>AUTOPLAY</dt>
-					<dd>
-						Opens the autoplay settings: choose the number of spins and, under ADVANCED, a loss
-						limit and a single win limit, then start. Press it again to stop autoplay.
-					</dd>
-				</div>
-				<div>
-					<dt>TURBO</dt>
-					<dd>Turns faster spins and animations on and off.</dd>
-				</div>
-				<div>
-					<dt>MENU</dt>
-					<dd>
-						Opens the menu: the {words.payTable} (symbol wins and {words.paylines}), INFO (these
-						rules), SETTINGS (master, music and sound effect volume) and the sound buttons. The
-						close button closes it.
-					</dd>
-				</div>
-				<div>
-					<dt>SOUND</dt>
-					<dd>
-						The sound button turns all sound on or off. The music and sound effect buttons, and the
-						volumes in SETTINGS, change each on its own.
-					</dd>
-				</div>
-				<div>
-					<dt>{words.buyBonus}</dt>
-					<dd>
-						The sign beside the reels, or the button on smaller screens, opens the bonus menu: pick
-						a bonus, check what it costs and confirm.
-					</dd>
-				</div>
-				<div>
-					<dt>BOOSTER</dt>
-					<dd>
-						The switch beside the reels, or the BOOSTER card in the bonus menu, turns the booster on
-						or off. Each spin costs {BOOSTER_COST}x the {words.bet} while it is on.
-					</dd>
-				</div>
-				<div>
-					<dt>FEATURE SPIN</dt>
-					<dd>
-						The FEATURE SPIN card in the bonus menu turns feature spins on or off. Each spin costs
-						{FEATURE_COST}x the {words.bet} while it is on.
-					</dd>
-				</div>
-				<div>
-					<dt>BALANCE and WIN</dt>
-					<dd>Show the balance and the win of the current round.</dd>
-				</div>
-				<div>
-					<dt>ARROW</dt>
-					<dd>
-						On phones the controls slide down out of the way during FREE SPINS; the arrow button
-						brings them back up, or slides them down again.
-					</dd>
-				</div>
-				<div>
-					<dt>PRESS ANYWHERE TO CONTINUE</dt>
-					<dd>
-						On the start screen, the FREE SPINS screens and big wins, press anywhere or the space
-						bar to continue. While a win is counting up, the first press jumps to the final amount.
-					</dd>
-				</div>
-				<div>
-					<dt>REPLAY</dt>
-					<dd>When watching a replay of a round, plays the round again from the start.</dd>
-				</div>
-			</dl>
-		</section>
-
-		<section>
-			{@render heading('Disclaimer')}
-			<p class="note">
-				Malfunction voids all wins and plays. A consistent internet connection is required. In the
-				event of a disconnection, reload the game to finish any uncompleted rounds. The expected
-				return is calculated over many plays. The game display is not representative of any physical
-				device and is for illustrative purposes only. Winnings are settled according to the amount
-				received from the Remote Game Server and not from events within the web browser. TM and
-				&copy; 2026 Engine.
-			</p>
-		</section>
-	{/if}
+	<section>
+		{@render heading('Disclaimer')}
+		<p class="note">
+			Malfunction voids all wins and plays. A consistent internet connection is required. In the
+			event of a disconnection, reload the game to finish any uncompleted rounds. The expected
+			return is calculated over many plays. The game display is not representative of any physical
+			device and is for illustrative purposes only. Winnings are settled according to the amount
+			received from the Remote Game Server and not from events within the web browser. TM and
+			&copy; 2026 Engine.
+		</p>
+	</section>
 </div>
 
 <style lang="scss">

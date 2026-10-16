@@ -7,11 +7,12 @@
 	import { LANDSCAPE_BASE_SIZE, LANDSCAPE_BACKGROUND_WIDTH_LIST } from '../constants';
 	import type { LayoutUiProps } from '../types';
 	import { getContext } from '../context';
-	import { getUiTheme } from '../theme';
+	import { getMenuButtons, getUiTheme } from '../theme';
 
 	const props: LayoutUiProps = $props();
 	const context = getContext();
 	const theme = getUiTheme();
+	const menuButtons = $derived(getMenuButtons(props, theme));
 </script>
 
 <Container x={20}>
@@ -121,21 +122,14 @@
 			x={165}
 			y={context.stateLayoutDerived.mainLayoutStandard().height - LANDSCAPE_BASE_SIZE - 130}
 		>
-			<Container scale={0.8} y={LANDSCAPE_BASE_SIZE * 0.5 - 150 - 170 * 3}>
-				{@render props.buttonPayTable({ anchor: 0.5 })}
-			</Container>
-
-			<Container scale={0.8} y={LANDSCAPE_BASE_SIZE * 0.5 - 150 - 170 * 2}>
-				{@render props.buttonGameRules({ anchor: 0.5 })}
-			</Container>
-
-			<Container scale={0.8} y={LANDSCAPE_BASE_SIZE * 0.5 - 150 - 170 * 1}>
-				{@render props.buttonSettings({ anchor: 0.5 })}
-			</Container>
-
-			<Container scale={0.8} y={LANDSCAPE_BASE_SIZE * 0.5 - 150}>
-				{@render props.buttonSoundSwitch({ anchor: 0.5 })}
-			</Container>
+			{#each menuButtons as button, index}
+				<Container
+					scale={0.8}
+					y={LANDSCAPE_BASE_SIZE * 0.5 - 150 - 170 * (menuButtons.length - 1 - index)}
+				>
+					{@render button({ anchor: 0.5 })}
+				</Container>
+			{/each}
 
 			<Container scale={0.8} y={LANDSCAPE_BASE_SIZE * 0.5}>
 				{@render props.buttonMenuClose({ anchor: 0.5 })}

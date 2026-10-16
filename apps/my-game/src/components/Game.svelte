@@ -137,10 +137,8 @@
 	{#snippet bonusArt(betModeData)}
 		<BonusCardArt {betModeData} />
 	{/snippet}
-	{#snippet payTable()}
-		<GameInfo part="payTable" />
-	{/snippet}
+	<!-- no pay table: the rules hold the symbol wins and paylines too (see uiTheme's hidePayTable) -->
 	{#snippet gameRules()}
-		<GameInfo part="gameRules" />
+		<GameInfo />
 	{/snippet}
 </Modals>

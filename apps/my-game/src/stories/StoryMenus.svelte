@@ -22,7 +22,6 @@
 			| 'betAmountMenu'
 			| 'autoSpin'
 			| 'settings'
-			| 'payTable'
 			| 'gameRules';
 		// made-up volatility to show the meter; the game's bet modes do not have it yet
 		sampleVolatility?: boolean;
@@ -74,16 +73,12 @@
 	<BonusCardArt {betModeData} />
 {/snippet}
 
-{#snippet payTable()}
-	<GameInfo part="payTable" />
-{/snippet}
-
 {#snippet gameRules()}
-	<GameInfo part="gameRules" />
+	<GameInfo />
 {/snippet}
 
 <GlobalStyle>
-	<Modals theme={UI_HTML_THEME_CLEAN} {version} {bonusArt} {payTable} {gameRules} />
+	<Modals theme={UI_HTML_THEME_CLEAN} {version} {bonusArt} {gameRules} />
 </GlobalStyle>
 
 <style>

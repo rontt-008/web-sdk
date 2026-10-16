@@ -33,6 +33,9 @@ export const uiTheme: UiTheme = {
 	label: { ...UI_THEME_CLEAN.label, panelAlpha: 0.82 },
 	// the buy bonus and booster buttons under the logo replace the UI's buy bonus button here
 	hideBuyBonusOn: ['desktop', 'landscape'],
-	// mute music and mute sounds buttons beside the menu button
+	// mute music and mute sounds buttons beside the menu button, instead of the menu's sound switch
 	muteButtons: true,
+	hideSoundSwitch: true,
+	// the rules (the info button) hold the symbol wins and paylines too
+	hidePayTable: true,
 };

@@ -3,7 +3,7 @@
 
 	import { requestAuthenticate, requestReplay } from 'rgs-requests';
 	import { stateUrlDerived, stateBet, stateConfig, stateReplay, stateUi } from 'state-shared';
-	import { API_AMOUNT_MULTIPLIER, MOST_USED_BET_INDEXES } from 'constants-shared/bet';
+	import { API_AMOUNT_MULTIPLIER } from 'constants-shared/bet';
 
 	type Props = { children: Snippet };
 
@@ -64,25 +64,29 @@
 				// 			"minimumRoundDuration": 0
 				// 	}
 				// }
-				const { minBet, maxBet, defaultBetLevel, betLevels = [] } = authenticateData.config;
+				const { minBet, maxBet, stepBet, defaultBetLevel, betLevels = [] } = authenticateData.config;
 				stateConfig.jurisdiction = authenticateData?.config?.jurisdiction;
 				// only the RGS bet levels, kept inside minBet - maxBet
-				stateConfig.betAmountOptions = betLevels
-					.filter((level) => (!minBet || level >= minBet) && (!maxBet || level <= maxBet))
-					.map((level) => level / API_AMOUNT_MULTIPLIER);
-				stateConfig.betMenuOptions = stateConfig.betAmountOptions.filter((_, index) =>
-					MOST_USED_BET_INDEXES.includes(index),
+				const levels = betLevels.filter(
+					(level) => (!minBet || level >= minBet) && (!maxBet || level <= maxBet),
 				);
+				// without any, every stepBet from minBet to maxBet
+				if (levels.length === 0 && minBet && maxBet && stepBet) {
+					for (let level = minBet; level <= maxBet; level += stepBet) levels.push(level);
+				}
+				// a bet the RGS hasn't allowed is never shown or sent
+				if (levels.length === 0) {
+					throw { error: 'ERR_AUTHENTICATE', message: 'No bet levels from the game server.' };
+				}
+				stateConfig.betAmountOptions = levels.map((level) => level / API_AMOUNT_MULTIPLIER);
 
 				// open on defaultBetLevel, or the level closest to it
-				if (stateConfig.betAmountOptions.length > 0) {
-					const defaultBet = (defaultBetLevel || 0) / API_AMOUNT_MULTIPLIER;
-					const betAmount = stateConfig.betAmountOptions.reduce((closest, level) =>
-						Math.abs(level - defaultBet) < Math.abs(closest - defaultBet) ? level : closest,
-					);
-					stateBet.betAmount = betAmount;
-					stateBet.wageredBetAmount = betAmount;
-				}
+				const defaultBet = (defaultBetLevel || 0) / API_AMOUNT_MULTIPLIER;
+				const betAmount = stateConfig.betAmountOptions.reduce((closest, level) =>
+					Math.abs(level - defaultBet) < Math.abs(closest - defaultBet) ? level : closest,
+				);
+				stateBet.betAmount = betAmount;
+				stateBet.wageredBetAmount = betAmount;
 			}
 
 			// round

@@ -17,6 +17,7 @@
 	import { MainContainer } from 'components-layout';
 	import { Container, Rectangle } from 'pixi-svelte';
 	import { getContext } from '../context';
+	import { getUiTheme } from '../theme';
 	import type { LayoutUiProps } from '../types';
 	import LabelFreeSpinCounter from './LabelFreeSpinCounter.svelte';
 	import { UI_BASE_FONT_SIZE, UI_BASE_SIZE, UI_THEMED_LABEL_SIZES } from '../constants';
@@ -28,6 +29,7 @@
 
 	const props: Props = $props();
 	const context = getContext();
+	const theme = getUiTheme();
 
 	// wide screens put everything in one row under the board, tall ones stack it
 	const wide = $derived(['desktop', 'landscape'].includes(context.stateLayoutDerived.layoutType()));
@@ -118,9 +120,11 @@
 		<MainContainer standard alignVertical="bottom">
 			<!-- over the menu button, with its close button where the menu button is -->
 			<Container x={wide ? center - 720 : center - 350} y={wide ? rowY : height - 390 - 15}>
-				<Container scale={0.8} y={0 * 0.5 - 150 - 170 * 3}>
-					<ButtonPayTable anchor={0.5} />
-				</Container>
+				{#if !theme?.hidePayTable}
+					<Container scale={0.8} y={0 * 0.5 - 150 - 170 * 3}>
+						<ButtonPayTable anchor={0.5} />
+					</Container>
+				{/if}
 
 				<Container scale={0.8} y={0 * 0.5 - 150 - 170 * 2}>
 					<ButtonGameRules anchor={0.5} />

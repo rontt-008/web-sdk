@@ -4,13 +4,14 @@
 	import { Container, Rectangle } from 'pixi-svelte';
 
 	import { getContext } from '../context';
-	import { getUiTheme } from '../theme';
+	import { getMenuButtons, getUiTheme } from '../theme';
 	import { UI_BASE_FONT_SIZE, UI_BASE_SIZE, UI_THEMED_LABEL_SIZES } from '../constants';
 	import type { LayoutUiProps } from '../types';
 
 	const props: LayoutUiProps = $props();
 	const context = getContext();
 	const theme = getUiTheme();
+	const menuButtons = $derived(getMenuButtons(props, theme));
 
 	// One centred row along the bottom of the 1920x1080 standard layout:
 	// menu, mute music, mute sounds | balance | win | bet, with up and down arrows stacked on its right | auto spin, SPIN,
@@ -154,18 +155,11 @@
 	<!-- menu items stack up from the menu button -->
 	<MainContainer standard alignVertical="bottom">
 		<Container x={x.menu} y={barY}>
-			<Container scale={MENU_ITEM_SCALE} y={-MENU_ITEM_SPACING * 4}>
-				{@render props.buttonPayTable({ anchor: 0.5 })}
-			</Container>
-			<Container scale={MENU_ITEM_SCALE} y={-MENU_ITEM_SPACING * 3}>
-				{@render props.buttonGameRules({ anchor: 0.5 })}
-			</Container>
-			<Container scale={MENU_ITEM_SCALE} y={-MENU_ITEM_SPACING * 2}>
-				{@render props.buttonSettings({ anchor: 0.5 })}
-			</Container>
-			<Container scale={MENU_ITEM_SCALE} y={-MENU_ITEM_SPACING}>
-				{@render props.buttonSoundSwitch({ anchor: 0.5 })}
-			</Container>
+			{#each menuButtons as button, index}
+				<Container scale={MENU_ITEM_SCALE} y={-MENU_ITEM_SPACING * (menuButtons.length - index)}>
+					{@render button({ anchor: 0.5 })}
+				</Container>
+			{/each}
 			<Container scale={BUTTON_SCALE}>
 				{@render props.buttonMenuClose({ anchor: 0.5 })}
 			</Container>

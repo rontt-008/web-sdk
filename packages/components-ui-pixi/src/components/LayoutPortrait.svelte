@@ -13,11 +13,12 @@
 	import ButtonDrawer from './ButtonDrawer.svelte';
 	import type { LayoutUiProps } from '../types';
 	import { getContext } from '../context';
-	import { getUiTheme } from '../theme';
+	import { getMenuButtons, getUiTheme } from '../theme';
 
 	const props: LayoutUiProps = $props();
 	const context = getContext();
 	const theme = getUiTheme();
+	const menuButtons = $derived(getMenuButtons(props, theme));
 
 	// the row beside the menu is full, so the mute buttons sit as a smaller pair just under it
 	const MUTE_SCALE = 0.7;
@@ -219,21 +220,11 @@
 			x={context.stateLayoutDerived.mainLayoutStandard().width * 0.5 - 440}
 			y={context.stateLayoutDerived.mainLayoutStandard().height - 400}
 		>
-			<Container y={-190 - 210 * 3}>
-				{@render props.buttonPayTable({ anchor: 0.5 })}
-			</Container>
-
-			<Container y={-190 - 210 * 2}>
-				{@render props.buttonGameRules({ anchor: 0.5 })}
-			</Container>
-
-			<Container y={-190 - 210 * 1}>
-				{@render props.buttonSettings({ anchor: 0.5 })}
-			</Container>
-
-			<Container y={-190}>
-				{@render props.buttonSoundSwitch({ anchor: 0.5 })}
-			</Container>
+			{#each menuButtons as button, index}
+				<Container y={-190 - 210 * (menuButtons.length - 1 - index)}>
+					{@render button({ anchor: 0.5 })}
+				</Container>
+			{/each}
 
 			<Container>
 				{@render props.buttonMenuClose({ anchor: 0.5 })}

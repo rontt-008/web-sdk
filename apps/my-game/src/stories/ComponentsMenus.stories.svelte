@@ -29,9 +29,6 @@
 <Story name="settings (clean)">
 	<StoryMenus modal="settings" />
 </Story>
-<Story name="payTable (clean)">
-	<StoryMenus modal="payTable" />
-</Story>
 <Story name="gameRules (clean)">
 	<StoryMenus modal="gameRules" />
 </Story>
