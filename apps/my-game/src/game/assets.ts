@@ -140,6 +140,11 @@ export default {
 		type: 'sprite',
 		src: new URL('../../assets/logo-cat.png', import.meta.url).href,
 	},
+	// the same cat with its eyes shut, for blinking
+	logoCatBlink: {
+		type: 'sprite',
+		src: new URL('../../assets/logo-cat-blink.png', import.meta.url).href,
+	},
 	logoCatShadow: {
 		type: 'sprite',
 		src: new URL('../../assets/logo-cat-shadow.png', import.meta.url).href,

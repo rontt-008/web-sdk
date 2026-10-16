@@ -1,4 +1,5 @@
 <script lang="ts">
+	import type { Snippet } from 'svelte';
 	import { Container, Sprite } from 'pixi-svelte';
 
 	import { SYMBOL_IMAGES, type SymbolImageKey } from '../game/constants';
@@ -15,6 +16,9 @@
 		// turned about its middle, as a ball rolls
 		spin?: number;
 		alpha?: number;
+		// drawn over the art and moving with it, from the art's middle; `scale` turns the image's
+		// pixels into the art's size on screen
+		children?: Snippet<[{ scale: number }]>;
 	};
 
 	const props: Props = $props();
@@ -46,5 +50,6 @@
 			alpha={SHADOW_ALPHA}
 		/>
 		<Sprite key={props.key} anchor={0.5} width={art.image[0] * scale} height={props.height} />
+		{@render props.children?.({ scale })}
 	</Container>
 </Container>
