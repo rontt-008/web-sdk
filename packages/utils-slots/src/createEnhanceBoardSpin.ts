@@ -26,11 +26,16 @@ export function createEnhanceBoardSpin<TReel extends Reel<any, any>>({
 	async function spin<RevealEvent extends BaseRevealEvent>({
 		revealEvent,
 		paddingBoard,
+		heldReels = [],
 	}: {
 		revealEvent: RevealEvent;
 		paddingBoard?: TRawSymbol[][];
+		// reels that don't spin (the game sets their symbols itself); not when pre-spinning, as
+		// every reel is already moving then
+		heldReels?: number[];
 	}) {
 		spinning = true;
+		const held = stateSlots.isPreSpinning ? [] : heldReels;
 		if (stateSlots.isPreSpinning) {
 			await Promise.all(
 				board.map(async (reel) => {
@@ -57,6 +62,7 @@ export function createEnhanceBoardSpin<TReel extends Reel<any, any>>({
 		};
 
 		board.reduce((previousPaddingSize, reel, reelIndex) => {
+			if (held.includes(reelIndex)) return previousPaddingSize;
 			const noStop = globalHasAnticipation && reelIndex >= firstAnticipatedReelIndex;
 			const isAnticipated = (revealEvent.anticipation?.[reelIndex] || 0) > 0;
 			const spinType = getSpinType({ noStop, isAnticipated });
@@ -85,7 +91,8 @@ export function createEnhanceBoardSpin<TReel extends Reel<any, any>>({
 		}, 0);
 
 		await Promise.all(
-			board.map(async (reel) => {
+			board.map(async (reel, reelIndex) => {
+				if (held.includes(reelIndex)) return;
 				await reel.spin();
 			}),
 		);

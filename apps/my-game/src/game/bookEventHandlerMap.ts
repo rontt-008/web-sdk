@@ -60,6 +60,9 @@ const animateSymbolsHighlighted = async ({ positions }: { positions: Position[] 
 	await animateSymbols({ positions });
 };
 
+// SUPER free spins: the moves of a bigWildWalk, for the reveal after it to slide the big wilds
+let walkingWildMoves: BookEventOfType<'bigWildWalk'>['moves'] = [];
+
 export const bookEventHandlerMap: BookEventHandlerMap<BookEvent, BookEventContext> = {
 	reveal: async (bookEvent: BookEventOfType<'reveal'>, { bookEvents }: BookEventContext) => {
 		const isBonusGame = checkIsMultipleRevealEvents({ bookEvents });
@@ -69,11 +72,43 @@ export const bookEventHandlerMap: BookEventHandlerMap<BookEvent, BookEventContex
 		}
 
 		stateGame.gameType = bookEvent.gameType;
-		await stateGameDerived.enhancedBoard.spin({
-			revealEvent: { ...bookEvent, board: markBigWilds(bookEvent.board) },
+		const board = markBigWilds(bookEvent.board);
+		const moves = walkingWildMoves;
+		walkingWildMoves = [];
+		// the reels the walking big wilds move onto don't spin
+		const heldReels = moves.map(({ to }) => to).filter((reel) => reel >= 0);
+		const spin = stateGameDerived.enhancedBoard.spin({
+			revealEvent: { ...bookEvent, board },
 			paddingBoard: config.paddingReels[bookEvent.gameType],
+			heldReels,
 		});
+		if (moves.length > 0) {
+			// the walking big wilds walk over while the other reels spin; once there, they are on the
+			// board (their reels get the reveal's big wilds) and it draws them again
+			await Promise.all([spin, eventEmitter.broadcastAsync({ type: 'walkingWildsMove' })]);
+			for (const reelIndex of heldReels) {
+				const reelSymbols = stateGame.board[reelIndex].reelState.symbols;
+				board[reelIndex].forEach((rawSymbol, row) => {
+					if (reelSymbols[row]) reelSymbols[row].rawSymbol = rawSymbol;
+				});
+			}
+			stateGame.hiddenReels = [];
+			eventEmitter.broadcast({ type: 'walkingWildsHide' });
+		} else {
+			await spin;
+		}
 		eventEmitter.broadcast({ type: 'soundScatterCounterClear' });
+	},
+	// before the reveal: the big wilds that walk on are taken off their reels, as they look there.
+	// The reels they move onto keep their symbols, which they slide over; but a reel whose own big
+	// wild walks away while another moves onto it doesn't, or that big wild would stay behind too.
+	bigWildWalk: async (bookEvent: BookEventOfType<'bigWildWalk'>) => {
+		if (bookEvent.moves.length === 0) return;
+		eventEmitter.broadcast({ type: 'walkingWildsShow', moves: bookEvent.moves });
+		stateGame.hiddenReels = bookEvent.moves
+			.map(({ to }) => to)
+			.filter((reel) => bookEvent.moves.some(({ from }) => from === reel));
+		walkingWildMoves = bookEvent.moves;
 	},
 	bigWildThrow: async (bookEvent: BookEventOfType<'bigWildThrow'>) => {
 		if (bookEvent.positions.length === 0) return;

@@ -28,6 +28,7 @@
 	import Board from './Board.svelte';
 	import Anticipations from './Anticipations.svelte';
 	import WildThrow from './WildThrow.svelte';
+	import WalkingWilds from './WalkingWilds.svelte';
 	import SunShine from './SunShine.svelte';
 	import SceneBlur from './SceneBlur.svelte';
 	import BigWin from './BigWin.svelte';
@@ -82,6 +83,7 @@
 
 				<MainContainer>
 					<Board />
+					<WalkingWilds />
 					<Anticipations />
 					<WildThrow />
 				</MainContainer>

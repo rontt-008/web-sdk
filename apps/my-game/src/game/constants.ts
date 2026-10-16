@@ -388,11 +388,10 @@ export const BONUS_NAME: Record<BonusType, string | undefined> = {
 	super: 'SUPER',
 	mythic: 'MYTHIC',
 };
-// how the bonus works, under its name on the intro; left out until the math decides what the
-// super bonus gives
+// how the bonus works, under its name on the intro
 export const BONUS_DESCRIPTION: Record<BonusType, string | undefined> = {
 	normal: 'When a wild lands, it has a chance to shoot out extra wilds.',
-	super: undefined,
+	super: 'Big wilds stay and move one reel left every spin, until they leave the reels.',
 	mythic: 'Every spin has a big wild that shoots out 1 to 3 extra wilds.',
 };
 // For the pay table; they must match the math. Free spins for 3, 4 and 5 FS symbols, and the spins

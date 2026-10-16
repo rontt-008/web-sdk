@@ -49,7 +49,7 @@
 	);
 </script>
 
-{#if !bigWild || bigWild.anchor}
+{#if (!bigWild || bigWild.anchor) && !context.stateGame.hiddenReels.includes(props.reelIndex)}
 	<SymbolWrap
 		x={getSymbolX(props.reelIndex)}
 		y={props.reelSymbol.symbolY() + ((rows - 1) / 2) * SYMBOL_SIZE}
