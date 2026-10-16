@@ -150,8 +150,9 @@
 			// a long frame (a hidden tab) shouldn't throw it across the screen in one go
 			const seconds = Math.min(ticker.deltaMS / 1000, 0.05);
 			time += seconds;
-			if (ball) return step(ball, seconds);
-			if (time >= nextAt && !context.stateGame.blurScene) start();
+			if (ball) step(ball, seconds);
+			else if (time >= nextAt && !context.stateGame.blurScene) start();
+			context.stateGame.yarnBall = ball ? { x: ball.x, y: ball.y } : undefined;
 		};
 		ticker.add(tick);
 		return () => ticker.remove(tick);

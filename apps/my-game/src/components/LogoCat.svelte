@@ -25,19 +25,45 @@
 	const BREATHE_PERIOD = 3.2;
 	const BREATHE = 0.022;
 
-	// Blinking: the same cat with its eyes shut (logo-cat-blink.png) is shown over it through two
-	// eyelids that slide down over the eyes and back up. The eyes (in the image's pixels, as painted
-	// over in the shut-eyed image) are covered from their top down.
-	const EYES = [
-		{ cx: 232.5, cy: 215.5, rx: 44.5, ry: 40.5 },
-		{ cx: 370.5, cy: 170.5, rx: 42.5, ry: 42.5 },
-	];
+	// Blinking: the same cat with its eyes shut (logo-cat-blink.png) is shown over it through the
+	// eyelids. In each eye an upper lid comes down and a lower lid a little way up, along the head's
+	// tilt, their edges curved like the closed eye's line, until they meet on it; a dark line runs
+	// along the upper lid's edge as it comes down. Measured in the image's pixels; the closed line
+	// must match the one painted on logo-cat-blink.png.
+	const LIDS = {
+		tilt: (-18.08 * Math.PI) / 180,
+		eyes: [
+			{ cx: 230.77, cy: 212.78 },
+			{ cx: 368.17, cy: 167.93 },
+		],
+		// the eye (about), and the circle round it the lids sweep over
+		eyeRadius: 31,
+		radius: 36,
+		// the closed line: this far below the eye's middle at its ends, bowing down this much more in
+		// the middle (a curve this wide), drawn this long either side of the middle
+		below: 6,
+		bow: 9,
+		curveWidth: 32,
+		halfLength: 27,
+		lineWidth: 6,
+	};
+	const LID_COLOR = 0x281814;
+	const LID_SAMPLES = 24;
 	// seconds: the lids shut quickly, stay a moment and open a little slower
 	const BLINK = { close: 0.11, hold: 0.08, open: 0.16 };
 	const BLINK_LENGTH = BLINK.close + BLINK.hold + BLINK.open;
 	// between blinks, at random; sometimes it blinks twice in a row
 	const BLINK_EVERY = { min: 2, max: 6 };
 	const DOUBLE_BLINK = { chance: 0.25, gap: 0.12 };
+
+	// While the ball of yarn rolls across the screen the pupils turn to follow it, sliding inside
+	// their eyes (logo-cat-pupils.png over a plain iris, logo-cat-irises.png, within each eye's rim,
+	// logo-cat-eye-mask.png). Image pixels: the most they move, and the point between the eyes they
+	// look from.
+	const LOOK = { x: 7, y: 5 };
+	const EYES_MIDDLE = { x: 299.5, y: 190.4 };
+	// how quickly they turn to the ball and back (a higher number is quicker)
+	const LOOK_SPEED = 8;
 
 	const ROCK_HEIGHT =
 		(ROCK_WIDTH * SYMBOL_IMAGES.logoRock.image[1]) / SYMBOL_IMAGES.logoRock.image[0];
@@ -55,6 +81,18 @@
 		return Math.min(CAT_HEIGHT.max, Math.max(CAT_HEIGHT.min, seatY - top));
 	});
 
+	// where the pupils are looking: towards the ball while it rolls by, eased there and back
+	const lookTarget = () => {
+		const ball = context.stateGame.yarnBall;
+		if (!ball) return { x: 0, y: 0 };
+		const scale = catHeight / CAT_IMAGE[1];
+		const dx = ball.x - (rockX + (EYES_MIDDLE.x - CAT_IMAGE[0] / 2) * scale);
+		const dy = ball.y - (seatY - catHeight + EYES_MIDDLE.y * scale);
+		const distance = Math.hypot(dx, dy) || 1;
+		return { x: (dx / distance) * LOOK.x, y: (dy / distance) * LOOK.y };
+	};
+	let look = $state({ x: 0, y: 0 });
+
 	let time = $state(0);
 	// when the current (or last) blink began, and when the next one comes
 	let blinkStart = -Infinity;
@@ -63,7 +101,15 @@
 		const ticker = context.stateApp.pixiApplication?.ticker;
 		if (!ticker) return;
 		const tick = () => {
-			time += ticker.deltaMS / 1000;
+			const seconds = ticker.deltaMS / 1000;
+			time += seconds;
+
+			const target = lookTarget();
+			const ease = 1 - Math.exp(-seconds * LOOK_SPEED);
+			if (Math.hypot(target.x - look.x, target.y - look.y) > 0.01) {
+				look = { x: look.x + (target.x - look.x) * ease, y: look.y + (target.y - look.y) * ease };
+			}
+
 			if (time < nextBlink) return;
 			blinkStart = time;
 			const double = Math.random() < DOUBLE_BLINK.chance;
@@ -91,32 +137,93 @@
 		return 1 - (t - BLINK.close - BLINK.hold) / BLINK.open;
 	});
 
-	// each eye covered from its top down to how far the lid has come, in the art's own size
+	// The lids are worked out across each eye (u, along the head's tilt) and down it (v), from the
+	// eye's middle, in image pixels. Both lid edges have the closed line's curve; the upper starts
+	// above the eye and the lower below it, and they meet on the closed line.
+	const curve = (u: number) => LIDS.bow * (1 - (u / LIDS.curveWidth) ** 2);
+	const upperEdge = (u: number) =>
+		-LIDS.radius - LIDS.bow + (LIDS.below + LIDS.radius + LIDS.bow) * lid + curve(u);
+	const lowerEdge = (u: number) => LIDS.radius + (LIDS.below - LIDS.radius) * lid + curve(u);
+	const across = _.range(LID_SAMPLES + 1).map(
+		(k) => -LIDS.radius + (2 * LIDS.radius * k) / LID_SAMPLES,
+	);
+
+	// from an eye's (u, v) to the art's own size, about its middle
+	const toArt = (eye: { cx: number; cy: number }, u: number, v: number, scale: number) => {
+		const cos = Math.cos(LIDS.tilt);
+		const sin = Math.sin(LIDS.tilt);
+		return {
+			x: (eye.cx + u * cos - v * sin - CAT_IMAGE[0] / 2) * scale,
+			y: (eye.cy + u * sin + v * cos - CAT_IMAGE[1] / 2) * scale,
+		};
+	};
+
+	// what the lids cover in each eye: above the upper lid's edge and below the lower one's, within
+	// the circle they sweep over
 	const drawLids =
 		(scale: number): ComponentProps<typeof Graphics>['draw'] =>
 		(graphics) => {
-			for (const eye of EYES) {
-				const left = (eye.cx - eye.rx - CAT_IMAGE[0] / 2) * scale;
-				const top = (eye.cy - eye.ry - CAT_IMAGE[1] / 2) * scale;
-				graphics.rect(left, top, eye.rx * 2 * scale, eye.ry * 2 * lid * scale);
+			for (const eye of LIDS.eyes) {
+				const half = (u: number) => Math.sqrt(Math.max(0, LIDS.radius ** 2 - u * u));
+				const clampV = (u: number, v: number) => Math.min(half(u), Math.max(-half(u), v));
+				const upper = [
+					...across.map((u) => toArt(eye, u, -half(u), scale)),
+					...[...across].reverse().map((u) => toArt(eye, u, clampV(u, upperEdge(u)), scale)),
+				];
+				const lower = [
+					...across.map((u) => toArt(eye, u, clampV(u, lowerEdge(u)), scale)),
+					...[...across].reverse().map((u) => toArt(eye, u, half(u), scale)),
+				];
+				graphics.poly(upper).poly(lower);
 			}
 			graphics.fill({ color: 0xffffff });
 		};
+
+	// the dark line along the upper lid's edge, where it crosses the eye
+	const drawLidLines =
+		(scale: number): ComponentProps<typeof Graphics>['draw'] =>
+		(graphics) => {
+			for (const eye of LIDS.eyes) {
+				const points = _.range(41)
+					.map((k) => -LIDS.halfLength + (2 * LIDS.halfLength * k) / 40)
+					.filter((u) => Math.hypot(u, upperEdge(u)) <= LIDS.eyeRadius)
+					.map((u) => toArt(eye, u, upperEdge(u), scale));
+				if (points.length < 2) continue;
+				graphics.moveTo(points[0].x, points[0].y);
+				for (const point of points.slice(1)) graphics.lineTo(point.x, point.y);
+			}
+			graphics.stroke({ color: LID_COLOR, width: LIDS.lineWidth * scale, cap: 'round', join: 'round' });
+		};
+
+	const artSize = (scale: number) => ({
+		width: CAT_IMAGE[0] * scale,
+		height: CAT_IMAGE[1] * scale,
+	});
 </script>
 
 <StandingArt key="logoRock" height={ROCK_HEIGHT} x={rockX} y={rockBottom} />
 <StandingArt key="logoCat" height={catHeight} x={rockX} y={seatY} {pose}>
 	{#snippet children({ scale })}
+		<!-- the plain iris over the drawn pupils, then the pupils, moved to look, kept within the eyes -->
+		<Sprite key="logoCatIrises" anchor={0.5} {...artSize(scale)} />
+		<Container>
+			<Sprite key="logoCatEyeMask" isMask anchor={0.5} {...artSize(scale)} />
+			<Sprite
+				key="logoCatPupils"
+				anchor={0.5}
+				x={look.x * scale}
+				y={look.y * scale}
+				{...artSize(scale)}
+			/>
+		</Container>
 		{#if lid > 0}
 			<Container>
 				<Graphics isMask draw={drawLids(scale)} />
-				<Sprite
-					key="logoCatBlink"
-					anchor={0.5}
-					width={CAT_IMAGE[0] * scale}
-					height={CAT_IMAGE[1] * scale}
-				/>
+				<Sprite key="logoCatBlink" anchor={0.5} {...artSize(scale)} />
 			</Container>
+			{#if lid < 1}
+				<Graphics draw={drawLidLines(scale)} />
+			{/if}
 		{/if}
 	{/snippet}
 </StandingArt>

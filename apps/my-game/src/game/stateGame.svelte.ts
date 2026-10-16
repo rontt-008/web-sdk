@@ -90,6 +90,9 @@ export const stateGame = $state({
 	// SUPER free spins: reels that show nothing while big wilds walk (one walks off a reel another is
 	// moving onto)
 	hiddenReels: [] as number[],
+	// where the ball of yarn rolling across the screen is, while it is (see YarnBall), for the cat on
+	// its rock to watch
+	yarnBall: undefined as { x: number; y: number } | undefined,
 });
 
 // vertical position of the board's centre; raised on screens where the bottom UI would overlap it

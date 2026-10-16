@@ -145,6 +145,20 @@ export default {
 		type: 'sprite',
 		src: new URL('../../assets/logo-cat-blink.png', import.meta.url).href,
 	},
+	// its pupils split off the art so they can look around: the pupils alone, the plain iris under
+	// them, and the inside of each eye's rim that they stay within (see LogoCat)
+	logoCatPupils: {
+		type: 'sprite',
+		src: new URL('../../assets/logo-cat-pupils.png', import.meta.url).href,
+	},
+	logoCatIrises: {
+		type: 'sprite',
+		src: new URL('../../assets/logo-cat-irises.png', import.meta.url).href,
+	},
+	logoCatEyeMask: {
+		type: 'sprite',
+		src: new URL('../../assets/logo-cat-eye-mask.png', import.meta.url).href,
+	},
 	logoCatShadow: {
 		type: 'sprite',
 		src: new URL('../../assets/logo-cat-shadow.png', import.meta.url).href,
