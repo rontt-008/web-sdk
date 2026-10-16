@@ -1,6 +1,6 @@
 <script lang="ts">
-	import { CanvasTextMetrics, TextStyle } from 'pixi.js';
 	import { Container, Rectangle, Sprite, Text } from 'pixi-svelte';
+	import { measureTextWidth } from 'components-pixi';
 
 	import UiIcon, { type UiIconName } from './UiIcon.svelte';
 	import { getUiTheme } from '../theme';
@@ -57,7 +57,7 @@
 			? Math.min(
 					1,
 					(width - props.diameter * 0.35) /
-						Math.max(1, CanvasTextMetrics.measureText(props.text, new TextStyle(textStyle)).width),
+						Math.max(1, measureTextWidth(props.text, textStyle)),
 				)
 			: 1,
 	);

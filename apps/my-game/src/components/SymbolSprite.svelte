@@ -1,57 +1,108 @@
 <script lang="ts">
 	import { untrack, type Snippet } from 'svelte';
 	import { Tween } from 'svelte/motion';
-	import { cubicOut } from 'svelte/easing';
 	import { Container, Sprite } from 'pixi-svelte';
 	import { stateBetDerived } from 'state-shared';
 
-	import { getSymbolInfo } from '../game/utils';
+	import { getSymbolInfo, type SymbolMotion } from '../game/utils';
 	import { SYMBOL_SIZE } from '../game/constants';
+	import {
+		REST_POSE,
+		excitedPose,
+		flipPose,
+		hopPose,
+		popPose,
+		punchPose,
+		slamPose,
+		type SymbolPose,
+	} from '../game/motion';
+	import { getContext } from '../game/context';
+	import Burst from './Burst.svelte';
 
 	type Props = {
 		x?: number;
 		y?: number;
 		symbolInfo: ReturnType<typeof getSymbolInfo>;
-		// pulse the symbol before completing, used for wins
-		animate?: boolean;
+		// played once, then oncomplete is called (straight away when there is none)
+		motion?: SymbolMotion;
 		// squash and spring back once when this turns true, like landing with a little bounce
 		jiggle?: boolean;
+		// wiggles on a loop while true (scatters while a reel is anticipated)
+		excited?: boolean;
+		// darkened, so the symbols of a win stand out
+		dimmed?: boolean;
 		oncomplete?: () => void;
-		// drawn over the symbol, pulsing with it
+		// drawn over the symbol, moving with it
 		children?: Snippet;
 	};
 
 	const props: Props = $props();
+	const context = getContext();
 
 	const SHADOW_ALPHA = 0.6;
 	const SHADOW_OFFSET = { x: SYMBOL_SIZE * 0.03, y: SYMBOL_SIZE * 0.05 };
 
-	const WIN_PULSE_SCALE = 1.2;
-	const WIN_PULSE_DURATION = 250;
-	const WIN_PULSE_COUNT = 2;
-
-	const scale = new Tween(1);
-
-	const pulse = async () => {
-		const duration = WIN_PULSE_DURATION / stateBetDerived.timeScale();
-		const pulseScale =
-			'winPulseScale' in props.symbolInfo ? props.symbolInfo.winPulseScale : WIN_PULSE_SCALE;
-		for (let i = 0; i < WIN_PULSE_COUNT; i++) {
-			await scale.set(pulseScale, { duration, easing: cubicOut });
-			await scale.set(1, { duration, easing: cubicOut });
-		}
+	// each motion's length (shorter in turbo), its curve and whether it squashes onto the symbol's
+	// bottom edge (things that jump and land) or about its middle (things that swell)
+	const MOTIONS: Record<
+		SymbolMotion,
+		{ duration: number; pose: (t: number, direction: 1 | -1) => SymbolPose; onGround: boolean }
+	> = {
+		hop: { duration: 650, pose: hopPose, onGround: true },
+		flip: { duration: 750, pose: flipPose, onGround: true },
+		punch: { duration: 700, pose: punchPose, onGround: false },
+		pop: { duration: 480, pose: popPose, onGround: false },
+		slam: { duration: 480, pose: slamPose, onGround: true },
 	};
+
+	// symbols lean either way as they jump, so a line of them doesn't move in step
+	const direction: 1 | -1 = Math.random() < 0.5 ? 1 : -1;
+	const progress = new Tween(1);
+	let playing = $state<SymbolMotion>();
+	let runId = $state(0);
 
 	$effect(() => {
 		props.symbolInfo;
+		const motion = props.motion;
+		const run = untrack(() => ++runId);
 
-		if (!props.animate) {
+		if (!motion) {
+			playing = undefined;
 			props.oncomplete?.();
 			return;
 		}
 
-		untrack(pulse).then(() => props.oncomplete?.());
+		untrack(async () => {
+			playing = motion;
+			await progress.set(0, { duration: 0 });
+			await progress.set(1, {
+				duration: MOTIONS[motion].duration / stateBetDerived.timeScale(),
+				easing: (t) => t,
+			});
+			if (run !== runId) return;
+			playing = undefined;
+			props.oncomplete?.();
+		});
 	});
+
+	// seconds since it got excited, for its loop
+	let excitedTime = $state(0);
+	$effect(() => {
+		if (!props.excited) return;
+		const ticker = context.stateApp.pixiApplication?.ticker;
+		if (!ticker) return;
+		excitedTime = 0;
+		const tick = () => (excitedTime += ticker.deltaMS / 1000);
+		ticker.add(tick);
+		return () => ticker.remove(tick);
+	});
+
+	const pose = $derived.by((): SymbolPose => {
+		if (playing) return MOTIONS[playing].pose(progress.current, direction);
+		if (props.excited) return excitedPose(excitedTime);
+		return REST_POSE;
+	});
+	const onGround = $derived(playing ? MOTIONS[playing].onGround : false);
 
 	// The jiggle squashes the symbol flat, springs it up taller, and wobbles a couple of times as it
 	// settles. Width changes the opposite way to height so it keeps its size, and it squashes onto
@@ -81,30 +132,71 @@
 			jiggleProgress.set(1, { duration: JIGGLE_DURATION / stateBetDerived.timeScale() });
 		});
 	});
+
+	// dimmed symbols are shaded a warm dark brown, like the wood they sit on, rather than faded
+	const DIM_COLOR = { r: 0x5c, g: 0x4a, b: 0x40 };
+	const DIM_DURATION = 180;
+	const dim = new Tween(props.dimmed ? 1 : 0);
+	$effect(() => {
+		dim.set(props.dimmed ? 1 : 0, { duration: DIM_DURATION / stateBetDerived.timeScale() });
+	});
+	const tint = $derived.by(() => {
+		const channel = (target: number) => Math.round(255 - (255 - target) * dim.current);
+		return (channel(DIM_COLOR.r) << 16) | (channel(DIM_COLOR.g) << 8) | channel(DIM_COLOR.b);
+	});
+
+	// sparkles fly out from behind scatters and wilds as they land and as a scatter wins; the big
+	// wild kicks up a puff along its bottom instead
+	const BURSTS: Partial<Record<SymbolMotion, 'sparkle' | 'dust'>> = {
+		pop: 'sparkle',
+		flip: 'sparkle',
+		slam: 'dust',
+	};
+	const burst = $derived(playing ? BURSTS[playing] : undefined);
 </script>
 
-<Container x={props.x} y={props.y} scale={scale.current}>
-	<Container
-		y={((1 - jiggleScaleY) * spriteHeight) / 2}
-		scale={{ x: 1 / jiggleScaleY, y: jiggleScaleY }}
-	>
-		{#if 'shadow' in props.symbolInfo}
-			<Sprite
-				anchor={0.5}
-				key={props.symbolInfo.shadow.assetKey}
-				x={SHADOW_OFFSET.x}
-				y={SHADOW_OFFSET.y}
-				width={SYMBOL_SIZE * props.symbolInfo.shadow.sizeRatios.width}
-				height={SYMBOL_SIZE * props.symbolInfo.shadow.sizeRatios.height}
-				alpha={SHADOW_ALPHA}
+<Container x={props.x} y={props.y} {tint}>
+	{#key runId}
+		{#if burst === 'sparkle'}
+			<Burst distance={SYMBOL_SIZE * 0.85} size={SYMBOL_SIZE * 0.12} count={12} />
+		{:else if burst === 'dust'}
+			<Burst
+				y={spriteHeight * 0.48}
+				distance={SYMBOL_SIZE * 0.9}
+				size={SYMBOL_SIZE * 0.08}
+				count={12}
+				squashY={0.45}
+				upwards
 			/>
 		{/if}
-		<Sprite
-			anchor={0.5}
-			key={props.symbolInfo.assetKey}
-			width={SYMBOL_SIZE * props.symbolInfo.sizeRatios.width}
-			height={SYMBOL_SIZE * props.symbolInfo.sizeRatios.height}
-		/>
+	{/key}
+	<Container
+		y={pose.y + (onGround ? ((1 - pose.scaleY) * spriteHeight) / 2 : 0)}
+		scale={{ x: pose.scaleX, y: pose.scaleY }}
+		rotation={pose.rotation}
+	>
+		<Container
+			y={((1 - jiggleScaleY) * spriteHeight) / 2}
+			scale={{ x: 1 / jiggleScaleY, y: jiggleScaleY }}
+		>
+			{#if 'shadow' in props.symbolInfo}
+				<Sprite
+					anchor={0.5}
+					key={props.symbolInfo.shadow.assetKey}
+					x={SHADOW_OFFSET.x}
+					y={SHADOW_OFFSET.y}
+					width={SYMBOL_SIZE * props.symbolInfo.shadow.sizeRatios.width}
+					height={SYMBOL_SIZE * props.symbolInfo.shadow.sizeRatios.height}
+					alpha={SHADOW_ALPHA}
+				/>
+			{/if}
+			<Sprite
+				anchor={0.5}
+				key={props.symbolInfo.assetKey}
+				width={SYMBOL_SIZE * props.symbolInfo.sizeRatios.width}
+				height={SYMBOL_SIZE * props.symbolInfo.sizeRatios.height}
+			/>
+		</Container>
+		{@render props.children?.()}
 	</Container>
-	{@render props.children?.()}
 </Container>

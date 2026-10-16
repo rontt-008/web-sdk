@@ -61,6 +61,8 @@
 		flights = flights.filter(({ id }) => id !== flight.id);
 
 		reelSymbol.rawSymbol = WILD;
+		// pops into place with a puff of sparkles, as a wild landing from the reels does
+		reelSymbol.symbolState = 'land';
 		context.eventEmitter.broadcast({ type: 'soundOnce', name: 'sfx_multiplier_landing' });
 	};
 

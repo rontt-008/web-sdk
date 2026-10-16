@@ -30,7 +30,7 @@
 	import WildThrow from './WildThrow.svelte';
 	import SunShine from './SunShine.svelte';
 	import SceneBlur from './SceneBlur.svelte';
-	import Win from './Win.svelte';
+	import BigWin from './BigWin.svelte';
 	import FreeSpinIntro from './FreeSpinIntro.svelte';
 	import FreeSpinCounter from './FreeSpinCounter.svelte';
 	import FreeSpinRetrigger from './FreeSpinRetrigger.svelte';
@@ -112,7 +112,7 @@
 				{#snippet logo()}{/snippet}
 			</UI>
 		</Container>
-		<Win />
+		<BigWin />
 		<FreeSpinIntro />
 		{#if ['desktop', 'landscape'].includes(context.stateLayoutDerived.layoutType())}
 			<FreeSpinCounter />

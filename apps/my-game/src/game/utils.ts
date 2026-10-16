@@ -72,6 +72,30 @@ export const getSymbolInfo = ({
 	return SYMBOL_INFO_MAP[rawSymbol.name][state];
 };
 
+// The animation a sprite symbol plays in a state (see motion.ts): in a win the big wild swells,
+// scatters flip over and the rest hop; landing, the big wild slams down and scatters and wilds pop.
+// Other symbols do nothing as they land (the cats jiggle with the reel's bounce, see ReelSymbol).
+export type SymbolMotion = 'hop' | 'flip' | 'punch' | 'pop' | 'slam';
+
+export const getSymbolMotion = ({
+	rawSymbol,
+	state,
+}: {
+	rawSymbol: RawSymbol;
+	state: SymbolState;
+}): SymbolMotion | undefined => {
+	if (state === 'win') {
+		if (rawSymbol.bigWild) return 'punch';
+		if (rawSymbol.name === 'S') return 'flip';
+		return 'hop';
+	}
+	if (state === 'land') {
+		if (rawSymbol.bigWild) return 'slam';
+		if (rawSymbol.name === 'S' || rawSymbol.name === 'W') return 'pop';
+	}
+	return undefined;
+};
+
 // 3 FS symbols give the normal bonus, 4 the super bonus and 5 the mythic bonus
 export const getBonusType = (scatterCount: number): BonusType => {
 	if (scatterCount >= BONUS_SCATTER_COUNT.mythic) return 'mythic';

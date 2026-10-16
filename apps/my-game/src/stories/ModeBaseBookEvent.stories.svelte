@@ -146,6 +146,36 @@
 />
 
 <Story
+	name="setWin (big)"
+	args={templateArgs({
+		skipLoadingScreen: true,
+		data: events.setWinBig,
+		action: async (data) => await playBookEvent(data, { bookEvents: [] }),
+	})}
+	{template}
+/>
+
+<Story
+	name="setWin (epic)"
+	args={templateArgs({
+		skipLoadingScreen: true,
+		data: events.setWinEpic,
+		action: async (data) => await playBookEvent(data, { bookEvents: [] }),
+	})}
+	{template}
+/>
+
+<Story
+	name="setWin (max)"
+	args={templateArgs({
+		skipLoadingScreen: true,
+		data: events.setWinMax,
+		action: async (data) => await playBookEvent(data, { bookEvents: [] }),
+	})}
+	{template}
+/>
+
+<Story
 	name="freeSpinEnd"
 	args={templateArgs({
 		skipLoadingScreen: true,

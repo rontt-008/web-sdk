@@ -1,6 +1,6 @@
 <script lang="ts">
-	import { CanvasTextMetrics, TextStyle, type TextStyleOptions } from 'pixi.js';
 	import { Rectangle, Text } from 'pixi-svelte';
+	import { measureTextWidth as textWidth } from 'components-pixi';
 	import { UI_FONT_FAMILY } from 'constants-shared/fonts';
 	import { WHITE } from 'constants-shared/colors';
 
@@ -49,8 +49,6 @@
 
 	// long values, like MX$1,234,567.89 or a big balance, shrink to stay inside the pill: stacked
 	// they get the pill's width, in a row what the label leaves of it, plain the box's width
-	const textWidth = (text: string, style: TextStyleOptions) =>
-		CanvasTextMetrics.measureText(text, new TextStyle(style)).width;
 	const valueRoom = $derived.by(() => {
 		if (props.plain) return props.plain.width;
 		if (props.stacked) return PILL_WIDTH - UI_BASE_FONT_SIZE;

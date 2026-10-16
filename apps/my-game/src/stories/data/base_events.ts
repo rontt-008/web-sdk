@@ -265,6 +265,24 @@ export default {
 		amount: 400,
 		winLevel: 4,
 	},
+	// 22x the bet: the big win screen, BIG WIN only
+	setWinBig: {
+		type: 'setWin',
+		amount: 2200,
+		winLevel: 6,
+	},
+	// 154x the bet: climbs from BIG WIN to EPIC WIN
+	setWinEpic: {
+		type: 'setWin',
+		amount: 15400,
+		winLevel: 9,
+	},
+	// the max win, 10,000x the bet
+	setWinMax: {
+		type: 'setWin',
+		amount: 1000000,
+		winLevel: 10,
+	},
 	freeSpinEnd: {
 		type: 'freeSpinEnd',
 		amount: 400,

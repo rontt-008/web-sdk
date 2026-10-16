@@ -53,6 +53,21 @@
 	{template}
 />
 
+<!-- one real odds round by its id, to replay it (set it in the controls, or with ?args=data.id:91) -->
+<Story
+	name="by id (real odds)"
+	args={templateArgs({
+		skipLoadingScreen: true,
+		data: { id: 704 },
+		action: async (data: { id: number | string }) => {
+			const book = realBooks.find((realBook) => realBook.id === Number(data.id));
+			if (!book) return console.error('No real odds book with id', data.id);
+			await playBet({ ...book, state: book.events });
+		},
+	})}
+	{template}
+/>
+
 <!-- rounds picked by their lookup table weights, so free spins come as often as in the real game -->
 <Story
 	name="random (real odds)"

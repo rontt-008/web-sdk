@@ -11,6 +11,9 @@ import type { BookEvent, BookEventOfType, BookEventContext } from './typesBookEv
 import type { Position } from './types';
 import config from './config';
 
+// how many times the scatters flip over when they trigger free spins
+const SCATTER_TRIGGER_FLIPS = 2;
+
 const winLevelSoundsPlay = ({ winLevelData }: { winLevelData: WinLevelData }) => {
 	if (winLevelData?.alias === 'max') eventEmitter.broadcastAsync({ type: 'uiHide' });
 	if (winLevelData?.sound?.sfx) {
@@ -51,6 +54,12 @@ const animateSymbols = async ({ positions }: { positions: Position[] }) => {
 	});
 };
 
+// the rest of the board is shaded while these symbols animate
+const animateSymbolsHighlighted = async ({ positions }: { positions: Position[] }) => {
+	stateGame.winHighlight = _.uniqWith(positions.map(toBigWildAnchor), _.isEqual);
+	await animateSymbols({ positions });
+};
+
 export const bookEventHandlerMap: BookEventHandlerMap<BookEvent, BookEventContext> = {
 	reveal: async (bookEvent: BookEventOfType<'reveal'>, { bookEvents }: BookEventContext) => {
 		const isBonusGame = checkIsMultipleRevealEvents({ bookEvents });
@@ -80,21 +89,31 @@ export const bookEventHandlerMap: BookEventHandlerMap<BookEvent, BookEventContex
 	},
 	winInfo: async (bookEvent: BookEventOfType<'winInfo'>) => {
 		eventEmitter.broadcast({ type: 'soundOnce', name: 'sfx_winlevel_small' });
-		// the wins are shown one after another, each by a line through its symbols with its amount
-		// on it (the symbols don't pulse and there is no win screen, see setWin)
-		eventEmitter.broadcast({ type: 'boardShow' });
-		await eventEmitter.broadcastAsync({
-			type: 'winLinesShow',
-			wins: bookEvent.wins.map((win) => ({ positions: win.positions, amount: win.win })),
-		});
+		// The wins are shown one after another: the rest of the board is shaded, the symbols of the
+		// win hop and a line is drawn through them with the win's amount on it. Big wins then get
+		// their own screen (see setWin).
+		for (const win of bookEvent.wins) {
+			await Promise.all([
+				animateSymbolsHighlighted({ positions: win.positions }),
+				eventEmitter.broadcastAsync({
+					type: 'winLineShow',
+					positions: win.positions,
+					amount: win.win,
+				}),
+			]);
+		}
+		stateGame.winHighlight = undefined;
 	},
 	setTotalWin: async (bookEvent: BookEventOfType<'setTotalWin'>) => {
 		stateBet.winBookEventAmount = bookEvent.amount;
 	},
 	freeSpinTrigger: async (bookEvent: BookEventOfType<'freeSpinTrigger'>) => {
-		// animate scatters
+		// the scatters flip over twice, the rest of the board shaded
 		eventEmitter.broadcast({ type: 'soundOnce', name: 'sfx_scatter_win_v2' });
-		await animateSymbols({ positions: bookEvent.positions });
+		for (const _flip of _.range(SCATTER_TRIGGER_FLIPS)) {
+			await animateSymbolsHighlighted({ positions: bookEvent.positions });
+		}
+		stateGame.winHighlight = undefined;
 		stateGame.bonusType = getBonusType(bookEvent.positions.length);
 		// show free spin intro: it cuts straight in over the blurred scene, without a transition
 		eventEmitter.broadcast({ type: 'soundOnce', name: 'sfx_superfreespin' });
@@ -125,7 +144,8 @@ export const bookEventHandlerMap: BookEventHandlerMap<BookEvent, BookEventContex
 	// total), so the frontend only shows the difference.
 	freeSpinRetrigger: async (bookEvent: BookEventOfType<'freeSpinRetrigger'>) => {
 		eventEmitter.broadcast({ type: 'soundOnce', name: 'sfx_scatter_win_v2' });
-		await animateSymbols({ positions: bookEvent.positions });
+		await animateSymbolsHighlighted({ positions: bookEvent.positions });
+		stateGame.winHighlight = undefined;
 		eventEmitter.broadcast({ type: 'soundOnce', name: 'sfx_fs_respins' });
 		await eventEmitter.broadcastAsync({
 			type: 'freeSpinRetriggerShow',
@@ -171,8 +191,19 @@ export const bookEventHandlerMap: BookEventHandlerMap<BookEvent, BookEventContex
 		eventEmitter.broadcast({ type: 'drawerButtonHide' });
 	},
 	setWin: async (bookEvent: BookEventOfType<'setWin'>) => {
-		// No win screen (Win.svelte is no longer shown): each line's win is shown on the line itself
-		// (see winInfo) and the total in the UI's win amount.
+		// Smaller wins are only shown on their lines (see winInfo) and in the UI's win amount; big
+		// ones (15x the bet and up) count up on their own screen afterwards.
+		const winLevelData = winLevelMap[bookEvent.winLevel as WinLevel];
+		if (winLevelData?.type !== 'big') return;
+
+		await eventEmitter.broadcastAsync({ type: 'uiHide' });
+		winLevelSoundsPlay({ winLevelData });
+		await eventEmitter.broadcastAsync({
+			type: 'bigWinShow',
+			amount: bookEvent.amount,
+			winLevelData,
+		});
+		winLevelSoundsStop();
 	},
 	finalWin: async (bookEvent: BookEventOfType<'finalWin'>) => {
 		// Do nothing

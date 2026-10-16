@@ -22,3 +22,4 @@ export {
 
 export type { ButtonProps, AmountProps };
 export { LOADING_BAR_THEME_CLEAN, type LoadingBarTheme } from './src/loadingBarTheme';
+export { measureTextWidth, type TextStyleOptions } from './src/measureText';

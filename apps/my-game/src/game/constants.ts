@@ -195,16 +195,32 @@ const SYMBOL_ART_MAX_HEIGHT = 0.96;
 const SYMBOL_ART_MAX_WIDTH = (0.9 * REEL_WIDTH) / SYMBOL_SIZE;
 // widened a little to suit the wide reels (round art can opt out, see sStatic)
 const SYMBOL_ART_STRETCH_X = 1.1;
-// Each symbol also has a soft shadow image (`<key>Shadow`): the same art blurred, with padding
-// around it, so it shares the symbol's centre and scale. `size` scales a symbol that looks too big
-// or small next to the others.
-const symbolArt = (
-	assetKey: string,
-	[imageWidth, imageHeight]: [number, number],
-	[shadowWidth, shadowHeight]: [number, number],
-	stretchX = SYMBOL_ART_STRETCH_X,
-	size = 1,
-) => {
+// The sizes of the symbol images and of their soft shadow images (`<key>Shadow`): the same art
+// blurred, with padding around it, so it shares the symbol's centre and scale.
+export const SYMBOL_IMAGES = {
+	symbolH1: { image: [277, 290], shadow: [329, 342] },
+	symbolH2: { image: [329, 288], shadow: [387, 346] },
+	symbolH3: { image: [296, 223], shadow: [348, 275] },
+	symbolH4: { image: [240, 282], shadow: [292, 334] },
+	symbolL1: { image: [562, 419], shadow: [662, 519] },
+	symbolL2: { image: [339, 265], shadow: [403, 329] },
+	symbolL3: { image: [306, 256], shadow: [364, 314] },
+	symbolL4: { image: [676, 403], shadow: [800, 527] },
+	symbolL5: { image: [474, 325], shadow: [562, 413] },
+	symbolS: { image: [512, 423], shadow: [604, 515] },
+	symbolW: { image: [512, 493], shadow: [604, 585] },
+} as const satisfies Record<
+	string,
+	{ image: readonly [number, number]; shadow: readonly [number, number] }
+>;
+export type SymbolImageKey = keyof typeof SYMBOL_IMAGES;
+
+// `size` scales a symbol that looks too big or small next to the others.
+const symbolArt = (assetKey: SymbolImageKey, stretchX = SYMBOL_ART_STRETCH_X, size = 1) => {
+	const {
+		image: [imageWidth, imageHeight],
+		shadow: [shadowWidth, shadowHeight],
+	} = SYMBOL_IMAGES[assetKey];
 	const scale =
 		size *
 		Math.min(
@@ -226,24 +242,24 @@ const symbolArt = (
 	};
 };
 
-const h1Static = symbolArt('symbolH1', [277, 290], [329, 342]);
-const h2Static = symbolArt('symbolH2', [329, 288], [387, 346]);
-const h3Static = symbolArt('symbolH3', [296, 223], [348, 275]);
-const h4Static = symbolArt('symbolH4', [240, 282], [292, 334]);
+const h1Static = symbolArt('symbolH1');
+const h2Static = symbolArt('symbolH2');
+const h3Static = symbolArt('symbolH3');
+const h4Static = symbolArt('symbolH4');
 const h5Static = { type: 'sprite', assetKey: 'h5.webp', sizeRatios: { width: 1, height: 1 } };
 
-const l1Static = symbolArt('symbolL1', [562, 419], [662, 519]);
+const l1Static = symbolArt('symbolL1');
 // the collar
-const l2Static = symbolArt('symbolL2', [339, 265], [403, 329], SYMBOL_ART_STRETCH_X, 0.9);
+const l2Static = symbolArt('symbolL2', SYMBOL_ART_STRETCH_X, 0.9);
 // the paw
-const l3Static = symbolArt('symbolL3', [306, 256], [364, 314], SYMBOL_ART_STRETCH_X, 0.85);
-const l4Static = symbolArt('symbolL4', [676, 403], [800, 527]);
+const l3Static = symbolArt('symbolL3', SYMBOL_ART_STRETCH_X, 0.85);
+const l4Static = symbolArt('symbolL4');
 // the bowl
-const l5Static = symbolArt('symbolL5', [474, 325], [562, 413], SYMBOL_ART_STRETCH_X, 0.9);
+const l5Static = symbolArt('symbolL5', SYMBOL_ART_STRETCH_X, 0.9);
 
 // not widened: the round badge looks squashed when stretched
-const sStatic = symbolArt('symbolS', [512, 423], [604, 515], 1);
-const wStatic = symbolArt('symbolW', [512, 493], [604, 585]);
+const sStatic = symbolArt('symbolS', 1);
+const wStatic = symbolArt('symbolW');
 
 // A reel that lands any W is drawn as one big wild, stretched over the whole reel.
 export const BIG_WILD_INFO = {

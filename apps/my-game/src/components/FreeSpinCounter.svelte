@@ -6,12 +6,15 @@
 </script>
 
 <script lang="ts">
+	import { Tween } from 'svelte/motion';
 	import { MainContainer } from 'components-layout';
 	import { FadeContainer } from 'components-pixi';
-	import { Sprite, Text } from 'pixi-svelte';
+	import { Container, Sprite, Text } from 'pixi-svelte';
+	import { stateBetDerived } from 'state-shared';
 
 	import { getContext } from '../game/context';
 	import { SYMBOL_SIZE, BONUS_NAME } from '../game/constants';
+	import { popOut } from '../game/motion';
 	import { createBoardTextStyle, fitBoardFontSize } from '../game/textStyles';
 
 	// During free spins the buy bonus button's wooden sign, a bit bigger, takes the place of the
@@ -53,6 +56,16 @@
 	let total = $state(0);
 	const count = $derived(`${current} OF ${total}`);
 
+	// the count kicks each time it changes: a new spin, or spins added
+	const COUNT_KICK = 1.3;
+	const countScale = new Tween(1);
+	let countHeight = $state(COUNT_FONT_SIZE * 1.2);
+	const kick = async () => {
+		const timeScale = stateBetDerived.timeScale();
+		await countScale.set(COUNT_KICK, { duration: 110 / timeScale });
+		await countScale.set(1, { duration: 360 / timeScale, easing: (t) => popOut(t, 3) });
+	};
+
 	const getStyle = (text: string, fontSize: number) =>
 		createBoardTextStyle({
 			fontSize: fitBoardFontSize({ text, fontSize, maxWidth: TEXT_MAX_WIDTH }),
@@ -66,8 +79,10 @@
 		freeSpinCounterShow: () => (show = true),
 		freeSpinCounterHide: () => (show = false),
 		freeSpinCounterUpdate: (emitterEvent) => {
+			const previous = count;
 			if (emitterEvent.current !== undefined) current = emitterEvent.current;
 			if (emitterEvent.total !== undefined) total = emitterEvent.total;
+			if (show && count !== previous) kick();
 		},
 	});
 </script>
@@ -81,11 +96,14 @@
 			text={title}
 			style={titleStyle}
 		/>
-		<Text
-			anchor={{ x: 0.5, y: 0 }}
-			y={TEXT_Y - SYMBOL_SIZE * 0.01}
-			text={count}
-			style={countStyle}
-		/>
+		<!-- its top where the title ends, scaled about its middle -->
+		<Container y={TEXT_Y - SYMBOL_SIZE * 0.01 + countHeight * 0.5} scale={countScale.current}>
+			<Text
+				anchor={0.5}
+				text={count}
+				style={countStyle}
+				onresize={(sizes) => (countHeight = sizes.height)}
+			/>
+		</Container>
 	</FadeContainer>
 </MainContainer>

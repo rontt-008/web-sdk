@@ -23,6 +23,21 @@
 	} as const;
 	// from the bottom of the screen to the middle of the text
 	const BOTTOM_OFFSET = 70;
+	// it breathes gently, fading a little and back every so many seconds
+	const BREATHE_PERIOD = 1.8;
+	const BREATHE_ALPHA = 0.45;
+	const BREATHE_SCALE = 0.04;
+
+	let time = $state(0);
+	const breathe = $derived(0.5 - 0.5 * Math.cos((time * 2 * Math.PI) / BREATHE_PERIOD));
+
+	$effect(() => {
+		const ticker = context.stateApp.pixiApplication?.ticker;
+		if (!ticker) return;
+		const tick = () => (time += ticker.deltaMS / 1000);
+		ticker.add(tick);
+		return () => ticker.remove(tick);
+	});
 </script>
 
 <MainContainer alignVertical="bottom">
@@ -30,6 +45,8 @@
 		anchor={0.5}
 		x={context.stateLayoutDerived.mainLayout().width * 0.5}
 		y={context.stateLayoutDerived.mainLayout().height - BOTTOM_OFFSET}
+		alpha={1 - BREATHE_ALPHA * breathe}
+		scale={1 - BREATHE_SCALE * breathe}
 		text="PRESS ANYWHERE TO CONTINUE"
 		style={STYLE}
 	/>

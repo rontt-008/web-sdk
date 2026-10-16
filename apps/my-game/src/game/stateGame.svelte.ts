@@ -6,7 +6,7 @@ import { PORTRAIT_UI_HEIGHT } from 'components-ui-pixi';
 import { createEnhanceBoard, createReelForSpinning } from 'utils-slots';
 import { createGetWinLevelDataByWinLevelAlias } from 'utils-shared/winLevel';
 
-import type { BonusType, GameType, RawSymbol, SymbolState } from './types';
+import type { BonusType, GameType, Position, RawSymbol, SymbolState } from './types';
 import { stateLayoutDerived } from './stateLayout';
 import { winLevelMap } from './winLevelMap';
 import { eventEmitter } from './eventEmitter';
@@ -83,6 +83,9 @@ export const stateGame = $state({
 	scatterCounter: 0,
 	// blurs the background, board and logo behind a screen shown over them (see SceneBlur)
 	blurScene: false,
+	// while a win is shown, the positions in it (big wilds by their top row): the rest of the board
+	// is shaded (see ReelSymbol)
+	winHighlight: undefined as Position[] | undefined,
 });
 
 // vertical position of the board's centre; raised on screens where the bottom UI would overlap it

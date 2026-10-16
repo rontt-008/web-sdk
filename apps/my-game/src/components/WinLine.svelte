@@ -2,9 +2,10 @@
 	import type { Position } from '../game/types';
 
 	export type EmitterEventWinLine = {
-		type: 'winLinesShow';
-		// amount is in book units, like the amounts in book events
-		wins: { positions: Position[]; amount: number }[];
+		type: 'winLineShow';
+		positions: Position[];
+		// in book units, like the amounts in book events
+		amount: number;
 	};
 </script>
 
@@ -22,16 +23,19 @@
 	import { getSymbolX } from '../game/utils';
 	import { SYMBOL_SIZE } from '../game/constants';
 	import { createBoardTextStyle } from '../game/textStyles';
+	import { popOut } from '../game/motion';
 	import BoardContainer from './BoardContainer.svelte';
 
 	type Point = { x: number; y: number };
 
-	// The lines are the only sign of a win: the symbols don't pulse and there is no win screen.
-	// The winning lines are shown one after another: each draws itself from its first symbol to its
-	// last with its win amount in the middle, stays a moment, then fades before the next one.
+	// A winning line draws itself from its first symbol to its last while they hop (see winInfo), its
+	// win amount pops up in the middle, it stays a moment, then fades as the next one is drawn.
 	const DRAW_DURATION = 150;
 	const HOLD_DURATION = 500;
 	const FADE_DURATION = 100;
+	// the amount swells in from small with a little overshoot as the line reaches it
+	const AMOUNT_POP_START = 0.4;
+	const AMOUNT_POP_DURATION = 300;
 	// light blue fading down to light green, with a dark navy outline so it reads on the line
 	const AMOUNT_STYLE = createBoardTextStyle({
 		fontSize: SYMBOL_SIZE * 0.5,
@@ -51,6 +55,7 @@
 	let line = $state<{ centres: Point[]; amountText: string }>();
 	const progress = new Tween(0);
 	const alpha = new Tween(0);
+	const amountScale = new Tween(1);
 
 	// Catmull-Rom spline: a smooth curve through every centre, sampled into short straight steps
 	const smoothPath = (points: Point[]) => {
@@ -112,27 +117,23 @@
 	};
 
 	context.eventEmitter.subscribeOnMount({
-		// resolves when the last line starts fading, so the spin can end while it fades
-		winLinesShow: async ({ wins }) => {
-			for (const [index, { positions, amount }] of wins.entries()) {
-				line = {
-					centres: _.sortBy(positions, ['reel', 'row']).map((position) => ({
-						x: getSymbolX(position.reel),
-						y: context.stateGame.board[position.reel].reelState.symbols[position.row].symbolY(),
-					})),
-					amountText: toAmountText(amount),
-				};
-				alpha.set(1, { duration: 0 });
-				progress.set(0, { duration: 0 });
-				await progress.set(1, {
-					duration: DRAW_DURATION / stateBetDerived.timeScale(),
-					easing: cubicOut,
-				});
-				await waitForTimeout(HOLD_DURATION / stateBetDerived.timeScale());
-
-				const fade = alpha.set(0, { duration: FADE_DURATION / stateBetDerived.timeScale() });
-				if (index < wins.length - 1) await fade;
-			}
+		// resolves as the line starts to fade, so the next line or the end of the spin comes in over it
+		winLineShow: async ({ positions, amount }) => {
+			const timeScale = stateBetDerived.timeScale();
+			line = {
+				centres: _.sortBy(positions, ['reel', 'row']).map((position) => ({
+					x: getSymbolX(position.reel),
+					y: context.stateGame.board[position.reel].reelState.symbols[position.row].symbolY(),
+				})),
+				amountText: toAmountText(amount),
+			};
+			alpha.set(1, { duration: 0 });
+			progress.set(0, { duration: 0 });
+			amountScale.set(AMOUNT_POP_START, { duration: 0 });
+			amountScale.set(1, { duration: AMOUNT_POP_DURATION / timeScale, easing: (t) => popOut(t) });
+			await progress.set(1, { duration: DRAW_DURATION / timeScale, easing: cubicOut });
+			await waitForTimeout(HOLD_DURATION / timeScale);
+			alpha.set(0, { duration: FADE_DURATION / timeScale });
 		},
 	});
 </script>
@@ -140,13 +141,12 @@
 <BoardContainer>
 	<Container alpha={alpha.current}>
 		<Graphics {draw} />
-		<!-- the amount fades in as its line draws -->
 		{#if line && amountPosition}
 			<Text
 				anchor={0.5}
 				x={amountPosition.x}
 				y={amountPosition.y}
-				alpha={progress.current}
+				scale={amountScale.current}
 				text={line.amountText}
 				style={AMOUNT_STYLE}
 			/>

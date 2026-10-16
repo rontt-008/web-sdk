@@ -3,14 +3,14 @@ import type { EmitterEventFreeSpinIntro } from '../components/FreeSpinIntro.svel
 import type { EmitterEventFreeSpinCounter } from '../components/FreeSpinCounter.svelte';
 import type { EmitterEventFreeSpinOutro } from '../components/FreeSpinOutro.svelte';
 import type { EmitterEventFreeSpinRetrigger } from '../components/FreeSpinRetrigger.svelte';
-import type { EmitterEventWin } from '../components/Win.svelte';
+import type { EmitterEventBigWin } from '../components/BigWin.svelte';
 import type { EmitterEventSound } from '../components/Sound.svelte';
 import type { EmitterEventWildThrow } from '../components/WildThrow.svelte';
 import type { EmitterEventWinLine } from '../components/WinLine.svelte';
 
 export type EmitterEventGame =
 	| EmitterEventBoard
-	| EmitterEventWin
+	| EmitterEventBigWin
 	| EmitterEventFreeSpinIntro
 	| EmitterEventFreeSpinCounter
 	| EmitterEventFreeSpinOutro
