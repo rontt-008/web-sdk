@@ -78,6 +78,8 @@ export type UiTheme = {
 	// no sound on/off button in the menu, for a game with `muteButtons` beside the menu button (the
 	// replay keeps it, as it has no mute buttons)
 	hideSoundSwitch?: boolean;
+	// no settings button (the volumes) in the menu, for a game whose mute buttons have volume sliders
+	hideSettings?: boolean;
 	// mute music and mute sounds buttons beside the menu button (compact desktop, portrait, landscape
 	// and tablet layouts)
 	muteButtons?: boolean;
@@ -104,6 +106,6 @@ export const getBuyBonusExtraWidth = (theme: UiTheme | undefined) =>
 export const getMenuButtons = (props: LayoutUiProps, theme: UiTheme | undefined) => [
 	...(theme?.hidePayTable ? [] : [props.buttonPayTable]),
 	props.buttonGameRules,
-	props.buttonSettings,
+	...(theme?.hideSettings ? [] : [props.buttonSettings]),
 	...(theme?.hideSoundSwitch ? [] : [props.buttonSoundSwitch]),
 ];

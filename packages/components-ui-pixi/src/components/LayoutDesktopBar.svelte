@@ -1,8 +1,10 @@
 <script lang="ts">
-	import { stateUi } from 'state-shared';
+	import { stateSound, stateUi } from 'state-shared';
 	import { MainContainer } from 'components-layout';
-	import { Container, Rectangle } from 'pixi-svelte';
+	import type * as PIXI from 'pixi.js';
+	import { Container, Graphics, Rectangle } from 'pixi-svelte';
 
+	import UiVolumeSlider from './UiVolumeSlider.svelte';
 	import { getContext } from '../context';
 	import { getMenuButtons, getPanelCornerRadius, getUiTheme } from '../theme';
 	import {
@@ -10,6 +12,7 @@
 		BAR_SCALE,
 		ICON_SCALE,
 		LABEL_WIDTH,
+		PANEL_GAP,
 		PANEL_HEIGHT,
 		SPIN_SCALE,
 		getDesktopBar,
@@ -22,8 +25,8 @@
 	const menuButtons = $derived(getMenuButtons(props, theme));
 
 	// One centred bar along the bottom of the standard layout (measured in desktopBar.ts): four
-	// panels with their buttons drawn as bare icons, the spin button over the end of the last one and
-	// the buy bonus button after it.
+	// panels with their buttons drawn as bare icons, the spin button in a round notch at the end of
+	// the last one and the buy bonus button after it.
 	const ARROW_OFFSET = 24; // from the middle of the bar to the middle of each arrow
 	const LABEL_SCALE = 0.75;
 	// the menu item buttons are 1.3x the size of the others; scaled to match the close button
@@ -42,6 +45,38 @@
 	const showBuyBonus = $derived(bar.showBuyBonus);
 	const showMuteButtons = $derived(bar.showMuteButtons);
 	const buyBonusScale = $derived(bar.buyBonusScale);
+
+	// a panel whose right end is cut away in a circle (of radius `notch`) centred on that end, for the
+	// spin button to sit in with a gap around it
+	const drawNotchedPanel = (
+		graphics: PIXI.Graphics,
+		left: number,
+		width: number,
+		notch: number,
+	) => {
+		const half = PANEL_HEIGHT * 0.5;
+		const corner = getPanelCornerRadius(theme, PANEL_HEIGHT);
+		const right = left + width;
+		// the circle meets the top and bottom edges this far left of the end; one too small to reach
+		// them leaves a square end with the notch in it
+		const reaches = notch > half;
+		const inset = reaches ? Math.sqrt(notch * notch - half * half) : 0;
+		const angle = Math.atan2(Math.min(notch, half), inset);
+
+		graphics.moveTo(left, 0).arcTo(left, -half, right, -half, corner);
+		if (!reaches) graphics.lineTo(right, -half);
+		graphics.arc(right, 0, notch, angle - Math.PI, Math.PI - angle, true);
+		if (!reaches) graphics.lineTo(right, half);
+		graphics
+			.arcTo(left, half, left, 0, corner)
+			.closePath()
+			.fill({ color: theme?.label.panel ?? 0x000000, alpha: theme?.label.panelAlpha ?? 1 })
+			.stroke({
+				color: theme?.outline ?? 0x000000,
+				width: theme?.outlineWidth ?? 0,
+				alpha: theme?.outlineAlpha ?? 1,
+			});
+	};
 </script>
 
 <Container x={20}>
@@ -55,18 +90,24 @@
 <MainContainer standard alignVertical="bottom">
 	<Container x={bar.left} y={barY} scale={BAR_SCALE}>
 		{#each bar.panels as panel}
-			<Rectangle
-				x={panel.left}
-				anchor={{ x: 0, y: 0.5 }}
-				width={panel.width}
-				height={PANEL_HEIGHT}
-				borderRadius={getPanelCornerRadius(theme, PANEL_HEIGHT)}
-				backgroundColor={theme?.label.panel}
-				backgroundAlpha={theme?.label.panelAlpha}
-				borderColor={theme?.outline}
-				borderWidth={theme?.outlineWidth}
-				borderAlpha={theme?.outlineAlpha}
-			/>
+			{#if panel.notch}
+				<Graphics
+					draw={(graphics) => drawNotchedPanel(graphics, panel.left, panel.width, panel.notch!)}
+				/>
+			{:else}
+				<Rectangle
+					x={panel.left}
+					anchor={{ x: 0, y: 0.5 }}
+					width={panel.width}
+					height={PANEL_HEIGHT}
+					borderRadius={getPanelCornerRadius(theme, PANEL_HEIGHT)}
+					backgroundColor={theme?.label.panel}
+					backgroundAlpha={theme?.label.panelAlpha}
+					borderColor={theme?.outline}
+					borderWidth={theme?.outlineWidth}
+					borderAlpha={theme?.outlineAlpha}
+				/>
+			{/if}
 		{/each}
 
 		{#if !stateUi.menuOpen}
@@ -75,14 +116,29 @@
 			</Container>
 		{/if}
 
+		<!-- hovering either mute button opens a volume slider above it -->
 		{#if showMuteButtons}
-			<Container x={bar.muteMusic} scale={ICON_SCALE}>
-				{@render props.buttonMuteMusic({ anchor: 0.5, bare: true })}
-			</Container>
+			<UiVolumeSlider
+				x={bar.muteMusic}
+				bind:value={stateSound.volumeValueMusic}
+				buttonSize={PANEL_HEIGHT}
+				gap={PANEL_GAP}
+			>
+				<Container scale={ICON_SCALE}>
+					{@render props.buttonMuteMusic({ anchor: 0.5, bare: true })}
+				</Container>
+			</UiVolumeSlider>
 
-			<Container x={bar.muteSounds} scale={ICON_SCALE}>
-				{@render props.buttonMuteSounds({ anchor: 0.5, bare: true })}
-			</Container>
+			<UiVolumeSlider
+				x={bar.muteSounds}
+				bind:value={stateSound.volumeValueSoundEffect}
+				buttonSize={PANEL_HEIGHT}
+				gap={PANEL_GAP}
+			>
+				<Container scale={ICON_SCALE}>
+					{@render props.buttonMuteSounds({ anchor: 0.5, bare: true })}
+				</Container>
+			</UiVolumeSlider>
 		{/if}
 
 		<Container x={bar.balance} scale={LABEL_SCALE}>

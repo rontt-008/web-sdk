@@ -10,7 +10,7 @@ export const BAR_SCALE = 1.18;
 // from the bottom of the screen to the middle of the bar
 const BAR_OFFSET = 70;
 export const PANEL_HEIGHT = 96;
-const PANEL_GAP = 10;
+export const PANEL_GAP = 10;
 // an icon at a panel's end sits as far in as the middle of a rounded end; text keeps this far from
 // the end
 const PANEL_END = PANEL_HEIGHT * 0.5;
@@ -20,6 +20,8 @@ export const ICON_SCALE = 0.62;
 const ICON_STEP = 88;
 export const ARROW_SCALE = 0.4;
 export const SPIN_SCALE = 0.68;
+// between the spin button and the round notch it sits in at the end of the last panel
+const NOTCH_GAP = 6;
 // the boxes the balance, win and bet values shrink to fit
 export const LABEL_WIDTH = { balance: 200, win: 170, bet: 180 };
 const GAP = { small: 16, medium: 20, large: 30 };
@@ -30,6 +32,9 @@ type DesktopBarOptions = {
 	// the standard layout's size
 	standard: { width: number; height: number };
 };
+
+// a panel's left end and width; `notch` is the radius of a round notch cut out of its right end
+type Panel = { left: number; width: number; notch?: number };
 
 // where everything on the bar goes: x of each panel's left end and width, and of each thing on
 // them, from the bar's left end; the bar's left end and middle (y) in the standard layout
@@ -63,8 +68,8 @@ export const getDesktopBar = ({ theme, layoutType, standard }: DesktopBarOptions
 	const turbo = playLeft + PANEL_END;
 	const autoSpin = turbo + ICON_STEP;
 	const spin = autoSpin + iconRadius + GAP.small + spinRadius;
-	// runs under the spin button to its middle
-	const play = { left: playLeft, width: spin - playLeft };
+	// runs to the middle of the spin button, with a round notch (this radius) cut out around it
+	const play = { left: playLeft, width: spin - playLeft, notch: spinRadius + NOTCH_GAP };
 
 	const buyBonus = spin + spinRadius + GAP.medium + buyBonusWidth * 0.5;
 	const width = showBuyBonus ? buyBonus + buyBonusWidth * 0.5 : spin + spinRadius;
@@ -73,7 +78,7 @@ export const getDesktopBar = ({ theme, layoutType, standard }: DesktopBarOptions
 		left: (standard.width - width * BAR_SCALE) * 0.5,
 		y: standard.height - BAR_OFFSET * BAR_SCALE,
 		width,
-		panels: [controls, info, betPanel, play],
+		panels: [controls, info, betPanel, play] as Panel[],
 		showBuyBonus,
 		showMuteButtons,
 		buyBonusScale,

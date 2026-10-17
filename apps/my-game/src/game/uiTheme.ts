@@ -25,7 +25,13 @@ export const loadingBarTheme: LoadingBarTheme = {
 	markerFill: CREAM,
 	markerOutline: DARK_BROWN,
 	// same size and outline as "PRESS ANYWHERE TO CONTINUE"
-	percent: { fontFamily: 'Titan One', fontSize: 26, fill: CREAM, stroke: DARK_BROWN, strokeWidth: 4.5 },
+	percent: {
+		fontFamily: 'Titan One',
+		fontSize: 26,
+		fill: CREAM,
+		stroke: DARK_BROWN,
+		strokeWidth: 4.5,
+	},
 };
 
 // the UI is black instead of the clean theme's charcoal
@@ -74,6 +80,8 @@ export const uiTheme: UiTheme = {
 	// the space bar does exactly what the spin button does (Engine's guideline 228)
 	spaceHoldSpins: false,
 	hideSoundSwitch: true,
+	// no settings menu: the mute buttons have volume sliders
+	hideSettings: true,
 	// the rules (the info button) hold the symbol wins and paylines too
 	hidePayTable: true,
 };
