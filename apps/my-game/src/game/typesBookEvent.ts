@@ -103,14 +103,14 @@ type BookEventBigWildThrow = {
 	positions: Position[];
 };
 
-// SUPER free spins, sent before a reveal: the big wilds of the spin before each move one reel left,
-// carrying their multiplier. The reels they move onto don't spin; the reveal's board already has
-// them there.
+// SUPER and MYTHIC free spins, sent before a reveal: the big wilds of the spin before each move one
+// reel left, carrying their multiplier, which doubles in MYTHIC free spins (newMultiplier). The
+// reels they move onto don't spin; the reveal's board already has them there.
 type BookEventBigWildWalk = {
 	index: number;
 	type: 'bigWildWalk';
 	// reels; to is -1 when the big wild walks off the first reel
-	moves: { from: number; to: number; multiplier: number }[];
+	moves: { from: number; to: number; multiplier: number; newMultiplier?: number }[];
 };
 
 type BookEventCreateBonusSnapshot = {

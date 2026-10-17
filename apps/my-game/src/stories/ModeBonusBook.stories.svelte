@@ -20,6 +20,7 @@
 	import { playBet } from '../game/utils';
 	import books from './data/bonus_books';
 	import realBooks from './data/bonus_books_real';
+	import mythicBooks from './data/mythic_books_real';
 	import { pickByWeight } from './pickByWeight';
 
 	setContext();
@@ -63,6 +64,27 @@
 			const index = pickByWeight(realBooks);
 			const data = realBooks[index];
 			console.log('Running a book at index', index, '(real odds)');
+			await playBet({ ...data, state: data.events });
+		},
+	})}
+	{template}
+/>
+
+<!-- MYTHIC free spins can't be bought: these are the mystery bonus rounds that start them, picked by
+	their lookup table weights, as if buying them -->
+<Story
+	name="MYTHIC FREE SPINS (random)"
+	args={templateArgs({
+		skipLoadingScreen: true,
+		data: {},
+		action: async () => {
+			const index = pickByWeight(mythicBooks);
+			const data = mythicBooks[index];
+			console.log(
+				'Running a MYTHIC FREE SPINS book at index',
+				index,
+				`(${data.payoutMultiplier}x)`,
+			);
 			await playBet({ ...data, state: data.events });
 		},
 	})}

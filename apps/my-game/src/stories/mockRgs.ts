@@ -1,6 +1,6 @@
 // Stands in for Stake Engine's RGS in Storybook, so the game can be played like the real thing: it
 // keeps a balance, takes each bet at its mode's cost and answers with a round picked by its lookup
-// table weight (or a max win round, see startMockRgs), from the real odds books exported from the
+// table weight (or a max win or top win round, see startMockRgs), from the books exported from the
 // math. Requests to the RGS endpoints are answered here; everything else goes through to the network.
 import { API_AMOUNT_MULTIPLIER } from 'constants-shared/bet';
 
@@ -11,6 +11,12 @@ import bonusBooks from './data/bonus_books_real';
 import superBooks from './data/super_books_real';
 import mysteryBooks from './data/mystery_books_real';
 import featureBooks from './data/feature_books_real';
+import baseTopBooks from './data/base_books_top';
+import anteTopBooks from './data/ante_books_top';
+import bonusTopBooks from './data/bonus_books_top';
+import superTopBooks from './data/super_books_top';
+import mysteryTopBooks from './data/mystery_books_top';
+import featureTopBooks from './data/feature_books_top';
 import { pickByWeight } from './pickByWeight';
 
 type BetModeName = keyof typeof config.betModes;
@@ -25,26 +31,44 @@ const BOOKS: Record<BetModeName, Book[]> = {
 	feature: featureBooks,
 };
 
+// rounds of 3000x and up, spread over that range with only a few max wins (export_story_books.py)
+const TOP_BOOKS: Record<BetModeName, Book[]> = {
+	base: baseTopBooks,
+	ante: anteTopBooks,
+	bonus: bonusTopBooks,
+	super: superTopBooks,
+	mystery: mysteryTopBooks,
+	feature: featureTopBooks,
+};
+
+// which rounds it answers with: picked by the real odds, only the mode's max wins, or only top wins
+export type MockRounds = 'real odds' | 'max win' | 'top wins';
+
 // bet sizes offered, in dollars (the bet menu shows a handful of them)
 const BET_LEVELS = [
 	0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1, 1.2, 1.4, 1.6, 1.8, 2, 2.5, 3, 3.5, 4, 4.5, 5, 6, 7,
 	8, 9, 10, 12, 14, 16, 18, 20, 25, 30, 35, 40, 45, 50, 60, 70, 80, 90, 100,
 ];
 
-// maxWin: every round is one of the mode's max wins instead of one picked by the real odds
-type Rgs = { balance: number; roundID: number; unpaid: number; maxWin: boolean };
+type Rgs = { balance: number; roundID: number; unpaid: number; rounds: MockRounds };
 
 // amounts are kept in the API's integer units (1000000 is 1 dollar)
-const createRgs = (balance: number, maxWin: boolean): Rgs => ({
+const createRgs = (balance: number, rounds: MockRounds): Rgs => ({
 	balance: Math.round(balance * API_AMOUNT_MULTIPLIER),
 	roundID: 0,
 	unpaid: 0,
-	maxWin,
+	rounds,
 });
 
 // the rounds that pay the mode's max win (the real odds books hold one for each mode)
 const maxWinBooks = (name: BetModeName) =>
 	BOOKS[name].filter((book) => book.payoutMultiplier >= config.betModes[name].max_win);
+
+const booksFor = (rgs: Rgs, name: BetModeName) => {
+	if (rgs.rounds === 'max win') return maxWinBooks(name);
+	if (rgs.rounds === 'top wins') return TOP_BOOKS[name];
+	return BOOKS[name];
+};
 
 const balanceObject = (rgs: Rgs) => ({ amount: rgs.balance, currency: 'USD' });
 
@@ -90,9 +114,12 @@ const HANDLERS: Record<string, (rgs: Rgs, body: Record<string, any>) => object> 
 		const name = String(mode).toLowerCase() as BetModeName;
 		if (!(name in BOOKS)) return { error: 'ERR_VAL', message: `Unknown bet mode: ${mode}` };
 
-		const books = rgs.maxWin ? maxWinBooks(name) : BOOKS[name];
+		const books = booksFor(rgs, name);
 		if (books.length === 0) {
-			return { error: 'ERR_GEN', message: `No max win round for bet mode ${mode} in the story data` };
+			return {
+				error: 'ERR_GEN',
+				message: `No ${rgs.rounds} round for bet mode ${mode} in the story data`,
+			};
 		}
 
 		const cost = Math.round(amount * config.betModes[name].cost);
@@ -147,11 +174,17 @@ const installFetch = () => {
 	};
 };
 
-// Starts a mock RGS with this balance (in dollars); with maxWin every round pays the mode's max win.
+// Starts a mock RGS with this balance (in dollars), answering with these rounds (see MockRounds).
 // Returns a function that stops it.
-export const startMockRgs = ({ balance, maxWin = false }: { balance: number; maxWin?: boolean }) => {
+export const startMockRgs = ({
+	balance,
+	rounds = 'real odds',
+}: {
+	balance: number;
+	rounds?: MockRounds;
+}) => {
 	installFetch();
-	const rgs = createRgs(balance, maxWin);
+	const rgs = createRgs(balance, rounds);
 	activeRgs = rgs;
 
 	return () => {

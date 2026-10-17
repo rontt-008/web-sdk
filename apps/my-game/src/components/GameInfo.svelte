@@ -188,8 +188,8 @@
 		</div>
 		<div class="card feature">
 			<p>
-				<strong>MYTHIC FREE SPINS:</strong> every spin has at least one BIG WILD, and at least one of
-				them throws 1 to 3 extra WILDs instead of 0 to 3.
+				<strong>MYTHIC FREE SPINS:</strong> BIG WILDs stay and move the same way as in SUPER FREE
+				SPINS, and each time a BIG WILD moves one reel to the left, its multiplier doubles.
 			</p>
 		</div>
 	</section>

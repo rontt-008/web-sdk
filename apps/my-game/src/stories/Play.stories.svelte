@@ -16,14 +16,15 @@
 	import Game from '../components/Game.svelte';
 	import { setContext } from '../game/context';
 	import MockRgs from './MockRgs.svelte';
+	import type { MockRounds } from './mockRgs';
 
 	setContext();
 </script>
 
 <!-- the game as it runs on Stake Engine, against a mock RGS; changing the balance restarts it -->
-{#snippet play(balance: number, maxWin: boolean)}
+{#snippet play(balance: number, rounds: MockRounds)}
 	{#key balance}
-		<MockRgs {balance} {maxWin}>
+		<MockRgs {balance} {rounds}>
 			<Authenticate>
 				<StoryLocale lang="en">
 					<Game />
@@ -37,7 +38,7 @@
 the feature spin on and buy bonuses. -->
 <Story name="real odds" args={{ balance: 1000 }}>
 	{#snippet template(args)}
-		{@render play(args.balance, false)}
+		{@render play(args.balance, 'real odds')}
 	{/snippet}
 </Story>
 
@@ -45,6 +46,14 @@ the feature spin on and buy bonuses. -->
 feature spin on, or any bonus bought. -->
 <Story name="max win" args={{ balance: 1000 }}>
 	{#snippet template(args)}
-		{@render play(args.balance, true)}
+		{@render play(args.balance, 'max win')}
+	{/snippet}
+</Story>
+
+<!-- Every round is a top win, 3000x the bet and up, whichever way it is played: spread over that
+range, with a max win now and then. The feature spin has only a few such rounds. -->
+<Story name="top wins" args={{ balance: 1000 }}>
+	{#snippet template(args)}
+		{@render play(args.balance, 'top wins')}
 	{/snippet}
 </Story>

@@ -1,10 +1,15 @@
 <script lang="ts" module>
 	export type EmitterEventWalkingWilds =
-		// SUPER free spins: the big wilds that walk on cover their reels, as they look on the board
-		| { type: 'walkingWildsShow'; moves: { from: number; to: number; multiplier: number }[] }
+		// SUPER and MYTHIC free spins: the big wilds that walk on cover their reels, as they look on
+		// the board
+		| {
+				type: 'walkingWildsShow';
+				moves: { from: number; to: number; multiplier: number; newMultiplier?: number }[];
+		  }
 		// cat paws reach up from under the board and grab each of them
 		| { type: 'walkingWildsGrab' }
-		// while the other reels spin, the paws carry them one reel left (or off the first one)
+		// while the other reels spin, the paws carry them one reel left (or off the first one); in
+		// MYTHIC free spins their multipliers then double
 		| { type: 'walkingWildsMove' }
 		// they are in place: the board draws them again and the paws let go and sink back down
 		| { type: 'walkingWildsHide' };
@@ -28,6 +33,9 @@
 	const GRAB_DURATION = 300;
 	const MOVE_DURATION = 450;
 	const RELEASE_DURATION = 250;
+	// a big wild whose multiplier doubles swells and settles as the new one shows
+	const DOUBLE_DURATION = 350;
+	const DOUBLE_SWELL = 0.15;
 
 	// hands.png (588x1024) holds both paws, facing each other: the left one at x 0-218 and the right
 	// one at x 370-588, both from y 376 down to their arms, which are cut flat at y 708. Their claw
@@ -59,8 +67,22 @@
 	// behind the log
 	const PAW_HIDDEN_BELOW = 600;
 
-	// from one reel to the one on its left; to is -1 off the board
-	type Walker = { from: number; to: number; rawSymbol: RawSymbol };
+	// from one reel to the one on its left; to is -1 off the board. Its multiplier becomes
+	// newMultiplier there (doubled in MYTHIC free spins).
+	type Walker = {
+		from: number;
+		to: number;
+		multiplier: number;
+		newMultiplier: number;
+		rawSymbol: RawSymbol;
+		doubled?: boolean;
+	};
+	const bigWild = (multiplier: number): RawSymbol => ({
+		name: 'W',
+		wild: true,
+		multiplier,
+		bigWild: { anchor: true, multiplier },
+	});
 
 	const context = getContext();
 	const handsTexture = $derived(context.stateApp.loadedAssets?.hands as PIXI.Texture | undefined);
@@ -107,6 +129,8 @@
 	// the paws: 0 down out of sight, 1 holding; then 0 holding, 1 back down
 	const grab = new Tween(0);
 	const release = new Tween(0);
+	// 0 to 1 while a doubled multiplier shows
+	const doubling = new Tween(0);
 
 	const getX = (walker: Walker) =>
 		getSymbolX(walker.from) + (getSymbolX(walker.to) - getSymbolX(walker.from)) * progress.current;
@@ -133,11 +157,14 @@
 			progress.set(0, { duration: 0 });
 			grab.set(0, { duration: 0 });
 			release.set(0, { duration: 0 });
+			doubling.set(0, { duration: 0 });
 			wildsShown = true;
-			walkers = moves.map(({ from, to, multiplier }) => ({
+			walkers = moves.map(({ from, to, multiplier, newMultiplier = multiplier }) => ({
 				from,
 				to,
-				rawSymbol: { name: 'W', wild: true, multiplier, bigWild: { anchor: true, multiplier } },
+				multiplier,
+				newMultiplier,
+				rawSymbol: bigWild(multiplier),
 			}));
 		},
 		walkingWildsGrab: async () => {
@@ -153,6 +180,18 @@
 				duration: MOVE_DURATION / stateBetDerived.timeScale(),
 				easing: cubicInOut,
 			});
+
+			// MYTHIC free spins: once there, the multipliers double
+			const doubles = (walker: Walker) =>
+				walker.to >= 0 && walker.newMultiplier !== walker.multiplier;
+			if (!walkers.some(doubles)) return;
+			walkers = walkers.map((walker) =>
+				doubles(walker)
+					? { ...walker, rawSymbol: bigWild(walker.newMultiplier), doubled: true }
+					: walker,
+			);
+			context.eventEmitter.broadcast({ type: 'soundOnce', name: 'sfx_multiplier_up' });
+			await doubling.set(1, { duration: DOUBLE_DURATION / stateBetDerived.timeScale() });
 		},
 		walkingWildsHide: async () => {
 			wildsShown = false;
@@ -172,7 +211,12 @@
 	<BoardMask />
 	{#if wildsShown}
 		{#each walkers as walker, index (index)}
-			<Container x={getX(walker)} y={BOARD_SIZES.height / 2} alpha={getAlpha(walker)}>
+			<Container
+				x={getX(walker)}
+				y={BOARD_SIZES.height / 2}
+				alpha={getAlpha(walker)}
+				scale={walker.doubled ? 1 + DOUBLE_SWELL * Math.sin(Math.PI * doubling.current) : 1}
+			>
 				<Symbol state="static" rawSymbol={walker.rawSymbol} />
 			</Container>
 		{/each}

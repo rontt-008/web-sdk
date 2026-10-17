@@ -403,7 +403,7 @@ export const BONUS_NAME: Record<BonusType, string | undefined> = {
 export const BONUS_DESCRIPTION: Record<BonusType, string | undefined> = {
 	normal: 'When a wild lands, it has a chance to shoot out extra wilds.',
 	super: 'Big wilds stay and move one reel left every spin, until they leave the reels.',
-	mythic: 'Every spin has a big wild that shoots out 1 to 3 extra wilds.',
+	mythic: 'Big wilds stay and move one reel left every spin, doubling their multiplier each time.',
 };
 // For the pay table; they must match the math. Free spins for 3, 4 and 5 FS symbols, and the spins
 // 2 to 5 FS symbols add during free spins (the math's freespin_triggers).
