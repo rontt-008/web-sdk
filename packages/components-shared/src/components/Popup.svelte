@@ -53,7 +53,12 @@
 
 		{#if !props.persistent}
 			<div class="close-button-wrap" style="--zIndex: {zIndexInternal.closeButton}">
-				<button class="close-button" data-test="close-button" onclick={closeModal}>×</button>
+				<!-- the × drawn rather than typed, so it sits in the middle of the button in any font -->
+				<button class="close-button" data-test="close-button" aria-label="close" onclick={closeModal}>
+					<svg class="close-icon" viewBox="0 0 16 16" aria-hidden="true">
+						<path d="M3.5 3.5l9 9M12.5 3.5l-9 9" />
+					</svg>
+				</button>
 			</div>
 		{/if}
 		{@render props.children()}
@@ -124,12 +129,8 @@
 		display: flex;
 		align-items: center;
 		justify-content: center;
-		padding: 0 0 0.15em;
+		padding: 0;
 		color: var(--ui-control-text, white);
-		font-family: var(--ui-font-heading, inherit);
-		font-size: 2rem;
-		font-weight: 900;
-		line-height: 1;
 		background: var(--ui-control-bg, transparent);
 		border: var(--ui-control-border, none);
 		border-radius: 50%;
@@ -147,5 +148,15 @@
 		&:active {
 			transform: scale(0.95);
 		}
+	}
+
+	.close-icon {
+		display: block;
+		width: 1.2rem;
+		height: 1.2rem;
+		fill: none;
+		stroke: currentColor;
+		stroke-width: 2.6;
+		stroke-linecap: round;
 	}
 </style>

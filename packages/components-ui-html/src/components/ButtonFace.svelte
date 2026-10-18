@@ -9,7 +9,8 @@
 		variant: 'primary' | 'activate' | 'control';
 		selected?: boolean;
 		round?: boolean;
-		// square, filling the bottom of a card; it only brightens when hovered
+		// filling the bottom of a card, its bottom corners rounded like the card's (--ui-flush-radius,
+		// set by the card); it only brightens when hovered
 		flush?: boolean;
 		width?: string;
 		height: string;
@@ -106,7 +107,7 @@
 	}
 
 	.flush {
-		border-radius: 0;
+		border-radius: 0 0 var(--ui-flush-radius, 0) var(--ui-flush-radius, 0);
 	}
 
 	.label {

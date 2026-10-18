@@ -5,6 +5,7 @@
 	import { numberToCurrencyString } from 'utils-shared/amount';
 
 	import ButtonFace from './ButtonFace.svelte';
+	import SignIcon from './SignIcon.svelte';
 	import HeadingText from './HeadingText.svelte';
 	import type { EmitterEventModal } from '../types';
 
@@ -32,7 +33,7 @@
 		<div class="toggle-wrap">
 			<Button data-test="down-button" disabled={disabledDown} onclick={toggleDown}>
 				<ButtonFace variant="control" round width={iconSize} height={iconSize} fontSize="1.75rem">
-					−
+					<SignIcon sign="minus" />
 				</ButtonFace>
 			</Button>
 
@@ -42,7 +43,7 @@
 
 			<Button data-test="up-button" disabled={disabledUp} onclick={toggleUp}>
 				<ButtonFace variant="control" round width={iconSize} height={iconSize} fontSize="1.75rem">
-					+
+					<SignIcon sign="plus" />
 				</ButtonFace>
 			</Button>
 		</div>

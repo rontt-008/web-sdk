@@ -5,6 +5,7 @@
 	import { numberToCurrencyString } from 'utils-shared/amount';
 
 	import ButtonFace from './ButtonFace.svelte';
+	import SignIcon from './SignIcon.svelte';
 	import HeadingText from './HeadingText.svelte';
 	import { i18nDerived } from '../i18n/i18nDerived';
 	import type { EmitterEventModal } from '../types';
@@ -39,7 +40,7 @@
 						height={BUTTON_SIZE}
 						fontSize="1.4rem"
 					>
-						−
+						<SignIcon sign="minus" />
 					</ButtonFace>
 				</Button>
 
@@ -58,7 +59,7 @@
 						height={BUTTON_SIZE}
 						fontSize="1.4rem"
 					>
-						+
+						<SignIcon sign="plus" />
 					</ButtonFace>
 				</Button>
 			</div>

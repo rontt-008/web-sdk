@@ -146,11 +146,13 @@
 		/* buying and switching a mode on have their own colour: the title, the button and the glow */
 		--type-color: var(--ui-accent-color, white);
 
+		/* the buy button's bottom corners, the same as the card's */
+		--ui-flush-radius: var(--ui-card-radius, 1rem);
+
 		box-sizing: border-box;
 		width: 16rem;
 		display: flex;
 		flex-direction: column;
-		overflow: hidden;
 
 		color: var(--ui-card-text, white);
 		background: var(--ui-card-bg, rgba(0, 0, 0, 0.5));
@@ -159,16 +161,28 @@
 		border-image: var(--ui-card-border-image, none);
 		box-shadow: var(--ui-card-shadow, none);
 		text-align: center;
-		transition: filter 200ms ease;
+		/* the ring around the card that is switched on (below), faded in */
+		outline: 3px solid transparent;
+		outline-offset: 3px;
+		transition: outline-color 200ms ease;
 
 		&.activate {
 			--type-color: var(--ui-activate-color, white);
 		}
 
-		/* a glow that follows the card's outline, including a frame the theme draws around it */
 		&.active {
-			filter: drop-shadow(0 0 0.2rem var(--type-color)) drop-shadow(0 0 0.8rem var(--type-color));
+			outline-color: var(--type-color);
 		}
+	}
+
+	/* The buy button covers the card's bottom edge, border included, and draws the rounded bottom
+	   corners itself: clipped by the card instead, its corners come out jagged, with the card's
+	   border showing as a dark line around them. The browser's own button border is left out too;
+	   it kept the button 2px inside its place. (The themes' card border is 1px.) */
+	.bonus-card > :global(button) {
+		width: calc(100% + 2px);
+		margin: 0 -1px -1px;
+		border: 0;
 	}
 
 	.body {
