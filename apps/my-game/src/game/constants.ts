@@ -148,13 +148,11 @@ export const PORTRAIT_MAIN_SIZES = {
 	height: PORTRAIT_HEIGHT,
 };
 
-export const HIGH_SYMBOLS = ['H1', 'H2', 'H3', 'H4', 'H5'];
+export const HIGH_SYMBOLS = ['H1', 'H2', 'H3', 'H4'];
 // the cats; they jiggle as their reel lands (see ReelSymbol)
 export const CAT_SYMBOLS: SymbolName[] = ['H1', 'H2', 'H3', 'H4'];
 
 export const INITIAL_SYMBOL_STATE: SymbolState = 'static';
-
-const HIGH_SYMBOL_SIZE = 0.9;
 
 const SPIN_OPTIONS_SHARED = {
 	reelBounceBackSpeed: 0.15,
@@ -186,13 +184,6 @@ export const zIndexes = {
 		normal: -2,
 		feature: -1,
 	},
-};
-
-const explosion = {
-	type: 'spine',
-	assetKey: 'explosion',
-	animationName: 'explosion',
-	sizeRatios: { width: 1, height: 1 },
 };
 
 // The symbol art is cropped to its edges, so size each image by its area (wide and tall art then
@@ -257,7 +248,6 @@ const h1Static = symbolArt('symbolH1');
 const h2Static = symbolArt('symbolH2');
 const h3Static = symbolArt('symbolH3');
 const h4Static = symbolArt('symbolH4');
-const h5Static = { type: 'sprite', assetKey: 'h5.webp', sizeRatios: { width: 1, height: 1 } };
 
 const l1Static = symbolArt('symbolL1');
 // the collar
@@ -289,7 +279,6 @@ export const BIG_WILD_MULTIPLIER = {
 export const SYMBOL_INFO_MAP = {
 	// sprite symbols in the 'win' state get a pulse animation in Symbol.svelte
 	H1: {
-		explosion,
 		win: h1Static,
 		postWinStatic: h1Static,
 		static: h1Static,
@@ -297,7 +286,6 @@ export const SYMBOL_INFO_MAP = {
 		land: h1Static,
 	},
 	H2: {
-		explosion,
 		win: h2Static,
 		postWinStatic: h2Static,
 		static: h2Static,
@@ -305,7 +293,6 @@ export const SYMBOL_INFO_MAP = {
 		land: h2Static,
 	},
 	H3: {
-		explosion,
 		win: h3Static,
 		postWinStatic: h3Static,
 		static: h3Static,
@@ -313,28 +300,13 @@ export const SYMBOL_INFO_MAP = {
 		land: h3Static,
 	},
 	H4: {
-		explosion,
 		win: h4Static,
 		postWinStatic: h4Static,
 		static: h4Static,
 		spin: h4Static,
 		land: h4Static,
 	},
-	H5: {
-		explosion,
-		win: {
-			type: 'spine',
-			assetKey: 'H5',
-			animationName: 'h5',
-			sizeRatios: { width: 0.5 * 0.9, height: HIGH_SYMBOL_SIZE * 0.53 },
-		},
-		postWinStatic: h5Static,
-		static: h5Static,
-		spin: h5Static,
-		land: h5Static,
-	},
 	L1: {
-		explosion,
 		win: l1Static,
 		postWinStatic: l1Static,
 		static: l1Static,
@@ -342,7 +314,6 @@ export const SYMBOL_INFO_MAP = {
 		land: l1Static,
 	},
 	L2: {
-		explosion,
 		win: l2Static,
 		postWinStatic: l2Static,
 		static: l2Static,
@@ -350,7 +321,6 @@ export const SYMBOL_INFO_MAP = {
 		land: l2Static,
 	},
 	L3: {
-		explosion,
 		win: l3Static,
 		postWinStatic: l3Static,
 		static: l3Static,
@@ -358,7 +328,6 @@ export const SYMBOL_INFO_MAP = {
 		land: l3Static,
 	},
 	L4: {
-		explosion,
 		win: l4Static,
 		postWinStatic: l4Static,
 		static: l4Static,
@@ -366,7 +335,6 @@ export const SYMBOL_INFO_MAP = {
 		land: l4Static,
 	},
 	L5: {
-		explosion,
 		win: l5Static,
 		postWinStatic: l5Static,
 		static: l5Static,
@@ -374,7 +342,6 @@ export const SYMBOL_INFO_MAP = {
 		land: l5Static,
 	},
 	W: {
-		explosion,
 		win: wStatic,
 		postWinStatic: wStatic,
 		static: wStatic,
@@ -382,7 +349,6 @@ export const SYMBOL_INFO_MAP = {
 		land: wStatic,
 	},
 	S: {
-		explosion,
 		win: sStatic,
 		postWinStatic: sStatic,
 		static: sStatic,

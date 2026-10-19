@@ -20,7 +20,6 @@ export const SYMBOL_STATES = [
 	'land',
 	'win',
 	'postWinStatic',
-	'explosion',
 ] as const;
 
 export type SymbolState = SpinningReelSymbolState | (typeof SYMBOL_STATES)[number];
