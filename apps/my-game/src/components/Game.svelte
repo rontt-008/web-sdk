@@ -8,7 +8,7 @@
 	import { App, Container } from 'pixi-svelte';
 	import { stateModal } from 'state-shared';
 
-	import { UI, UiGameName } from 'components-ui-pixi';
+	import { UI } from 'components-ui-pixi';
 	import { GameVersion, Modals } from 'components-ui-html';
 
 	import { getContext } from '../game/context';
@@ -113,9 +113,8 @@
 
 		<Container alpha={gameAlpha.current}>
 			<UI theme={uiTheme}>
-				{#snippet gameName()}
-					<UiGameName name="LAZY EVENING" />
-				{/snippet}
+				<!-- no clock and game name in the screen's corner -->
+				{#snippet gameName()}{/snippet}
 				<!-- the game logo is drawn beside the board by <GameLogo /> -->
 				{#snippet logo()}{/snippet}
 			</UI>

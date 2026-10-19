@@ -171,9 +171,8 @@ const uiBarBounds = () => {
 const LOGO_RATIO = 1400 / 596;
 
 // Beside the board, the logo keeps close to the screen's left edge, but on very wide screens no
-// further than this from the board. Its top is up level with the top of the board's frame, clear
-// of the game's name in the screen's corner, so the free spin counter under it keeps clear of the
-// cat on its rock below (see LogoCat).
+// further than this from the board. Its top is up level with the top of the board's frame, so the
+// free spin counter under it keeps clear of the cat on its rock below (see LogoCat).
 const LOGO_BESIDE_BOARD = {
 	width: SYMBOL_SIZE * 3.25,
 	screenMargin: SYMBOL_SIZE * 0.1,
