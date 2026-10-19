@@ -22,7 +22,7 @@ export const BOOSTER_COST = config.betModes.ante.cost;
 // chance of each bonus from the mystery bonus; must match the math's 'mystery' mode
 export const MYSTERY_CHANCES = { normal: 0.5, super: 0.4, mythic: 0.1 };
 
-const percent = (chance: number) => `${Math.round(chance * 100)}%`;
+export const percent = (chance: number) => `${Math.round(chance * 100)}%`;
 // "2x to 100x"
 const featureMultipliers = `${Math.min(...FEATURE_SPIN_WILD_MULTIPLIERS)}x to ${Math.max(...FEATURE_SPIN_WILD_MULTIPLIERS)}x`;
 
@@ -103,7 +103,8 @@ export const setBetModeMeta = () => {
 				...samples.SUPER.text,
 				title: 'MYSTERY BONUS',
 				button: buyButton,
-				dialog: `Go straight to FREE SPINS for ${MYSTERY_COST}x ${yourBet}: a ${percent(MYSTERY_CHANCES.normal)} chance of the normal FREE SPINS, ${percent(MYSTERY_CHANCES.super)} of SUPER FREE SPINS and ${percent(MYSTERY_CHANCES.mythic)} of MYTHIC FREE SPINS.`,
+				// its chances of each free spins are shown beside it, in its confirm dialog (ConfirmTowel)
+				dialog: `Go straight to FREE SPINS for ${MYSTERY_COST}x ${yourBet}. Which kind you get is the mystery.`,
 				description: 'FREE SPINS, with a chance of SUPER or MYTHIC FREE SPINS.',
 				tickerSpin: 'MYSTERY BONUS ACTIVATED',
 			},

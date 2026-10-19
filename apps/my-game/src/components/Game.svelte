@@ -24,6 +24,9 @@
 	import BoardParticles from './BoardParticles.svelte';
 	import GameLogo from './GameLogo.svelte';
 	import BonusCardArt from './BonusCardArt.svelte';
+	import ClotheslineCard from './ClotheslineCard.svelte';
+	import BonusRip from './BonusRip.svelte';
+	import ConfirmTowel from './ConfirmTowel.svelte';
 	import GameInfo from './GameInfo.svelte';
 	import Board from './Board.svelte';
 	import Anticipations from './Anticipations.svelte';
@@ -134,6 +137,18 @@
 	{/snippet}
 	{#snippet bonusArt(betModeData)}
 		<BonusCardArt {betModeData} />
+	{/snippet}
+	<!-- the bonuses hang as dish towels pegged to a washing line -->
+	{#snippet bonusCard({ levels, levelRow })}
+		<ClotheslineCard {levels} {levelRow} />
+	{/snippet}
+	<!-- buying one, or switching one on, is confirmed on its towel, bigger -->
+	{#snippet bonusConfirm({ betModeData, confirm, cancel })}
+		<ConfirmTowel {betModeData} onconfirm={confirm} oncancel={cancel} />
+	{/snippet}
+	<!-- a bonus once bought: its towel rips into pieces, then the bonus starts -->
+	{#snippet bonusBought({ betModeData, start })}
+		<BonusRip {betModeData} onstart={start} />
 	{/snippet}
 	<!-- no pay table: the rules hold the symbol wins and paylines too (see uiTheme's hidePayTable) -->
 	{#snippet gameRules()}

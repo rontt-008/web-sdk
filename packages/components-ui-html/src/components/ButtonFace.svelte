@@ -12,6 +12,8 @@
 		// filling the bottom of a card, its bottom corners rounded like the card's (--ui-flush-radius,
 		// set by the card); it only brightens when hovered
 		flush?: boolean;
+		// one half of two buttons joined side by side: rounded only on its own outer side
+		join?: 'left' | 'right';
 		width?: string;
 		height: string;
 		fontSize?: string;
@@ -23,6 +25,7 @@
 		selected = false,
 		round = false,
 		flush = false,
+		join,
 		width = '100%',
 		height,
 		fontSize = '1rem',
@@ -36,6 +39,8 @@
 	class:selected
 	class:round
 	class:flush
+	class:join-left={join === 'left'}
+	class:join-right={join === 'right'}
 	style:--width={width}
 	style:--height={height}
 	style:font-size={fontSize}
@@ -110,11 +115,19 @@
 		border-radius: 0 0 var(--ui-flush-radius, 0) var(--ui-flush-radius, 0);
 	}
 
+	.join-left {
+		border-radius: var(--ui-control-radius, 0.625rem) 0 0 var(--ui-control-radius, 0.625rem);
+	}
+
+	.join-right {
+		border-radius: 0 var(--ui-control-radius, 0.625rem) var(--ui-control-radius, 0.625rem) 0;
+	}
+
 	.label {
 		letter-spacing: 0.02em;
 	}
 
-	:global(button:enabled:hover) > .face:not(.flush) {
+	:global(button:enabled:hover) > .face:not(.flush, .join-left, .join-right) {
 		transform: scale(1.03);
 	}
 
@@ -132,7 +145,7 @@
 		filter: brightness(0.9);
 	}
 
-	:global(button:enabled:active) > .flush {
+	:global(button:enabled:active) > :is(.flush, .join-left, .join-right) {
 		transform: none;
 	}
 

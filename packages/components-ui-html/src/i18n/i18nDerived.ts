@@ -10,6 +10,7 @@ export const i18nDerived = {
 	selectYourBet: () =>
 		social() ? 'SELECT YOUR PLAY AMOUNT' : stateI18nDerived.translate('SELECT YOUR BET'),
 	confirm: () => stateI18nDerived.translate('CONFIRM'),
+	cancel: () => stateI18nDerived.translate('CANCEL'),
 	masterVolume: () => stateI18nDerived.translate('MASTER VOLUME'),
 	musicVolume: () => stateI18nDerived.translate('MUSIC VOLUME'),
 	soundEffectVolume: () => stateI18nDerived.translate('SOUND EFFECT VOLUME'),

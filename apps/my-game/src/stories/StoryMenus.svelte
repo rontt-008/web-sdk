@@ -3,7 +3,7 @@
 	import { GlobalStyle, Modals, UI_HTML_THEME_CLEAN, stateBonus } from 'components-ui-html';
 
 	import assets from '../game/assets';
-	import { setContext } from '../game/context';
+	import { setContext, getContext } from '../game/context';
 	import {
 		setBetModeMeta,
 		BONUS_MODE,
@@ -12,6 +12,9 @@
 		BOOSTER_MODE,
 	} from '../game/betModes';
 	import BonusCardArt from '../components/BonusCardArt.svelte';
+	import ClotheslineCard from '../components/ClotheslineCard.svelte';
+	import BonusRip from '../components/BonusRip.svelte';
+	import ConfirmTowel from '../components/ConfirmTowel.svelte';
 	import GameInfo from '../components/GameInfo.svelte';
 
 	type Props = {
@@ -32,6 +35,13 @@
 
 	setContext();
 	setBetModeMeta();
+
+	// a bonus's button opens its confirm dialog, as in the game
+	getContext().eventEmitter.subscribeOnMount({
+		buyBonusConfirm: () => {
+			stateModal.modal = { name: 'buyBonusConfirm' };
+		},
+	});
 	// the menus show amounts straight away, before <StoryLocale> would switch the language on
 	stateI18n.i18n.load('en', {});
 	stateI18n.i18n.activate('en');
@@ -73,8 +83,39 @@
 	<GameInfo />
 {/snippet}
 
+<!-- the bonuses as dish towels on a washing line, as in the game -->
+{#snippet bonusCard({ levels, levelRow }: { levels: BetModeData[]; levelRow: boolean })}
+	<ClotheslineCard {levels} {levelRow} />
+{/snippet}
+
+<!-- confirmed on its towel, bigger, as in the game -->
+{#snippet bonusConfirm({
+	betModeData,
+	confirm,
+	cancel,
+}: {
+	betModeData: BetModeData;
+	confirm: () => void;
+	cancel: () => void;
+})}
+	<ConfirmTowel {betModeData} onconfirm={confirm} oncancel={cancel} />
+{/snippet}
+
+<!-- a bonus once bought rips, as in the game (nothing starts it here) -->
+{#snippet bonusBought({ betModeData, start }: { betModeData: BetModeData; start: () => void })}
+	<BonusRip {betModeData} onstart={start} />
+{/snippet}
+
 <GlobalStyle>
-	<Modals theme={UI_HTML_THEME_CLEAN} {version} {bonusArt} {gameRules} />
+	<Modals
+		theme={UI_HTML_THEME_CLEAN}
+		{version}
+		{bonusArt}
+		{bonusCard}
+		{bonusBought}
+		{bonusConfirm}
+		{gameRules}
+	/>
 </GlobalStyle>
 
 <style>

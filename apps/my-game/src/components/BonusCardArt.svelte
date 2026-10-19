@@ -13,6 +13,9 @@
 
 	type Props = {
 		betModeData: BetModeData;
+		// the size of one of three fanned FS symbols, in rem; a single symbol is bigger and four are
+		// a little smaller, to fill about the same room
+		size?: number;
 	};
 
 	const props: Props = $props();
@@ -37,26 +40,50 @@
 	};
 
 	const count = $derived(SCATTER_COUNT[props.betModeData.mode] ?? 1);
+	const SIZE_BY_COUNT: Record<number, number> = { 1: 1.3, 4: 0.9 };
+	const fontSize = $derived(
+		props.size ? `${props.size * (SIZE_BY_COUNT[count] ?? 1)}rem` : undefined,
+	);
 	const image = $derived(IMAGE[props.betModeData.mode] ?? assets.symbolS.src);
 	const badge = $derived(BADGE[props.betModeData.mode]);
 
-	// fanned out like a hand of cards, the middle one in front
+	// fanned out like a hand of cards, the middle one in front, the outer ones lower and tilted
+	const FAN_DROP = 0.3;
+	const FAN_TILT = 9;
+	const offsetOf = (index: number) => index - (count - 1) / 2;
 	const getStyle = (index: number) => {
-		const offset = index - (count - 1) / 2;
+		const offset = offsetOf(index);
 		return [
-			`transform: translateY(${(Math.abs(offset) * 0.3).toFixed(2)}em) rotate(${offset * 9}deg)`,
+			`transform: translateY(${(Math.abs(offset) * FAN_DROP).toFixed(2)}em) rotate(${offset * FAN_TILT}deg)`,
 			`z-index: ${10 - Math.round(Math.abs(offset) * 2)}`,
 		].join('; ');
 	};
+	// Raised so the fan is in the middle: each symbol (1em square) is dropped, and tilted, which makes
+	// it reach (sin + cos - 1) / 2 em further up and down.
+	const fanLift = $derived.by(() => {
+		const reach = Array.from({ length: count }, (_, index) => {
+			const offset = offsetOf(index);
+			const tilt = (Math.abs(offset) * FAN_TILT * Math.PI) / 180;
+			const grow = (Math.sin(tilt) + Math.cos(tilt) - 1) / 2;
+			const drop = Math.abs(offset) * FAN_DROP;
+			return { top: drop - grow, bottom: drop + 1 + grow };
+		});
+		const top = Math.min(...reach.map((symbol) => symbol.top));
+		const bottom = Math.max(...reach.map((symbol) => symbol.bottom));
+		return `${((top + bottom) / 2 - 0.5).toFixed(3)}em`;
+	});
 </script>
 
-<div class="art" class:single={count === 1}>
-	{#each { length: count } as _, index}
-		<img class="scatter" src={image} alt="" style={getStyle(index)} />
-	{/each}
-	{#if badge}
-		<span class="badge"><HeadingText fill={BADGE_FILL}>{badge}</HeadingText></span>
-	{/if}
+<div class="art" style:font-size={fontSize} class:single={count === 1}>
+	<div class="fan" style:transform="translateY(-{fanLift})">
+		{#each { length: count } as _, index}
+			<img class="scatter" src={image} alt="" style={getStyle(index)} />
+		{/each}
+		<!-- on the symbol's bottom right corner, like a badge -->
+		{#if badge}
+			<span class="badge"><HeadingText fill={BADGE_FILL}>{badge}</HeadingText></span>
+		{/if}
+	</div>
 </div>
 
 <style lang="scss">
@@ -67,12 +94,18 @@
 		justify-content: center;
 		width: 100%;
 		height: 100%;
-		/* the size of one fanned FS symbol */
+		/* the size of one fanned FS symbol, unless given */
 		font-size: 3.4rem;
 	}
 
 	.single {
 		font-size: 4.2rem;
+	}
+
+	.fan {
+		position: relative;
+		display: flex;
+		align-items: center;
 	}
 
 	.scatter {
@@ -90,8 +123,10 @@
 		--ui-outline: #4a1c00;
 		position: absolute;
 		z-index: 20;
-		right: calc(50% - 0.75em);
-		bottom: -0.1em;
+		/* on the coin's lower right edge (the symbol has a see-through margin) */
+		right: -0.37em;
+		bottom: -0.37em;
 		font-size: 0.6em;
+		line-height: 1;
 	}
 </style>

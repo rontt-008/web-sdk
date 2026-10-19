@@ -19,16 +19,41 @@
 
 	type Props = {
 		bonusArt?: Snippet<[BetModeData]>;
+		// played over the game once a bonus is bought, before it starts; it calls start when done
+		bonusBought?: Snippet<[{ betModeData: BetModeData; start: () => void }]>;
+		// a CANCEL button joined to the left of CONFIRM, going back to the buy bonus menu
+		cancelButton?: boolean;
+		// the game's own dialog instead of the default one, in the same popup: it gets the bonus and
+		// what its CONFIRM and CANCEL buttons do
+		bonusConfirm?: Snippet<[{ betModeData: BetModeData; confirm: () => void; cancel: () => void }]>;
 	};
 
 	const props: Props = $props();
 	const { eventEmitter } = getContextEventEmitter<EmitterEventModal>();
 
+	// the bonus just bought, while bonusBought plays
+	let bought = $state<BetModeData | null>(null);
+	let startAnyway: ReturnType<typeof setTimeout> | undefined;
+	const BOUGHT_MAX_MS = 5000;
+
+	const start = () => {
+		if (!bought) return;
+		clearTimeout(startAnyway);
+		bought = null;
+		eventEmitter.broadcast({ type: 'bet' });
+	};
+
 	const confirm = () => {
 		stateBet.activeBetModeKey = stateBonus.selectedBetModeKey;
 
 		if (stateBonusDerived.selectedBetModeData().type === 'buy') {
-			eventEmitter.broadcast({ type: 'bet' });
+			if (props.bonusBought) {
+				bought = stateBonusDerived.selectedBetModeData();
+				// the bonus starts even if bonusBought never calls start
+				startAnyway = setTimeout(start, BOUGHT_MAX_MS);
+			} else {
+				eventEmitter.broadcast({ type: 'bet' });
+			}
 		}
 
 		if (stateBonusDerived.selectedBetModeData().type === 'activate') {
@@ -36,54 +61,94 @@
 			stateUi.autoSpinsSingleWinLimitText = INFINITY_MARK;
 		}
 	};
+
+	// the dialog's CONFIRM: buys the bonus or switches the mode on, and closes
+	const confirmAndClose = () => {
+		confirm();
+		eventEmitter.broadcast({ type: 'soundPressGeneral' });
+		stateModal.modal = null;
+	};
+
+	// its CANCEL: back to the buy bonus menu
+	const cancel = () => {
+		eventEmitter.broadcast({ type: 'soundPressGeneral' });
+		stateModal.modal = { name: 'buyBonus' };
+	};
 </script>
 
 {#if stateModal.modal?.name === 'buyBonusConfirm'}
 	{@const betModeData = stateBonusDerived.selectedBetModeData()}
 	<Popup zIndex={zIndex.dialog} onclose={() => (stateModal.modal = { name: 'buyBonus' })}>
-		<BaseContent maxWidth="500px">
-			<BaseTitle>
-				{betModeData.text.title}
-			</BaseTitle>
-			{#if props.bonusArt}
-				<div class="art">
-					{@render props.bonusArt(betModeData)}
+		{#if props.bonusConfirm}
+			{@render props.bonusConfirm({ betModeData, confirm: confirmAndClose, cancel })}
+		{:else}
+			<BaseContent maxWidth="500px">
+				<BaseTitle>
+					{betModeData.text.title}
+				</BaseTitle>
+				{#if props.bonusArt}
+					<div class="art">
+						{@render props.bonusArt(betModeData)}
+					</div>
+				{/if}
+				{#if betModeData.volatility}
+					<VolatilityMeter value={betModeData.volatility} />
+				{/if}
+				<BaseScrollable type="column">
+					<span class="dialog">{betModeData.text.dialog}</span>
+				</BaseScrollable>
+				<div class="price">
+					<HeadingText fill="var(--ui-price, white)">
+						{numberToCurrencyString(stateBet.betAmount * betModeData.costMultiplier)}
+					</HeadingText>
 				</div>
-			{/if}
-			{#if betModeData.volatility}
-				<VolatilityMeter value={betModeData.volatility} />
-			{/if}
-			<BaseScrollable type="column">
-				<span class="dialog">{betModeData.text.dialog}</span>
-			</BaseScrollable>
-			<div class="price">
-				<HeadingText fill="var(--ui-price, white)">
-					{numberToCurrencyString(stateBet.betAmount * betModeData.costMultiplier)}
-				</HeadingText>
-			</div>
-			<BaseButtonWrap type="max-width">
-				<Button
-					data-test="confirm-button"
-					onclick={() => {
-						confirm();
-						eventEmitter.broadcast({ type: 'soundPressGeneral' });
-						stateModal.modal = null;
-					}}
-				>
-					<ButtonFace
-						variant={betModeData.type === 'activate' ? 'activate' : 'primary'}
-						height="3rem"
-						fontSize="1.25rem"
-					>
-						{i18nDerived.confirm()}
-					</ButtonFace>
-				</Button>
-			</BaseButtonWrap>
-		</BaseContent>
+				{#snippet confirmButton(join?: 'right')}
+					<Button data-test="confirm-button" onclick={confirmAndClose}>
+						<!-- joined to the gold CANCEL, it is always the blue one, also for switching a mode on -->
+						<ButtonFace
+							variant={betModeData.type === 'activate' && !join ? 'activate' : 'primary'}
+							{join}
+							height="3rem"
+							fontSize="1.25rem"
+						>
+							{i18nDerived.confirm()}
+						</ButtonFace>
+					</Button>
+				{/snippet}
+
+				{#if props.cancelButton}
+					<!-- CANCEL and CONFIRM joined into one -->
+					<div class="joined">
+						<Button data-test="cancel-button" onclick={cancel}>
+							<ButtonFace variant="activate" join="left" height="3rem" fontSize="1.25rem">
+								{i18nDerived.cancel()}
+							</ButtonFace>
+						</Button>
+						{@render confirmButton('right')}
+					</div>
+				{:else}
+					<BaseButtonWrap type="max-width">
+						{@render confirmButton()}
+					</BaseButtonWrap>
+				{/if}
+			</BaseContent>
+		{/if}
 	</Popup>
 {/if}
 
+{#if bought && props.bonusBought}
+	<!-- over the game, taking the clicks, until the bonus starts -->
+	<div class="bought" style:z-index={zIndex.dialog}>
+		{@render props.bonusBought({ betModeData: bought, start })}
+	</div>
+{/if}
+
 <style lang="scss">
+	.bought {
+		position: fixed;
+		inset: 0;
+	}
+
 	/* the same window as on the bonus cards */
 	.art {
 		box-sizing: border-box;
@@ -106,5 +171,18 @@
 
 	.price {
 		font-size: 2rem;
+	}
+
+	.joined {
+		display: flex;
+		width: 100%;
+		max-width: 22rem;
+
+		/* the two halves side by side, without the browser's own button border between them */
+		> :global(button) {
+			flex: 1 1 0;
+			min-width: 0;
+			border: 0;
+		}
 	}
 </style>

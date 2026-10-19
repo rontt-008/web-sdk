@@ -1,16 +1,12 @@
 <script lang="ts">
 	import type { Snippet } from 'svelte';
-	import { stateBet, type BetModeData } from 'state-shared';
+	import type { BetModeData } from 'state-shared';
 	import { Button } from 'components-shared';
-	import { getContextEventEmitter } from 'utils-event-emitter';
-	import { numberToCurrencyString } from 'utils-shared/amount';
 
 	import ButtonFace from './ButtonFace.svelte';
 	import HeadingText from './HeadingText.svelte';
 	import VolatilityMeter from './VolatilityMeter.svelte';
-	import { stateBonus } from '../stateBonus.svelte';
-	import { i18nDerived } from '../i18n/i18nDerived';
-	import type { EmitterEventModal } from '../types';
+	import { createBonusCard } from '../bonusCard.svelte';
 
 	type Props = {
 		// a bet mode, followed by its levels (the modes whose parent it is)
@@ -21,44 +17,21 @@
 	};
 
 	const props: Props = $props();
-	const { eventEmitter } = getContextEventEmitter<EmitterEventModal>();
+	const card = createBonusCard(() => props.levels);
 
-	// opens on the level in use, e.g. a booster level that is switched on
-	let index = $state(
-		Math.max(
-			0,
-			props.levels.findIndex((level) => level.mode === stateBet.activeBetModeKey),
-		),
-	);
-
-	const betModeData = $derived(props.levels[Math.min(index, props.levels.length - 1)]);
-	const cost = $derived(stateBet.betAmount * betModeData.costMultiplier);
 	// longer prices, like MX$1,000,000.00, get smaller so they stay inside the card
 	const PRICE_FONT_SIZE_REM = 1.75;
 	const PRICE_FULL_SIZE_LENGTH = 12;
-	const priceText = $derived(numberToCurrencyString(cost));
 	const priceFontSize = $derived(
-		`${PRICE_FONT_SIZE_REM * Math.min(1, PRICE_FULL_SIZE_LENGTH / priceText.length)}rem`,
+		`${PRICE_FONT_SIZE_REM * Math.min(1, PRICE_FULL_SIZE_LENGTH / card.priceText.length)}rem`,
 	);
-	// the card says why it can't be picked, instead of only being greyed out
-	const notEnoughBalance = $derived(stateBet.balanceAmount < cost);
-	const isActivate = $derived(betModeData.type === 'activate');
-	const active = $derived(stateBet.activeBetModeKey === betModeData.mode);
-	// a mode that is switched on is switched off from its card, straight away
-	const canDisable = $derived(isActivate && active);
-	const hasLevels = $derived(props.levels.length > 1);
-
-	const select = (levelIndex: number) => {
-		index = (levelIndex + props.levels.length) % props.levels.length;
-		eventEmitter.broadcast({ type: 'soundPressGeneral' });
-	};
 </script>
 
 <!-- the arrows at the ends of the level slider -->
 {#snippet arrow(direction: -1 | 1)}
 	<Button
 		data-test={direction < 0 ? 'level-down-button' : 'level-up-button'}
-		onclick={() => select(index + direction)}
+		onclick={() => card.select(card.index + direction)}
 	>
 		<ButtonFace variant="control" round width="2rem" height="2rem">
 			<svg class="chevron" viewBox="0 0 16 16" aria-hidden="true">
@@ -68,43 +41,43 @@
 	</Button>
 {/snippet}
 
-<div class="bonus-card" class:activate={isActivate} class:active>
+<div class="bonus-card" class:activate={card.isActivate} class:active={card.active}>
 	<div class="body">
 		<div class="title">
-			<HeadingText fill="var(--type-color)">{betModeData.text.title}</HeadingText>
+			<HeadingText fill="var(--type-color)">{card.betModeData.text.title}</HeadingText>
 		</div>
 
-		{#if betModeData.text.description}
-			<p class="description">{betModeData.text.description}</p>
+		{#if card.betModeData.text.description}
+			<p class="description">{card.betModeData.text.description}</p>
 		{/if}
 
 		{#if props.bonusArt}
 			<div class="art">
-				{@render props.bonusArt(betModeData)}
+				{@render props.bonusArt(card.betModeData)}
 			</div>
 		{/if}
 
-		{#if betModeData.volatility}
-			<VolatilityMeter value={betModeData.volatility} />
+		{#if card.betModeData.volatility}
+			<VolatilityMeter value={card.betModeData.volatility} />
 		{/if}
 
 		<div class="price" style:font-size={priceFontSize}>
-			<HeadingText fill="var(--ui-card-price, white)">{priceText}</HeadingText>
+			<HeadingText fill="var(--ui-card-price, white)">{card.priceText}</HeadingText>
 		</div>
 	</div>
 
 	<!-- the bonus's levels, right above the button that buys or switches on the one picked -->
-	{#if hasLevels}
+	{#if card.hasLevels}
 		<div class="level-slider">
 			{@render arrow(-1)}
 			<div class="stops">
 				{#each props.levels as level, levelIndex (level.mode)}
 					<button
 						class="stop"
-						class:current={levelIndex === index}
+						class:current={levelIndex === card.index}
 						aria-label={level.text.title}
-						aria-current={levelIndex === index}
-						onclick={() => select(levelIndex)}
+						aria-current={levelIndex === card.index}
+						onclick={() => card.select(levelIndex)}
 					></button>
 				{/each}
 			</div>
@@ -114,29 +87,14 @@
 		<div class="level-slider empty" aria-hidden="true"></div>
 	{/if}
 
-	<Button
-		onclick={() => {
-			if (canDisable) {
-				stateBet.activeBetModeKey = 'BASE';
-			} else {
-				stateBonus.selectedBetModeKey = betModeData.mode;
-				eventEmitter.broadcast({ type: 'buyBonusConfirm' });
-			}
-			eventEmitter.broadcast({ type: 'soundPressGeneral' });
-		}}
-		disabled={!canDisable && (stateBet.betAmount <= 0 || notEnoughBalance)}
-	>
+	<Button onclick={card.press} disabled={card.disabled}>
 		<ButtonFace
-			variant={isActivate ? 'activate' : 'primary'}
+			variant={card.isActivate ? 'activate' : 'primary'}
 			flush
 			height="3.4rem"
 			fontSize="1.3rem"
 		>
-			{canDisable
-				? i18nDerived.disable()
-				: notEnoughBalance
-					? i18nDerived.notEnoughBalance()
-					: betModeData.text.button}
+			{card.buttonLabel}
 		</ButtonFace>
 	</Button>
 </div>

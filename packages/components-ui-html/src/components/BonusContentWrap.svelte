@@ -1,5 +1,5 @@
 <script lang="ts">
-	import type { Snippet } from 'svelte';
+	import { tick, type Snippet } from 'svelte';
 
 	type Props = {
 		cardCount: number;
@@ -63,6 +63,39 @@
 			if (scale > best.scale + 0.001) best = { columns, scale, width };
 		}
 		return best;
+	});
+
+	// Each card learns where it sits along its row, so a game's card can draw something that runs
+	// along the whole row, like a line it hangs from: --row-from and --row-to (0 at the row's left end,
+	// 1 at its right end, with half the gap on each side of every card) and --row-span (its width
+	// with the gap), and data-row-end="first", "last" or "both" at the ends of the row.
+	const markRows = () => {
+		if (!cards) return;
+		const gap = sizes.gap;
+		const rows = new Map<number, HTMLElement[]>();
+		for (const card of cards.children as HTMLCollectionOf<HTMLElement>) {
+			rows.set(card.offsetTop, [...(rows.get(card.offsetTop) ?? []), card]);
+		}
+		for (const row of rows.values()) {
+			const left = Math.min(...row.map((card) => card.offsetLeft)) - gap / 2;
+			const right = Math.max(...row.map((card) => card.offsetLeft + card.offsetWidth)) + gap / 2;
+			row.forEach((card, index) => {
+				const from = card.offsetLeft - gap / 2 - left;
+				const span = card.offsetWidth + gap;
+				card.style.setProperty('--row-from', String(from / (right - left)));
+				card.style.setProperty('--row-to', String((from + span) / (right - left)));
+				card.style.setProperty('--row-span', `${span}px`);
+				const first = index === 0;
+				const last = index === row.length - 1;
+				card.dataset.rowEnd = first && last ? 'both' : first ? 'first' : last ? 'last' : '';
+			});
+		}
+	};
+
+	$effect(() => {
+		// again whenever the rows change
+		void [layout.columns, layout.width, sizes.gap, sizes.card.width];
+		tick().then(markRows);
 	});
 </script>
 
@@ -139,8 +172,9 @@
 		display: flex;
 		flex-wrap: wrap;
 		justify-content: center;
-		/* room for the frame the theme draws around each card */
-		gap: calc(1.25rem + 2 * var(--ui-card-outset, 0rem));
+		/* room for the frame the theme draws around each card; the cards can read it too */
+		--row-gap: calc(1.25rem + 2 * var(--ui-card-outset, 0rem));
+		gap: var(--row-gap);
 		padding: var(--ui-card-outset, 0rem);
 
 		> :global(*) {

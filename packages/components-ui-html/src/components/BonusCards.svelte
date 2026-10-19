@@ -10,11 +10,17 @@
 		// another card in the menu has levels
 		levelRow?: boolean;
 		bonusArt?: Snippet<[BetModeData]>;
+		// the game's own card instead of the default one
+		bonusCard?: Snippet<[{ levels: BetModeData[]; levelRow: boolean }]>;
 	};
 
 	const props: Props = $props();
 </script>
 
 {#each props.groups as levels (levels[0].mode)}
-	<BonusCard {levels} levelRow={props.levelRow} bonusArt={props.bonusArt} />
+	{#if props.bonusCard}
+		{@render props.bonusCard({ levels, levelRow: props.levelRow ?? false })}
+	{:else}
+		<BonusCard {levels} levelRow={props.levelRow} bonusArt={props.bonusArt} />
+	{/if}
 {/each}
