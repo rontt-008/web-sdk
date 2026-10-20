@@ -38,11 +38,11 @@ export default {
 		type: 'sprite',
 		src: new URL('../../assets/logo-cat-blink.webp', import.meta.url).href,
 	},
-	// its pupils split off the art so they can look around: the pupils alone, the plain iris under
-	// them, and the inside of each eye's rim that they stay within (see LogoCat)
-	logoCatPupils: {
+	// its pupils drawn apart from the art so they can look around: one pupil, drawn in each eye, the
+	// eyes with their painted pupils painted out, and the inside of each eye's rim (see LogoCat)
+	logoCatPupil: {
 		type: 'sprite',
-		src: new URL('../../assets/logo-cat-pupils.png', import.meta.url).href,
+		src: new URL('../../assets/logo-cat-pupil.png', import.meta.url).href,
 	},
 	logoCatIrises: {
 		type: 'sprite',
@@ -134,7 +134,17 @@ export default {
 	},
 	bigWild: {
 		type: 'sprite',
-		src: new URL('../../assets/symbols/big-wild.webp', import.meta.url).href,
+		src: new URL('../../assets/symbols/bigwild.webp', import.meta.url).href,
+	},
+	// the same with an empty mouth: a big wild that has thrown its fish, or has none to throw
+	bigWildNoFish: {
+		type: 'sprite',
+		src: new URL('../../assets/symbols/bigwild-nofish.webp', import.meta.url).href,
+	},
+	// the fish a big wild throws, which turns into a wild where it lands (see WildThrow)
+	wildFish: {
+		type: 'sprite',
+		src: new URL('../../assets/symbols/fish.webp', import.meta.url).href,
 	},
 	symbolH1Shadow: {
 		type: 'sprite',

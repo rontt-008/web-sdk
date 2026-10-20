@@ -167,6 +167,9 @@ export const SPIN_OPTIONS_DEFAULT = {
 	reelPreSpinSpeed: 2.4,
 	reelSpinSpeed: 3.6,
 	reelBounceSizeMulti: 0.3,
+	// a reel teased for the free spins (2 FS symbols down) eases off over 6 symbols before its stop
+	// and rolls the last 1.5 in, from about 7 symbols a second down to 2, so it is clear what landed
+	reelAnticipatedSlowdown: { brakeSymbols: 6, crawlSymbols: 1.5, crawlSpeed: 0.9, endSpeed: 0.25 },
 };
 
 export const SPIN_OPTIONS_FAST = {
@@ -269,6 +272,9 @@ export const BIG_WILD_INFO = {
 	sizeRatios: { width: REEL_WIDTH / SYMBOL_SIZE, height: BOARD_DIMENSIONS.y },
 	winPulseScale: 1.05,
 } as const;
+// the big wild with an empty mouth (the same art otherwise, so they swap in place): one that has
+// thrown its fish, or has none to throw (see RawSymbol's bigWild.fish)
+export const BIG_WILD_NO_FISH_ASSET_KEY = 'bigWildNoFish';
 // its multiplier sits on the water strip, centred 88.1% of the way down the art
 export const BIG_WILD_MULTIPLIER = {
 	y: (0.881 - 0.5) * BOARD_DIMENSIONS.y * SYMBOL_SIZE,

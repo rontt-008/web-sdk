@@ -6,8 +6,8 @@
 	import { getSymbolInfo, getSymbolMotion } from '../game/utils';
 	import type { SymbolState, RawSymbol } from '../game/types';
 	import { getContext } from '../game/context';
-	import { BIG_WILD_MULTIPLIER } from '../game/constants';
-	import { popOut } from '../game/motion';
+	import { BIG_WILD_MULTIPLIER, BIG_WILD_NO_FISH_ASSET_KEY } from '../game/constants';
+	import { BIG_WILD_LANDING, popOut } from '../game/motion';
 	import { createBoardTextStyle, fitBoardFontSize } from '../game/textStyles';
 	import { Text } from 'pixi-svelte';
 	import { stateBetDerived } from 'state-shared';
@@ -26,6 +26,8 @@
 		excited?: boolean;
 		// darkened while other symbols win (sprite symbols only)
 		dimmed?: boolean;
+		// its reel is spinning: a big wild's multiplier is hidden until it lands
+		spinning?: boolean;
 	};
 
 	const props: Props = $props();
@@ -33,6 +35,10 @@
 	const symbolInfo = $derived(getSymbolInfo({ rawSymbol: props.rawSymbol, state: props.state }));
 	const isSprite = $derived(symbolInfo.type === 'sprite');
 	const motion = $derived(getSymbolMotion({ rawSymbol: props.rawSymbol, state: props.state }));
+	// a big wild without its fish (thrown, or none to throw) has an empty mouth
+	const assetKey = $derived(
+		props.rawSymbol.bigWild && !props.rawSymbol.bigWild.fish ? BIG_WILD_NO_FISH_ASSET_KEY : undefined,
+	);
 	// wins have no frame around each symbol: a line is drawn through them instead (see WinLine)
 	const bigWildMultiplier = $derived(props.rawSymbol.bigWild?.multiplier);
 	const bigWildMultiplierText = $derived(`${bigWildMultiplier}X`);
@@ -54,12 +60,16 @@
 		}),
 	);
 
-	// As the big wild lands its multiplier pops onto the strip just after the slam, and it gives an
-	// extra kick each time the big wild swells in a win.
-	const MULTIPLIER_POP_DELAY = 140;
+	// The big wild lands with a slam and a heartbeat: its multiplier pops onto the strip with the
+	// beat, then stays, giving an extra kick each time the big wild swells again (as it wins, or
+	// throws its fish).
 	const MULTIPLIER_POP_DURATION = 380;
 	const MULTIPLIER_WIN_KICK = 0.18;
-	const multiplierScale = new Tween(props.state === 'land' ? 0 : 1);
+	const multiplierScale = new Tween(props.state === 'land' || props.spinning ? 0 : 1);
+	$effect(() => {
+		if (!bigWildMultiplier || !props.spinning) return;
+		untrack(() => multiplierScale.set(0, { duration: 0 }));
+	});
 	$effect(() => {
 		if (!bigWildMultiplier) return;
 		const state = props.state;
@@ -67,7 +77,7 @@
 			const timeScale = stateBetDerived.timeScale();
 			if (state === 'land') {
 				await multiplierScale.set(0, { duration: 0 });
-				await waitForTimeout(MULTIPLIER_POP_DELAY / timeScale);
+				await waitForTimeout(BIG_WILD_LANDING.slam / timeScale);
 				await multiplierScale.set(1, {
 					duration: MULTIPLIER_POP_DURATION / timeScale,
 					easing: (t) => popOut(t, 3),
@@ -88,6 +98,8 @@
 {#if isSprite}
 	<SymbolSprite
 		{symbolInfo}
+		{assetKey}
+		fadeAssetKey={!!props.rawSymbol.bigWild?.fade}
 		x={props.x}
 		y={props.y}
 		{motion}

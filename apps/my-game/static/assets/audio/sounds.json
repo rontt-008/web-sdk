@@ -116,6 +116,14 @@
 		"sfx_youwon_panel": [
 			204356.259,
 			4460
+		],
+		"sfx_fish_throw": [
+			209316.259,
+			304.989
+		],
+		"sfx_fish_land": [
+			210121.247,
+			1000.0
 		]
 	},
 	"src": [
@@ -202,6 +210,12 @@
 			"volume": 1
 		},
 		"sfx_youwon_panel": {
+			"volume": 1
+		},
+		"sfx_fish_throw": {
+			"volume": 1
+		},
+		"sfx_fish_land": {
 			"volume": 1
 		}
 	}

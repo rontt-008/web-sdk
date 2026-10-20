@@ -15,6 +15,9 @@ export type SoundEffectName =
 	| 'sfx_bigwin_coinloop'
 	| 'sfx_btn_general'
 	| 'sfx_btn_spin'
+	// made for the game: a big wild throwing a fish, and the fish landing as a wild (see WildThrow)
+	| 'sfx_fish_land'
+	| 'sfx_fish_throw'
 	| 'sfx_fs_respins'
 	| 'sfx_multiplier_landing'
 	| 'sfx_multiplier_up'

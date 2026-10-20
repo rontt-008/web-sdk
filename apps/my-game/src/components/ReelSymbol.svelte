@@ -1,4 +1,6 @@
 <script lang="ts">
+	import { untrack } from 'svelte';
+
 	import Symbol from './Symbol.svelte';
 	import SymbolWrap from './SymbolWrap.svelte';
 	import { getSymbolInfo, getSymbolMotion, getSymbolX } from '../game/utils';
@@ -38,6 +40,18 @@
 		getSymbolInfo({ rawSymbol: props.reelSymbol.rawSymbol, state: props.reelSymbol.symbolState }),
 	);
 	const bigWild = $derived(props.reelSymbol.rawSymbol.bigWild);
+	// The big wild lands (slams down and beats, its multiplier popping on) the moment its reel hits
+	// the bottom, as the cats jiggle, not once the reel has bounced back; while the reel spins its
+	// multiplier is hidden.
+	const spinning = $derived(reel.reelState.motion === 'spinning');
+	$effect(() => {
+		if (!bigWild?.anchor || reel.reelState.motion !== 'bouncing') return;
+		untrack(() => (props.reelSymbol.symbolState = 'land'));
+	});
+	// a scatter the cat ate has left its place, until its reel spins it away (see ScatterFeed)
+	const hidden = $derived(
+		context.stateGame.hiddenReels.includes(props.reelIndex) || !!props.reelSymbol.rawSymbol.eaten,
+	);
 	// the big wild is drawn by its top W, centred on the reel below it
 	const rows = $derived(bigWild ? BOARD_DIMENSIONS.y : 1);
 	// moving symbols are drawn over the others and outside the board's edges
@@ -49,7 +63,7 @@
 	);
 </script>
 
-{#if (!bigWild || bigWild.anchor) && !context.stateGame.hiddenReels.includes(props.reelIndex)}
+{#if (!bigWild || bigWild.anchor) && !hidden}
 	<SymbolWrap
 		x={getSymbolX(props.reelIndex)}
 		y={props.reelSymbol.symbolY() + ((rows - 1) / 2) * SYMBOL_SIZE}
@@ -62,6 +76,7 @@
 			{jiggle}
 			{excited}
 			{dimmed}
+			{spinning}
 			oncomplete={() => {
 				if (props.reelSymbol.symbolState === 'win') props.reelSymbol.oncomplete();
 				if (props.reelSymbol.symbolState === 'land') props.reelSymbol.symbolState = 'static';

@@ -15,7 +15,7 @@ import {
 import { eventEmitter } from './eventEmitter';
 import type { Bet, BookEventOfType } from './typesBookEvent';
 import { bookEventHandlerMap } from './bookEventHandlerMap';
-import type { BonusType, RawSymbol, SymbolName, SymbolState } from './types';
+import type { BonusType, GameType, RawSymbol, SymbolName, SymbolState } from './types';
 
 // general utils
 export const { getEmptyBoard } = createGetEmptyPaddedBoard({ reelsDimensions: BOARD_DIMENSIONS });
@@ -73,7 +73,8 @@ export const getSymbolInfo = ({
 };
 
 // The animation a sprite symbol plays in a state (see motion.ts): in a win the big wild swells,
-// scatters flip over and the rest hop; landing, the big wild slams down and scatters and wilds pop.
+// scatters flip over and the rest hop; landing, the big wild slams down and swells in a heartbeat
+// (slam), and scatters and wilds pop.
 // Other symbols do nothing as they land (the cats jiggle with the reel's bounce, see ReelSymbol).
 export type SymbolMotion = 'hop' | 'flip' | 'punch' | 'pop' | 'slam';
 
@@ -108,17 +109,52 @@ export const getBonusType = (scatterCount: number): BonusType => {
 // and the ones under it draw nothing.
 export const FIRST_VISIBLE_ROW = 1; // reels are padded with one symbol above the board
 
-export const markBigWilds = (board: RawSymbol[][]) =>
-	board.map((reel) => {
+// The big wilds on fishReels throw their fish later in the spin, so they hold them until then.
+export const markBigWilds = (board: RawSymbol[][], fishReels: number[] = []) =>
+	board.map((reel, reelIndex) => {
 		const visibleRows = _.range(FIRST_VISIBLE_ROW, FIRST_VISIBLE_ROW + BOARD_DIMENSIONS.y);
 		const wildRows = visibleRows.filter((row) => reel[row]?.name === 'W');
 		if (wildRows.length === 0) return reel;
 
 		const wild = reel[wildRows[0]];
 		const multiplier = _.max(wildRows.map((row) => reel[row].multiplier));
+		const fish = fishReels.includes(reelIndex);
 		return reel.map((rawSymbol, row) => {
-			if (row === FIRST_VISIBLE_ROW) return { ...wild, bigWild: { anchor: true, multiplier } };
+			if (row === FIRST_VISIBLE_ROW) return { ...wild, bigWild: { anchor: true, multiplier, fish } };
 			if (visibleRows.includes(row)) return { ...wild, bigWild: { anchor: false } };
 			return rawSymbol;
 		});
 	});
+
+// The math picks the reels to tease (anticipation) as it draws the board, before any W grows into a
+// big wild, so a scatter that a big wild then covers still counts towards it, and reels get teased
+// with too few scatters showing. Worked out again from the scatters that show: left to right, once
+// this many are down (one fewer than the fewest that trigger free spins, as the math does), each
+// reel after that one is teased. Only ever fewer reels than the math's, never more.
+const ANTICIPATION_SCATTERS: Record<GameType, number> = { basegame: 2, freegame: 1 };
+
+export const visibleAnticipation = ({
+	board,
+	anticipation,
+	gameType,
+}: {
+	board: RawSymbol[][];
+	anticipation: number[];
+	gameType: GameType;
+}) => {
+	const visibleRows = _.range(FIRST_VISIBLE_ROW, FIRST_VISIBLE_ROW + BOARD_DIMENSIONS.y);
+	let scatters = 0;
+	let firstTeased = -1;
+	board.forEach((reel, reelIndex) => {
+		const shown = visibleRows.map((row) => reel[row]);
+		// a reel with a W is all big wild, covering any scatter on it
+		if (shown.some((rawSymbol) => rawSymbol?.name === 'W')) return;
+		scatters += shown.filter((rawSymbol) => rawSymbol?.name === 'S').length;
+		if (firstTeased === -1 && scatters >= ANTICIPATION_SCATTERS[gameType]) {
+			firstTeased = reelIndex + 1;
+		}
+	});
+	return anticipation.map((value, reelIndex) =>
+		value > 0 && firstTeased > -1 && reelIndex >= firstTeased ? reelIndex - firstTeased + 1 : 0,
+	);
+};

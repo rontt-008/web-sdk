@@ -149,6 +149,25 @@ export function createReelForSpinning<TRawSymbol extends object, TSymbolState ex
 		await reelY.set(targetY, { duration, easing });
 	};
 
+	// slides to targetY slowing evenly from one speed to the other (pixel / ms)
+	const slideYSlowingDown = async ({
+		reelY: targetY,
+		fromSpeed,
+		toSpeed,
+	}: {
+		reelY: number;
+		fromSpeed: number;
+		toSpeed: number;
+	}) => {
+		const distance = Math.abs(targetY - reelY.current);
+		const duration = (2 * distance) / (fromSpeed + toSpeed);
+		// the part of the distance covered by time t (0 to 1), as the speed falls in a straight line
+		const easing = (t: number) =>
+			(2 * (fromSpeed * t - ((fromSpeed - toSpeed) * t * t) / 2)) / (fromSpeed + toSpeed);
+
+		await reelY.set(targetY, { duration, easing });
+	};
+
 	const placeY = (targetY: number) => reelY.set(targetY, { duration: 0 });
 
 	const removePaddingAndBounceBack = async () => {
@@ -285,7 +304,31 @@ export function createReelForSpinning<TRawSymbol extends object, TSymbolState ex
 	const anticipatedSpin = () =>
 		generalSpinWith({
 			slideDown: async () => {
-				const bounceSize = reelOptions.symbolHeight * reelState.spinOptions().reelBounceSizeMulti;
+				const spinOptions = reelState.spinOptions();
+				const bounceSize = reelOptions.symbolHeight * spinOptions.reelBounceSizeMulti;
+				const slowdown = stateBet.isTurbo ? undefined : spinOptions.reelAnticipatedSlowdown;
+
+				if (slowdown) {
+					// full speed until a few symbols before the stop, then it brakes to a crawl and creeps
+					// the last symbols in
+					const stopY = defaultY + bounceSize;
+					const crawlY = stopY - slowdown.crawlSymbols * reelOptions.symbolHeight;
+					const brakeY = crawlY - slowdown.brakeSymbols * reelOptions.symbolHeight;
+					if (reelY.current < brakeY) {
+						await slideY({ reelY: brakeY, speed: spinOptions.reelSpinSpeed });
+					}
+					await slideYSlowingDown({
+						reelY: crawlY,
+						fromSpeed: spinOptions.reelSpinSpeed,
+						toSpeed: slowdown.crawlSpeed,
+					});
+					await slideYSlowingDown({
+						reelY: stopY,
+						fromSpeed: slowdown.crawlSpeed,
+						toSpeed: slowdown.endSpeed,
+					});
+					return;
+				}
 
 				await slideY({
 					reelY: defaultY * basePaddingSize(),

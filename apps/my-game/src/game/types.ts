@@ -7,8 +7,14 @@ export type RawSymbol = {
 	multiplier?: number;
 	scatter?: boolean;
 	wild?: boolean;
+	// set by the frontend, not the math: a scatter the cat ate (see ScatterFeed), not drawn while
+	// the reels spin it away
+	eaten?: boolean;
 	// set by the frontend, not the math (see markBigWilds)
-	bigWild?: { anchor: boolean; multiplier?: number };
+	// fish: it still has the fish in its mouth, as it throws them later in the spin (see WildThrow);
+	// without, it is drawn with an empty mouth. fade: its mouth has just changed and fades to it (it
+	// threw its last fish, or it is walking on to throw some in the next spin, see WalkingWilds)
+	bigWild?: { anchor: boolean; multiplier?: number; fish?: boolean; fade?: boolean };
 };
 export type BetMode = keyof typeof config.betModes;
 export type GameType = keyof typeof config.paddingReels;

@@ -31,6 +31,7 @@
 	import Board from './Board.svelte';
 	import Anticipations from './Anticipations.svelte';
 	import WildThrow from './WildThrow.svelte';
+	import ScatterFeed from './ScatterFeed.svelte';
 	import WalkingWilds from './WalkingWilds.svelte';
 	import YarnBall from './YarnBall.svelte';
 	import SunShine from './SunShine.svelte';
@@ -92,6 +93,8 @@
 					<WildThrow />
 					<!-- now and then rolls across under the board, in front of its frame -->
 					<YarnBall />
+					<!-- over the board and the cat, which the scatters are fed to -->
+					<ScatterFeed />
 				</MainContainer>
 
 				<!-- over the board, under the UI and the win and free spin screens -->

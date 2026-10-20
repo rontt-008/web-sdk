@@ -98,6 +98,17 @@ export const slamPose = (t: number): SymbolPose => {
 	return { y: 0, scaleX: 1 + (1 - scaleY) * 0.3, scaleY, rotation: 0 };
 };
 
+// Big wild landing: the slam, then a heartbeat (its multiplier pops onto the strip with the beat,
+// see Symbol). Lengths in ms; it squashes onto its bottom edge in the slam and swells about its
+// middle in the beat.
+export const BIG_WILD_LANDING = { slam: 260, beat: 700 };
+const SLAM_SHARE = BIG_WILD_LANDING.slam / (BIG_WILD_LANDING.slam + BIG_WILD_LANDING.beat);
+
+export const slamBeatPose = (t: number): SymbolPose =>
+	t < SLAM_SHARE ? slamPose(t / SLAM_SHARE) : punchPose((t - SLAM_SHARE) / (1 - SLAM_SHARE));
+
+export const slamBeatOnGround = (t: number) => t < SLAM_SHARE;
+
 // Scatters already on the board while a reel is anticipated: a nervous little wiggle, on a loop
 // (time in seconds).
 const EXCITED = { scale: 0.1, period: 0.55, tilt: (6 * Math.PI) / 180, tiltPeriod: 1.1 };
