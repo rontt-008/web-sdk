@@ -4,7 +4,13 @@ import { recordBookEvent, checkIsMultipleRevealEvents, type BookEventHandlerMap 
 import { stateBet, stateUi } from 'state-shared';
 
 import { eventEmitter } from './eventEmitter';
-import { playBookEvent, markBigWilds, getBonusType, FIRST_VISIBLE_ROW } from './utils';
+import {
+	playBookEvent,
+	markBigWilds,
+	getBonusType,
+	visibleAnticipation,
+	FIRST_VISIBLE_ROW,
+} from './utils';
 import { winLevelMap, type WinLevel, type WinLevelData } from './winLevelMap';
 import { stateGame, stateGameDerived } from './stateGame.svelte';
 import type { BookEvent, BookEventOfType, BookEventContext } from './typesBookEvent';
@@ -63,6 +69,28 @@ const animateSymbolsHighlighted = async ({ positions }: { positions: Position[] 
 // SUPER free spins: the moves of a bigWildWalk, for the reveal after it to slide the big wilds
 let walkingWildMoves: BookEventOfType<'bigWildWalk'>['moves'] = [];
 
+// the events of the round after this one, by place in it (events made up for stories have no index)
+const eventsAfter = (event: BookEvent, bookEvents: BookEvent[]) => {
+	const at = bookEvents.indexOf(event);
+	return at >= 0
+		? bookEvents.slice(at + 1)
+		: bookEvents.filter((bookEvent) => bookEvent.index > event.index);
+};
+
+// the reels whose big wilds throw fish later in this reveal's spin (before the next reveal): they
+// land with the fish in their mouth, the rest with it empty
+const fishReels = (reveal: BookEvent, bookEvents: BookEvent[]) => {
+	const after = eventsAfter(reveal, bookEvents);
+	const nextReveal = after.findIndex((bookEvent) => bookEvent.type === 'reveal');
+	const spin = nextReveal === -1 ? after : after.slice(0, nextReveal);
+	return spin
+		.filter(
+			(bookEvent): bookEvent is BookEventOfType<'bigWildThrow'> =>
+				bookEvent.type === 'bigWildThrow' && bookEvent.positions.length > 0,
+		)
+		.map((bookEvent) => bookEvent.reel);
+};
+
 export const bookEventHandlerMap: BookEventHandlerMap<BookEvent, BookEventContext> = {
 	reveal: async (bookEvent: BookEventOfType<'reveal'>, { bookEvents }: BookEventContext) => {
 		const isBonusGame = checkIsMultipleRevealEvents({ bookEvents });
@@ -72,13 +100,22 @@ export const bookEventHandlerMap: BookEventHandlerMap<BookEvent, BookEventContex
 		}
 
 		stateGame.gameType = bookEvent.gameType;
-		const board = markBigWilds(bookEvent.board);
+		const board = markBigWilds(bookEvent.board, fishReels(bookEvent, bookEvents));
 		const moves = walkingWildMoves;
 		walkingWildMoves = [];
 		// the reels the walking big wilds move onto don't spin
 		const heldReels = moves.map(({ to }) => to).filter((reel) => reel >= 0);
 		const spin = stateGameDerived.enhancedBoard.spin({
-			revealEvent: { ...bookEvent, board },
+			revealEvent: {
+				...bookEvent,
+				board,
+				// no teasing for scatters hidden under big wilds
+				anticipation: visibleAnticipation({
+					board: bookEvent.board,
+					anticipation: bookEvent.anticipation,
+					gameType: bookEvent.gameType,
+				}),
+			},
 			paddingBoard: config.paddingReels[bookEvent.gameType],
 			heldReels,
 		});
@@ -102,9 +139,18 @@ export const bookEventHandlerMap: BookEventHandlerMap<BookEvent, BookEventContex
 	// before the reveal: the big wilds that walk on are taken off their reels, as they look there.
 	// The reels they move onto keep their symbols, which they slide over; but a reel whose own big
 	// wild walks away while another moves onto it doesn't, or that big wild would stay behind too.
-	bigWildWalk: async (bookEvent: BookEventOfType<'bigWildWalk'>) => {
+	bigWildWalk: async (bookEvent: BookEventOfType<'bigWildWalk'>, { bookEvents }: BookEventContext) => {
 		if (bookEvent.moves.length === 0) return;
-		eventEmitter.broadcast({ type: 'walkingWildsShow', moves: bookEvent.moves });
+		// the ones that throw fish in the spin they walk into get them on the way
+		const nextReveal = eventsAfter(bookEvent, bookEvents).find(({ type }) => type === 'reveal');
+		const throwing = nextReveal ? fishReels(nextReveal, bookEvents) : [];
+		eventEmitter.broadcast({
+			type: 'walkingWildsShow',
+			moves: bookEvent.moves.map((move) => ({
+				...move,
+				fish: move.to >= 0 && throwing.includes(move.to),
+			})),
+		});
 		stateGame.hiddenReels = bookEvent.moves
 			.map(({ to }) => to)
 			.filter((reel) => bookEvent.moves.some(({ from }) => from === reel));
@@ -151,6 +197,9 @@ export const bookEventHandlerMap: BookEventHandlerMap<BookEvent, BookEventContex
 			await animateSymbolsHighlighted({ positions: bookEvent.positions });
 		}
 		stateGame.winHighlight = undefined;
+		// then they bounce off the board into the mouth of the cat on its rock, which hops for joy
+		// (only on wide screens, where the cat is)
+		await eventEmitter.broadcastAsync({ type: 'scatterFeed', positions: bookEvent.positions });
 		stateGame.bonusType = getBonusType(bookEvent.positions.length);
 		// show free spin intro: it cuts straight in over the blurred scene, without a transition
 		eventEmitter.broadcast({ type: 'soundOnce', name: 'sfx_superfreespin' });

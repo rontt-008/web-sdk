@@ -8,6 +8,8 @@
 		| 'buyBonus'
 		| 'arrowUp'
 		| 'arrowDown'
+		// a straight arrow, shaft and head, pointing down
+		| 'arrowDownLong'
 		| 'musicOn'
 		| 'musicOff';
 </script>
@@ -107,6 +109,10 @@
 		decrease: (g, c) => line(g, c, [-26, 0, 26, 0]),
 		arrowUp: (g, c) => line(g, c, [-28, 14, 0, -14, 28, 14]),
 		arrowDown: (g, c) => line(g, c, [-28, -14, 0, 14, 28, -14]),
+		arrowDownLong: (g, c) => {
+			line(g, c, [0, -34, 0, 32]);
+			line(g, c, [-24, 8, 0, 33, 24, 8]);
+		},
 		menu: (g, c) => {
 			line(g, c, [-28, -20, 28, -20]);
 			line(g, c, [-28, 0, 28, 0]);

@@ -17,6 +17,16 @@ export type SpinningReelSpinOptions = {
 	reelPaddingMultiplierNormal: number;
 	reelPaddingMultiplierAnticipated: number;
 	reelSpinDelay: number;
+	// Anticipated reels (out of turbo) slow right down at the end, so it is clear what landed: from
+	// brakeSymbols + crawlSymbols before the stop they brake from full speed to crawlSpeed, then
+	// creep the last crawlSymbols in, slowing to endSpeed (pixel / ms). Without it they stop as
+	// normal reels do.
+	reelAnticipatedSlowdown?: {
+		brakeSymbols: number;
+		crawlSymbols: number;
+		crawlSpeed: number;
+		endSpeed: number;
+	};
 };
 
 export type CascadingReelSpinOptions = {

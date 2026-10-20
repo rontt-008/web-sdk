@@ -4,7 +4,14 @@
 		// the board
 		| {
 				type: 'walkingWildsShow';
-				moves: { from: number; to: number; multiplier: number; newMultiplier?: number }[];
+				// fish: it throws fish in the spin it walks into, so gets them on the way
+				moves: {
+					from: number;
+					to: number;
+					multiplier: number;
+					newMultiplier?: number;
+					fish?: boolean;
+				}[];
 		  }
 		// cat paws reach up from under the board and grab each of them
 		| { type: 'walkingWildsGrab' }
@@ -69,19 +76,22 @@
 
 	// from one reel to the one on its left; to is -1 off the board. Its multiplier becomes
 	// newMultiplier there (doubled in MYTHIC free spins).
+	// It walks with an empty mouth, as it was on the board; one that throws fish in the next spin
+	// (fish) gets them as it moves, its mouth fading to full.
 	type Walker = {
 		from: number;
 		to: number;
 		multiplier: number;
 		newMultiplier: number;
+		fish: boolean;
 		rawSymbol: RawSymbol;
 		doubled?: boolean;
 	};
-	const bigWild = (multiplier: number): RawSymbol => ({
+	const bigWild = (multiplier: number, fish = false, fade = false): RawSymbol => ({
 		name: 'W',
 		wild: true,
 		multiplier,
-		bigWild: { anchor: true, multiplier },
+		bigWild: { anchor: true, multiplier, fish, fade },
 	});
 
 	const context = getContext();
@@ -159,11 +169,12 @@
 			release.set(0, { duration: 0 });
 			doubling.set(0, { duration: 0 });
 			wildsShown = true;
-			walkers = moves.map(({ from, to, multiplier, newMultiplier = multiplier }) => ({
+			walkers = moves.map(({ from, to, multiplier, newMultiplier = multiplier, fish = false }) => ({
 				from,
 				to,
 				multiplier,
 				newMultiplier,
+				fish,
 				rawSymbol: bigWild(multiplier),
 			}));
 		},
@@ -176,6 +187,10 @@
 		},
 		walkingWildsMove: async () => {
 			if (walkers.length === 0) return;
+			// the ones getting fish for the next spin fade to full mouths on the way
+			walkers = walkers.map((walker) =>
+				walker.fish ? { ...walker, rawSymbol: bigWild(walker.multiplier, true, true) } : walker,
+			);
 			await progress.set(1, {
 				duration: MOVE_DURATION / stateBetDerived.timeScale(),
 				easing: cubicInOut,
@@ -187,7 +202,7 @@
 			if (!walkers.some(doubles)) return;
 			walkers = walkers.map((walker) =>
 				doubles(walker)
-					? { ...walker, rawSymbol: bigWild(walker.newMultiplier), doubled: true }
+					? { ...walker, rawSymbol: bigWild(walker.newMultiplier, walker.fish), doubled: true }
 					: walker,
 			);
 			context.eventEmitter.broadcast({ type: 'soundOnce', name: 'sfx_multiplier_up' });

@@ -3,14 +3,11 @@
 
 	import UiLabel from './UiLabel.svelte';
 	import { i18nDerived } from '../i18n/i18nDerived';
+	import type { UiLabelOptions } from '../types';
 
-	type Props = {
-		stacked?: boolean;
-	};
-
-	const props: Props = $props();
+	const props: UiLabelOptions = $props();
 	const label = $derived(i18nDerived.freeSpins());
 	const value = $derived(`${stateUi.freeSpinCounterCurrent} / ${stateUi.freeSpinCounterTotal}`);
 </script>
 
-<UiLabel tiled {label} {value} stacked={props.stacked} />
+<UiLabel tiled {label} {value} stacked={props.stacked} plain={props.plain} />

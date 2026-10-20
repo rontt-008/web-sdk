@@ -33,6 +33,7 @@
 				paylines: 'win lines',
 				buyBonus: 'PLAY BONUS',
 				bonusBuys: 'bonuses',
+				buyIt: 'start it',
 			}
 		: {
 				bet: 'bet',
@@ -40,6 +41,7 @@
 				paylines: 'paylines',
 				buyBonus: 'BUY BONUS',
 				bonusBuys: 'bonus buys',
+				buyIt: 'buy it',
 			};
 
 	type PayingSymbol = Exclude<keyof typeof config.symbols, 'S'>;
@@ -292,9 +294,9 @@
 			<div>
 				<dt>{words.bet.toUpperCase()} UP and DOWN</dt>
 				<dd>
-					On wide and square screens, the up and down arrows beside the {words.bet} raise or lower it
-					one level at a time. On tall screens and small wide ones (a phone held either way, or a
-					small window), the &minus; and + buttons do the same.
+					On wide, square and tall screens (a phone held upright), the up and down arrows beside the
+					{words.bet} raise or lower it one level at a time. On small wide screens (a phone held
+					sideways, or a small window), the &minus; and + buttons do the same.
 				</dd>
 			</div>
 			<div>
@@ -321,28 +323,31 @@
 			<div>
 				<dt>MENU</dt>
 				<dd>
-					The button with three lines opens the menu: the i button opens these rules and the gear
-					button opens SETTINGS (master, music and sound effect volume). The close button (X) closes
-					the menu. The X at the top right of a window, or the Escape key, closes the window.
+					The button with three lines opens the menu: the i button opens these rules. The close
+					button (X) closes the menu. The X at the top right of a window, or the Escape key, closes
+					the window.
 				</dd>
 			</div>
 			<div>
 				<dt>SOUND</dt>
 				<dd>
 					The music note and speaker buttons next to the menu button turn music and sound effects
-					on or off. SETTINGS turns all sound on or off, and sets each volume on its own. When
-					watching a replay, the sound button in the menu turns all sound on or off.
+					on or off. On desktop, holding the pointer over either button opens a slider above it
+					that sets the music or sound effect volume. When watching a replay, the sound button in
+					the menu turns all sound on or off.
 				</dd>
 			</div>
 			<div>
 				<dt>{words.buyBonus}</dt>
 				<dd>
-					The round black button with the red S, right of the spin button (at the bottom left on
-					small wide screens), opens the bonus menu. It shows the balance and the {words.bet}, with
-					&minus; and + to change the {words.bet} the prices are worked out from. Pick a bonus, check
-					what it costs and confirm; the BOOSTER and FEATURE SPIN cards switch them on the same way,
-					and while one is on, its card's DISABLE button switches it off. The button is greyed out
-					while a round plays, and turns white while the BOOSTER or the FEATURE SPIN is on.
+					The round black button with the red S, right of the spin button (at the bottom right on tall
+					screens and on small wide screens), opens the bonus menu. It shows the
+					balance and the {words.bet}, with &minus; and + to change the {words.bet} the prices are
+					worked out from. Pick a bonus and check what it costs, then press CONFIRM to
+					{words.buyIt}, or CANCEL to go back to the bonus menu; the BOOSTER and FEATURE SPIN cards
+					switch them on the same way, and while one is on, its card's DISABLE button switches it
+					off. The button is greyed out while a round plays, and turns white while the BOOSTER or
+					the FEATURE SPIN is on.
 				</dd>
 			</div>
 			<div>

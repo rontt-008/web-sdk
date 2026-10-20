@@ -8,7 +8,7 @@
 	import { App, Container } from 'pixi-svelte';
 	import { stateModal } from 'state-shared';
 
-	import { UI, UiGameName } from 'components-ui-pixi';
+	import { UI } from 'components-ui-pixi';
 	import { GameVersion, Modals } from 'components-ui-html';
 
 	import { getContext } from '../game/context';
@@ -24,10 +24,14 @@
 	import BoardParticles from './BoardParticles.svelte';
 	import GameLogo from './GameLogo.svelte';
 	import BonusCardArt from './BonusCardArt.svelte';
+	import ClotheslineCard from './ClotheslineCard.svelte';
+	import BonusRip from './BonusRip.svelte';
+	import ConfirmTowel from './ConfirmTowel.svelte';
 	import GameInfo from './GameInfo.svelte';
 	import Board from './Board.svelte';
 	import Anticipations from './Anticipations.svelte';
 	import WildThrow from './WildThrow.svelte';
+	import ScatterFeed from './ScatterFeed.svelte';
 	import WalkingWilds from './WalkingWilds.svelte';
 	import YarnBall from './YarnBall.svelte';
 	import SunShine from './SunShine.svelte';
@@ -89,6 +93,8 @@
 					<WildThrow />
 					<!-- now and then rolls across under the board, in front of its frame -->
 					<YarnBall />
+					<!-- over the board and the cat, which the scatters are fed to -->
+					<ScatterFeed />
 				</MainContainer>
 
 				<!-- over the board, under the UI and the win and free spin screens -->
@@ -110,9 +116,8 @@
 
 		<Container alpha={gameAlpha.current}>
 			<UI theme={uiTheme}>
-				{#snippet gameName()}
-					<UiGameName name="LAZY EVENING" />
-				{/snippet}
+				<!-- no clock and game name in the screen's corner -->
+				{#snippet gameName()}{/snippet}
 				<!-- the game logo is drawn beside the board by <GameLogo /> -->
 				{#snippet logo()}{/snippet}
 			</UI>
@@ -134,6 +139,18 @@
 	{/snippet}
 	{#snippet bonusArt(betModeData)}
 		<BonusCardArt {betModeData} />
+	{/snippet}
+	<!-- the bonuses hang as dish towels pegged to a washing line -->
+	{#snippet bonusCard({ levels, levelRow })}
+		<ClotheslineCard {levels} {levelRow} />
+	{/snippet}
+	<!-- buying one, or switching one on, is confirmed on its towel, bigger -->
+	{#snippet bonusConfirm({ betModeData, confirm, cancel })}
+		<ConfirmTowel {betModeData} onconfirm={confirm} oncancel={cancel} />
+	{/snippet}
+	<!-- a bonus once bought: its towel rips into pieces, then the bonus starts -->
+	{#snippet bonusBought({ betModeData, start })}
+		<BonusRip {betModeData} onstart={start} />
 	{/snippet}
 	<!-- no pay table: the rules hold the symbol wins and paylines too (see uiTheme's hidePayTable) -->
 	{#snippet gameRules()}

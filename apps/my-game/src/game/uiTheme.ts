@@ -1,4 +1,10 @@
-import { UI_THEME_CLEAN, LayoutDesktopBar, type UiTheme } from 'components-ui-pixi';
+import {
+	UI_THEME_CLEAN,
+	LayoutDesktopBar,
+	LayoutPortraitBar,
+	LayoutLandscapeBar,
+	type UiTheme,
+} from 'components-ui-pixi';
 import { UI_HTML_THEME_CLEAN, type UiHtmlTheme } from 'components-ui-html';
 import { LOADING_BAR_THEME_CLEAN, type LoadingBarTheme } from 'components-pixi';
 
@@ -60,8 +66,16 @@ export const uiTheme: UiTheme = {
 	// no outlines around the buttons and panels, and slightly rounded corners on the panels
 	outlineWidth: 0,
 	panelCornerRadius: 0.12,
-	// on wide and almost square screens, a bar of panels along the bottom
-	layouts: { desktop: LayoutDesktopBar, tablet: LayoutDesktopBar },
+	// on wide and almost square screens, a bar of panels along the bottom; on tall ones (a phone held
+	// upright) a panel of the amounts over the spin row, and a pill of menu and sound; on small wide
+	// ones (a phone held sideways, the miniplayer) a bar right across the bottom and the spin buttons
+	// in a column on the right
+	layouts: {
+		desktop: LayoutDesktopBar,
+		tablet: LayoutDesktopBar,
+		portrait: LayoutPortraitBar,
+		landscape: LayoutLandscapeBar,
+	},
 	// one round buy bonus button right of the spin button: the bonus logo in red with a thin black
 	// outline, on solid near-black in a thin white ring, with no shadow; it opens the buy menu, which
 	// has the bonuses, the feature spin and the booster

@@ -7,13 +7,15 @@
 	import { getSymbolInfo, type SymbolMotion } from '../game/utils';
 	import { SYMBOL_SIZE } from '../game/constants';
 	import {
+		BIG_WILD_LANDING,
 		REST_POSE,
 		excitedPose,
 		flipPose,
 		hopPose,
 		popPose,
 		punchPose,
-		slamPose,
+		slamBeatOnGround,
+		slamBeatPose,
 		type SymbolPose,
 	} from '../game/motion';
 	import { getContext } from '../game/context';
@@ -23,6 +25,11 @@
 		x?: number;
 		y?: number;
 		symbolInfo: ReturnType<typeof getSymbolInfo>;
+		// another image over it, of the same size (the big wild's empty mouth); changing it doesn't
+		// restart the motion, as a new symbolInfo does
+		assetKey?: string;
+		// fade that image in (or out) as it changes, rather than swap it at once
+		fadeAssetKey?: boolean;
 		// played once, then oncomplete is called (straight away when there is none)
 		motion?: SymbolMotion;
 		// squash and spring back once when this turns true, like landing with a little bounce
@@ -43,16 +50,25 @@
 	const SHADOW_OFFSET = { x: SYMBOL_SIZE * 0.03, y: SYMBOL_SIZE * 0.05 };
 
 	// each motion's length (shorter in turbo), its curve and whether it squashes onto the symbol's
-	// bottom edge (things that jump and land) or about its middle (things that swell)
+	// bottom edge (things that jump and land) or about its middle (things that swell), or which
+	// when, through the motion (the big wild's landing: a slam, then a heartbeat)
 	const MOTIONS: Record<
 		SymbolMotion,
-		{ duration: number; pose: (t: number, direction: 1 | -1) => SymbolPose; onGround: boolean }
+		{
+			duration: number;
+			pose: (t: number, direction: 1 | -1) => SymbolPose;
+			onGround: boolean | ((t: number) => boolean);
+		}
 	> = {
 		hop: { duration: 650, pose: hopPose, onGround: true },
 		flip: { duration: 750, pose: flipPose, onGround: true },
 		punch: { duration: 700, pose: punchPose, onGround: false },
 		pop: { duration: 480, pose: popPose, onGround: false },
-		slam: { duration: 480, pose: slamPose, onGround: true },
+		slam: {
+			duration: BIG_WILD_LANDING.slam + BIG_WILD_LANDING.beat,
+			pose: slamBeatPose,
+			onGround: slamBeatOnGround,
+		},
 	};
 
 	// symbols lean either way as they jump, so a line of them doesn't move in step
@@ -85,6 +101,22 @@
 		});
 	});
 
+	// the image over it (see assetKey), faded or at once (see fadeAssetKey); the last one set is
+	// kept while it fades out
+	const OVER_FADE_DURATION = 400;
+	const overFade = new Tween(props.assetKey ? 1 : 0);
+	let overKey = $state(props.assetKey);
+	$effect(() => {
+		const key = props.assetKey;
+		const fade = props.fadeAssetKey;
+		if (key) overKey = key;
+		untrack(() =>
+			overFade.set(key ? 1 : 0, {
+				duration: fade ? OVER_FADE_DURATION / stateBetDerived.timeScale() : 0,
+			}),
+		);
+	});
+
 	// seconds since it got excited, for its loop
 	let excitedTime = $state(0);
 	$effect(() => {
@@ -102,7 +134,11 @@
 		if (props.excited) return excitedPose(excitedTime);
 		return REST_POSE;
 	});
-	const onGround = $derived(playing ? MOTIONS[playing].onGround : false);
+	const onGround = $derived.by(() => {
+		if (!playing) return false;
+		const onGround = MOTIONS[playing].onGround;
+		return typeof onGround === 'function' ? onGround(progress.current) : onGround;
+	});
 
 	// The jiggle squashes the symbol flat, springs it up taller, and wobbles a couple of times as it
 	// settles. Width changes the opposite way to height so it keeps its size, and it squashes onto
@@ -196,6 +232,15 @@
 				width={SYMBOL_SIZE * props.symbolInfo.sizeRatios.width}
 				height={SYMBOL_SIZE * props.symbolInfo.sizeRatios.height}
 			/>
+			{#if overKey && overFade.current > 0}
+				<Sprite
+					anchor={0.5}
+					key={overKey}
+					alpha={overFade.current}
+					width={SYMBOL_SIZE * props.symbolInfo.sizeRatios.width}
+					height={SYMBOL_SIZE * props.symbolInfo.sizeRatios.height}
+				/>
+			{/if}
 		</Container>
 		{@render props.children?.()}
 	</Container>

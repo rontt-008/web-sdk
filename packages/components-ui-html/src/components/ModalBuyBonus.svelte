@@ -12,6 +12,7 @@
 
 	type Props = {
 		bonusArt?: Snippet<[BetModeData]>;
+		bonusCard?: Snippet<[{ levels: BetModeData[]; levelRow: boolean }]>;
 		hiddenBetModes?: string[];
 	};
 
@@ -47,11 +48,21 @@
 			{/snippet}
 
 			{#snippet bonusCardsActivate()}
-				<BonusCards groups={activateGroups} {levelRow} bonusArt={props.bonusArt} />
+				<BonusCards
+					groups={activateGroups}
+					{levelRow}
+					bonusArt={props.bonusArt}
+					bonusCard={props.bonusCard}
+				/>
 			{/snippet}
 
 			{#snippet bonusCardsBuy()}
-				<BonusCards groups={buyGroups} {levelRow} bonusArt={props.bonusArt} />
+				<BonusCards
+					groups={buyGroups}
+					{levelRow}
+					bonusArt={props.bonusArt}
+					bonusCard={props.bonusCard}
+				/>
 			{/snippet}
 		</BonusContentWrap>
 	</Popup>
