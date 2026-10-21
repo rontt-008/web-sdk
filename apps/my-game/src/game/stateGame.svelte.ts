@@ -106,8 +106,9 @@ export const stateGame = $state({
 	// where the ball of yarn rolling across the screen is, while it is (see YarnBall), for the cat on
 	// its rock to watch
 	yarnBall: undefined as { x: number; y: number } | undefined,
-	// where the cat on its rock has its mouth, while the cat is on screen (see LogoCat)
-	catMouth: undefined as { x: number; y: number } | undefined,
+	// where the cat on its rock has its mouth, while the cat is on screen (see LogoCat): asked for
+	// when needed, rather than a new position written in every frame
+	catMouth: undefined as (() => { x: number; y: number }) | undefined,
 	// while the scatters that trigger free spins are fed to the cat (see ScatterFeed): it hops on its
 	// rock, opens its mouth (0 shut to 1 wide) and watches the next scatter coming
 	catFeed: undefined as { open: number; watch?: { x: number; y: number } } | undefined,

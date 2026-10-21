@@ -66,7 +66,7 @@
 	// where a flight is at t: two arcs, to the bounce and on into the mouth (which moves as the cat
 	// hops, so it is aimed at where the mouth is now)
 	const flightAt = (flight: Flight, t: number) => {
-		const to = context.stateGame.catMouth ?? flight.from;
+		const to = context.stateGame.catMouth?.() ?? flight.from;
 		const bounce = {
 			x: lerp(flight.from.x, to.x, BOUNCE_AT),
 			y: Math.max(flight.from.y, to.y) + BOUNCE_DROP,

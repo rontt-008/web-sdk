@@ -148,7 +148,6 @@
 				hop = Math.max(0, hop) + seconds / FEED_HOP.length;
 				if (hop >= 1) hop = context.stateGame.catFeed ? hop - 1 : -1;
 			}
-			context.stateGame.catMouth = mouthOnLayout();
 
 			const target = lookTarget();
 			const ease = 1 - Math.exp(-seconds * LOOK_SPEED);
@@ -165,6 +164,8 @@
 				(double ? DOUBLE_BLINK.gap : _.random(BLINK_EVERY.min, BLINK_EVERY.max, true));
 		};
 		ticker.add(tick);
+		// its mouth, for the scatters to fly to, worked out when asked
+		context.stateGame.catMouth = mouthOnLayout;
 		return () => {
 			ticker.remove(tick);
 			context.stateGame.catMouth = undefined;
