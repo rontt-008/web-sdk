@@ -10,6 +10,10 @@
 	const props: Props = $props();
 	const context = getContextApp();
 
+	// Rendered at most at twice the page's pixels: phones with 3x screens look the same at 2x, while
+	// 3x draws over twice as many pixels and takes over twice the memory for the screen's buffers.
+	const MAX_RESOLUTION = 2;
+
 	let wrap: HTMLDivElement;
 	let initialised = $state(false);
 	// The component can be destroyed and mounted again while its application is still initialising
@@ -32,7 +36,7 @@
 			clearBeforeRender: true,
 			preference: 'webgpu',
 			powerPreference: 'high-performance',
-			resolution: devicePixelRatio.current,
+			resolution: Math.min(devicePixelRatio.current ?? 1, MAX_RESOLUTION),
 			resizeTo: window,
 		});
 

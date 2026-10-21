@@ -1,0 +1,66 @@
+{
+	"sprite": {
+		"bgm_freespin": [
+			0.0,
+			41739.138,
+			true
+		],
+		"bgm_main": [
+			41839.138,
+			48000.0,
+			true
+		],
+		"bgm_winlevel_big": [
+			89939.138,
+			8000.0,
+			true
+		],
+		"bgm_winlevel_epic": [
+			98039.138,
+			8000.0,
+			true
+		],
+		"bgm_winlevel_max": [
+			106139.138,
+			8000.0,
+			true
+		],
+		"bgm_winlevel_mega": [
+			114239.138,
+			8000.0,
+			true
+		],
+		"bgm_winlevel_superwin": [
+			122339.138,
+			8000.0,
+			true
+		]
+	},
+	"src": [
+		"./assets/audio/music.ogg",
+		"./assets/audio/music.m4a"
+	],
+	"config": {
+		"bgm_freespin": {
+			"volume": 1
+		},
+		"bgm_main": {
+			"volume": 1
+		},
+		"bgm_winlevel_big": {
+			"volume": 1
+		},
+		"bgm_winlevel_epic": {
+			"volume": 1
+		},
+		"bgm_winlevel_max": {
+			"volume": 1
+		},
+		"bgm_winlevel_mega": {
+			"volume": 1
+		},
+		"bgm_winlevel_superwin": {
+			"volume": 1
+		}
+	}
+}

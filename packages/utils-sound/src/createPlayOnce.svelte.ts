@@ -10,6 +10,18 @@ export function createPlayOnce<TSoundName extends string>(options: {
 }) {
 	type Sound = GetSound<TSoundName>;
 
+	// One listener for all of this player's sounds, added once. A listener added with each play was
+	// never removed, so they piled up for as long as the game ran, and every sound ending ran all of
+	// them. The howl is shared with the music and loop players, whose sounds aren't in this map.
+	options.howl.on('end', (soundIdOnEnd) => {
+		const sound = (Object.values(options.getSoundMap()) as Sound[]).find(
+			({ soundId }) => soundId === soundIdOnEnd,
+		);
+		if (!sound) return;
+		options.howl.stop(soundIdOnEnd);
+		delete options.getSoundMap()[sound.soundName];
+	});
+
 	const playOnce = (sound: Sound) => {
 		const soundId = options.howl.play(sound.soundName);
 		options.getSoundMap()[sound.soundName] = {
@@ -19,13 +31,6 @@ export function createPlayOnce<TSoundName extends string>(options: {
 		};
 
 		options.initSoundVolume(sound.soundName);
-
-		options.howl.on('end', (soundIdOnEnd) => {
-			if (soundIdOnEnd === soundId) {
-				options.howl.stop(soundId);
-				delete options.getSoundMap()[sound.soundName];
-			}
-		});
 	};
 
 	const soundPlayMap = {

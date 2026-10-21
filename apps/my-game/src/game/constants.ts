@@ -115,6 +115,8 @@ export const INITIAL_BOARD: RawSymbol[][] = [
 ];
 
 export const BOARD_DIMENSIONS = { x: INITIAL_BOARD.length, y: INITIAL_BOARD[0].length - 2 };
+// reels are padded with one symbol above the board (and one below)
+export const FIRST_VISIBLE_ROW = 1;
 
 export const BOARD_SIZES = {
 	width: REEL_WIDTH * BOARD_DIMENSIONS.x,
@@ -170,6 +172,9 @@ export const SPIN_OPTIONS_DEFAULT = {
 	// a reel teased for the free spins (2 FS symbols down) eases off over 6 symbols before its stop
 	// and rolls the last 1.5 in, from about 7 symbols a second down to 2, so it is clear what landed
 	reelAnticipatedSlowdown: { brakeSymbols: 6, crawlSymbols: 1.5, crawlSpeed: 0.9, endSpeed: 0.25 },
+	// a reel starting lifts a third of a symbol, then speeds up smoothly to its spin speed (rather
+	// than winding up past it and dropping back, which made the symbols leaving jump about)
+	reelStart: { lift: 0.3, liftDuration: 100, accelerateDuration: 140 },
 };
 
 export const SPIN_OPTIONS_FAST = {
@@ -177,6 +182,8 @@ export const SPIN_OPTIONS_FAST = {
 	reelPreSpinSpeed: 5,
 	reelSpinSpeed: 5,
 	reelBounceSizeMulti: 0.05,
+	// no lift in turbo, just a quick smooth start rather than jumping to full speed
+	reelStart: { lift: 0, liftDuration: 0, accelerateDuration: 80 },
 };
 
 export const MOTION_BLUR_VELOCITY = 31;

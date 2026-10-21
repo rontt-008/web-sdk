@@ -205,9 +205,16 @@ export default {
 		src: new URL('../../assets/fonts/titanOne/titan-one.ttf', import.meta.url).href,
 		preload: true,
 	},
+	// the sound effects, in mono, and the music (the bgm_ sounds) in stereo: mono takes half the
+	// memory once decoded, and only the music loses anything by it
 	sound: {
 		type: 'audio',
 		src: new URL('../../assets/audio/sounds.json', import.meta.url).href,
+		preload: true,
+	},
+	music: {
+		type: 'audio',
+		src: new URL('../../assets/audio/music.json', import.meta.url).href,
 		preload: true,
 	},
 } as const;

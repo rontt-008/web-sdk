@@ -23,18 +23,22 @@ function createSound<TSoundName extends string>() {
 		once: Player<TSoundName, PlayOnce>;
 	};
 
-	const load = (loadedAudioValue: LoadedAudio<TSoundName>) => {
+	// The music can come in a sprite of its own (loadedMusic), e.g. kept in stereo while the sound
+	// effects are mono, which takes half the memory once decoded; otherwise it's in the one sprite.
+	const load = (
+		loadedAudioValue: LoadedAudio<TSoundName>,
+		loadedMusic?: LoadedAudio<TSoundName>,
+	) => {
 		// loadedAudio
 		loadedAudio = loadedAudioValue;
 
-		const howl = new Howl({
-			src: loadedAudio.src,
-			sprite: loadedAudio.sprite,
-			volume: 1,
-		});
+		const newHowl = ({ src, sprite }: LoadedAudio<TSoundName>) =>
+			new Howl({ src, sprite, volume: 1 });
+		const howl = newHowl(loadedAudio);
+		const musicHowl = loadedMusic ? newHowl(loadedMusic) : howl;
 		// players
 		players = {
-			music: createPlayer<TSoundName, PlayMusic>({ loadedAudio, loop: true, howl, createPlay: createPlayMusic<TSoundName> }), // prettier-ignore
+			music: createPlayer<TSoundName, PlayMusic>({ loadedAudio: loadedMusic ?? loadedAudio, loop: true, howl: musicHowl, createPlay: createPlayMusic<TSoundName> }), // prettier-ignore
 			loop: createPlayer<TSoundName, PlayLoop>({ loadedAudio, loop: true, howl, createPlay: createPlayLoop<TSoundName> }), // prettier-ignore
 			once: createPlayer<TSoundName, PlayOnce>({ loadedAudio, loop: false, howl, createPlay: createPlayOnce<TSoundName> }), //  prettier-ignore
 		};

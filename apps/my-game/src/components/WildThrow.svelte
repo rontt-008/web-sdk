@@ -167,7 +167,9 @@
 			progress: new Tween(0),
 		};
 		flights.push(flight);
-		context.eventEmitter.broadcast({ type: 'soundOnce', name: 'sfx_fish_throw' });
+		// forced, so each fish has its own: they go closer together than the sounds last, and a sound
+		// still playing is otherwise skipped
+		context.eventEmitter.broadcast({ type: 'soundOnce', name: 'sfx_fish_throw', forcePlay: true });
 		if (last) emptyMouth(reel);
 		await flight.progress.set(1, {
 			duration: (flight.via ? BAIT.duration : FLIGHT_DURATION) / stateBetDerived.timeScale(),
@@ -176,9 +178,9 @@
 
 		reelSymbol.rawSymbol = WILD;
 		// pops into place as a wild with a puff of sparkles, as a wild landing from the reels does,
-		// with a watery bloop
+		// with a watery bloop of its own (forced, as the throws are)
 		reelSymbol.symbolState = 'land';
-		context.eventEmitter.broadcast({ type: 'soundOnce', name: 'sfx_fish_land' });
+		context.eventEmitter.broadcast({ type: 'soundOnce', name: 'sfx_fish_land', forcePlay: true });
 	};
 
 	context.eventEmitter.subscribeOnMount({

@@ -1,128 +1,93 @@
 {
 	"sprite": {
-		"bgm_freespin": [
-			0.0,
-			41739.138,
-			true
-		],
-		"bgm_main": [
-			42239.138,
-			48000,
-			true
-		],
-		"bgm_winlevel_big": [
-			90739.138,
-			8000,
-			true
-		],
-		"bgm_winlevel_epic": [
-			99239.138,
-			8000,
-			true
-		],
-		"bgm_winlevel_max": [
-			107739.138,
-			8000,
-			true
-		],
-		"bgm_winlevel_mega": [
-			116239.138,
-			8000,
-			true
-		],
-		"bgm_winlevel_superwin": [
-			124739.138,
-			8000,
-			true
-		],
 		"jng_intro_fs": [
-			133239.138,
-			3450
+			0.0,
+			3450.0
 		],
 		"sfx_anticipation": [
-			137189.138,
-			7680,
+			3550.0,
+			7680.0,
 			true
 		],
 		"sfx_bigwin_coinloop": [
-			145369.138,
-			8000,
+			11330.0,
+			8000.0,
 			true
 		],
 		"sfx_btn_general": [
-			153869.138,
+			19430.0,
 			34.24
 		],
 		"sfx_btn_spin": [
-			154403.379,
+			19564.24,
 			244.15
 		],
 		"sfx_fs_respins": [
-			155147.528,
+			19908.39,
 			4535.669
 		],
 		"sfx_multiplier_landing": [
-			160183.197,
+			24544.059,
 			1795.125
 		],
 		"sfx_multiplier_up": [
-			162478.322,
+			26439.184,
 			2671.791
 		],
 		"sfx_reel_stop_1": [
-			165650.113,
-			430
+			29210.975,
+			430.0
 		],
 		"sfx_scatter_stop_1": [
-			166580.113,
+			29740.975,
 			2322.971
 		],
 		"sfx_scatter_stop_2": [
-			169403.084,
+			32163.946,
 			2187.007
 		],
 		"sfx_scatter_stop_3": [
-			172090.091,
+			34450.952,
 			2326.145
 		],
 		"sfx_scatter_stop_4": [
-			174916.236,
+			36877.098,
 			2213.968
 		],
 		"sfx_scatter_stop_5": [
-			177630.204,
+			39191.066,
 			2317.574
 		],
 		"sfx_scatter_win_v2": [
-			180447.778,
+			41608.639,
 			5327.029
 		],
 		"sfx_superfreespin": [
-			186274.807,
+			47035.669,
 			8038.413
 		],
 		"sfx_wild_explode": [
-			194813.22,
+			55174.082,
 			2703.039
 		],
 		"sfx_winlevel_end": [
-			198016.259,
-			3200
+			57977.12,
+			3200.0
 		],
 		"sfx_winlevel_small": [
-			201716.259,
-			2140
+			61277.12,
+			2140.0
 		],
 		"sfx_youwon_panel": [
-			204356.259,
-			4460
+			63517.12,
+			4460.0
 		],
 		"sfx_fish_throw": [
-			209316.259,
+			68077.12,
 			304.989
 		],
 		"sfx_fish_land": [
-			210121.247,
+			68482.109,
 			1000.0
 		]
 	},
@@ -131,27 +96,6 @@
 		"./assets/audio/sounds.m4a"
 	],
 	"config": {
-		"bgm_freespin": {
-			"volume": 1
-		},
-		"bgm_main": {
-			"volume": 1
-		},
-		"bgm_winlevel_big": {
-			"volume": 1
-		},
-		"bgm_winlevel_epic": {
-			"volume": 1
-		},
-		"bgm_winlevel_max": {
-			"volume": 1
-		},
-		"bgm_winlevel_mega": {
-			"volume": 1
-		},
-		"bgm_winlevel_superwin": {
-			"volume": 1
-		},
 		"jng_intro_fs": {
 			"volume": 1
 		},

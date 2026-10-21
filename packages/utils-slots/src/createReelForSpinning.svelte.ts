@@ -45,10 +45,10 @@ export function createReelForSpinning<TRawSymbol extends object, TSymbolState ex
 	};
 
 	const updateAllReelSymbolState = (value: SpinningReelSymbolState) => {
-		reelState.symbols.forEach((reelSymbol) => {
+		reelState.symbols.forEach((reelSymbol, symbolIndex) => {
 			reelSymbol.symbolState = value as TSymbolState;
 			if (value === 'land') {
-				reelOptions.onSymbolLand({ rawSymbol: reelSymbol.rawSymbol });
+				reelOptions.onSymbolLand({ rawSymbol: reelSymbol.rawSymbol, symbolIndex });
 			}
 		});
 	};
@@ -168,6 +168,39 @@ export function createReelForSpinning<TRawSymbol extends object, TSymbolState ex
 		await reelY.set(targetY, { duration, easing });
 	};
 
+	// Slides to targetY starting from rest, as reelStart has it: lifted a little against the way it
+	// goes and settled, then speeding up smoothly to speed, then keeping it. The easing is where
+	// along the way the reel is at each moment (below 0 while lifted).
+	const slideYFromRest = async ({ reelY: targetY, speed }: { reelY: number; speed: number }) => {
+		const reelStart = reelState.spinOptions().reelStart;
+		const distance = Math.abs(targetY - reelY.current);
+		if (!reelStart || distance === 0) return slideY({ reelY: targetY, speed });
+		const lift = reelStart.lift * reelOptions.symbolHeight;
+		const liftDuration = lift > 0 ? reelStart.liftDuration : 0;
+		// a short way: it speeds up for as long as the way allows
+		const accelerate = Math.min(reelStart.accelerateDuration, (2 * (distance + lift)) / speed);
+		const cruise = (distance + lift) / speed - accelerate / 2;
+		const duration = liftDuration + accelerate + cruise;
+		const at = (time: number) => {
+			if (time < liftDuration) return (-lift / 2) * (1 - Math.cos((Math.PI * time) / liftDuration));
+			const u = accelerate > 0 ? Math.min(time - liftDuration, accelerate) / accelerate : 1;
+			// the speed rises as sin² from 0 to speed, so it neither jerks into nor out of it
+			const ramped = speed * accelerate * (u / 2 - Math.sin(Math.PI * u) / (2 * Math.PI));
+			return -lift + ramped + speed * Math.max(0, time - liftDuration - accelerate);
+		};
+
+		await reelY.set(targetY, { duration, easing: (t) => at(t * duration) / distance });
+	};
+
+	// The first stretch of a spin that starts from rest speeds up (see slideYFromRest) rather than
+	// starting at full speed; a reel already going (pre-spinning) keeps its speed.
+	let fromRest = false;
+	const slideYAtSpeed = async (options: { reelY: number; speed: number }) => {
+		if (!fromRest) return slideY(options);
+		fromRest = false;
+		await slideYFromRest(options);
+	};
+
 	const placeY = (targetY: number) => reelY.set(targetY, { duration: 0 });
 
 	const removePaddingAndBounceBack = async () => {
@@ -207,11 +240,16 @@ export function createReelForSpinning<TRawSymbol extends object, TSymbolState ex
 	}) => {
 		let started = false;
 		while (isPreSpinning) {
-			const speed = started
-				? reelState.spinOptions().reelSpinSpeed
-				: reelState.spinOptions().reelPreSpinSpeed;
-			const easing = started || isTurboBeforeAll ? linear : backIn;
-			await slideY({ reelY: defaultY, speed, easing });
+			if (!started && reelState.spinOptions().reelStart) {
+				// winds up to the speed of the laps after it, so it goes on into them smoothly
+				await slideYFromRest({ reelY: defaultY, speed: reelState.spinOptions().reelSpinSpeed });
+			} else {
+				const speed = started
+					? reelState.spinOptions().reelSpinSpeed
+					: reelState.spinOptions().reelPreSpinSpeed;
+				const easing = started || isTurboBeforeAll ? linear : backIn;
+				await slideY({ reelY: defaultY, speed, easing });
+			}
 			await preSpinPadding({ preSpinPaddingRawReel });
 			if (!started) {
 				reelState.motion = 'spinning';
@@ -278,7 +316,7 @@ export function createReelForSpinning<TRawSymbol extends object, TSymbolState ex
 			slideDown: async () => {
 				const bounceSize = reelOptions.symbolHeight * reelState.spinOptions().reelBounceSizeMulti;
 
-				await slideY({
+				await slideYAtSpeed({
 					reelY: defaultY + bounceSize,
 					speed: reelState.spinOptions().reelSpinSpeed,
 				});
@@ -290,7 +328,7 @@ export function createReelForSpinning<TRawSymbol extends object, TSymbolState ex
 			slideDown: async () => {
 				const bounceSize = reelOptions.symbolHeight * reelState.spinOptions().reelBounceSizeMulti;
 
-				await slideY({
+				await slideYAtSpeed({
 					reelY: defaultY * basePaddingSize(),
 					speed: reelState.spinOptions().reelSpinSpeed,
 				});
@@ -315,7 +353,7 @@ export function createReelForSpinning<TRawSymbol extends object, TSymbolState ex
 					const crawlY = stopY - slowdown.crawlSymbols * reelOptions.symbolHeight;
 					const brakeY = crawlY - slowdown.brakeSymbols * reelOptions.symbolHeight;
 					if (reelY.current < brakeY) {
-						await slideY({ reelY: brakeY, speed: spinOptions.reelSpinSpeed });
+						await slideYAtSpeed({ reelY: brakeY, speed: spinOptions.reelSpinSpeed });
 					}
 					await slideYSlowingDown({
 						reelY: crawlY,
@@ -330,7 +368,7 @@ export function createReelForSpinning<TRawSymbol extends object, TSymbolState ex
 					return;
 				}
 
-				await slideY({
+				await slideYAtSpeed({
 					reelY: defaultY * basePaddingSize(),
 					speed: reelState.spinOptions().reelSpinSpeed,
 				});
@@ -377,10 +415,13 @@ export function createReelForSpinning<TRawSymbol extends object, TSymbolState ex
 	};
 
 	const spin = async () => {
+		// neither pre-spinning nor moving: it starts from rest
+		fromRest = !isPreSpinning && reelState.motion === 'stopped';
 		isPreSpinning = false;
 
 		await SPIN_MAP[reelState.spinType]();
 
+		fromRest = false;
 		interruptible.clear();
 		skipInterruptible.clear();
 		skipRequested = false;
@@ -430,6 +471,9 @@ export function createReelForSpinning<TRawSymbol extends object, TSymbolState ex
 		reelLength,
 		// reactive states
 		reelState,
+		// where the reel is (pixel), e.g. to tell how fast it moves; it jumps back as it moves its
+		// symbols round for each lap
+		position: () => reelY.current,
 		// methods
 		preSpin,
 		prepareToSpin,

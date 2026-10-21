@@ -9,6 +9,7 @@ import {
 	REEL_PADDING,
 	SYMBOL_INFO_MAP,
 	BOARD_DIMENSIONS,
+	FIRST_VISIBLE_ROW,
 	BIG_WILD_INFO,
 	BONUS_SCATTER_COUNT,
 } from './constants';
@@ -107,7 +108,7 @@ export const getBonusType = (scatterCount: number): BonusType => {
 // The math has no big wild symbol: a reel that lands a W on any visible row is shown as one.
 // Every visible row of that reel becomes a W; the top one draws the big wild over the whole reel
 // and the ones under it draw nothing.
-export const FIRST_VISIBLE_ROW = 1; // reels are padded with one symbol above the board
+export { FIRST_VISIBLE_ROW };
 
 // The big wilds on fishReels throw their fish later in the spin, so they hold them until then.
 export const markBigWilds = (board: RawSymbol[][], fishReels: number[] = []) =>

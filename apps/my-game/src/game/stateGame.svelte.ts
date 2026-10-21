@@ -16,13 +16,26 @@ import {
 	BOARD_SIZES,
 	INITIAL_BOARD,
 	BOARD_DIMENSIONS,
+	FIRST_VISIBLE_ROW,
 	SPIN_OPTIONS_DEFAULT,
 	SPIN_OPTIONS_FAST,
 	INITIAL_SYMBOL_STATE,
 	SCATTER_LAND_SOUND_MAP,
 } from './constants';
 
-const onSymbolLand = ({ rawSymbol }: { rawSymbol: RawSymbol }) => {
+const onSymbolLand = ({
+	rawSymbol,
+	symbolIndex,
+}: {
+	rawSymbol: RawSymbol;
+	symbolIndex: number;
+}) => {
+	// the padding rows above and below the board land too, out of sight: a W there isn't a big
+	// wild and an S there doesn't count, so neither is heard
+	const onBoard =
+		symbolIndex >= FIRST_VISIBLE_ROW && symbolIndex < FIRST_VISIBLE_ROW + BOARD_DIMENSIONS.y;
+	if (!onBoard) return;
+
 	if (rawSymbol.name === 'S') {
 		eventEmitter.broadcast({ type: 'soundScatterCounterIncrease' });
 		eventEmitter.broadcast({

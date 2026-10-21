@@ -27,6 +27,15 @@ export type SpinningReelSpinOptions = {
 		crawlSpeed: number;
 		endSpeed: number;
 	};
+	// How a reel starts from rest: it lifts a little against the spin (lift, in symbols, over
+	// liftDuration ms), then speeds up smoothly to reelSpinSpeed over accelerateDuration ms and keeps
+	// it. Without it, a reel starting a spin jumps straight to reelSpinSpeed, and the pre-spin winds
+	// up with backIn at reelPreSpinSpeed, which ends at almost 5 times that speed.
+	reelStart?: {
+		lift: number;
+		liftDuration: number;
+		accelerateDuration: number;
+	};
 };
 
 export type CascadingReelSpinOptions = {
@@ -51,7 +60,8 @@ type ReelCreateOptions<TRawSymbol extends object, TSymbolState extends string> =
 	reelIndex: number;
 	symbolHeight: number;
 	onReelStopping: () => void;
-	onSymbolLand: (args: { rawSymbol: TRawSymbol }) => void;
+	// symbolIndex: its row on the reel, counting the padding row above the board (which lands too)
+	onSymbolLand: (args: { rawSymbol: TRawSymbol; symbolIndex: number }) => void;
 };
 
 export type SpinningReelCreateOptions<

@@ -11,10 +11,10 @@
 
 <script lang="ts">
 	import _ from 'lodash';
-	import { untrack, type ComponentProps } from 'svelte';
+	import { untrack } from 'svelte';
 	import { Tween } from 'svelte/motion';
-	import { cubicOut } from 'svelte/easing';
-	import { Container, Graphics, Text } from 'pixi-svelte';
+	import { cubicInOut, cubicOut } from 'svelte/easing';
+	import { Container, Text } from 'pixi-svelte';
 	import { CanvasSizeRectangle, MainContainer } from 'components-layout';
 	import { FadeContainer } from 'components-pixi';
 	import { stateBetDerived } from 'state-shared';
@@ -25,17 +25,15 @@
 	import { SYMBOL_IMAGES, type SymbolImageKey } from '../game/constants';
 	import { hopPose, popOut, REST_POSE } from '../game/motion';
 	import { createBoardTextStyle, fitBoardFontSize } from '../game/textStyles';
-	import Burst, { BURST_COLORS } from './Burst.svelte';
-	import Confetti from './Confetti.svelte';
 	import PressToContinue from './PressToContinue.svelte';
 	import StandingArt from './StandingArt.svelte';
 
 	// A win of 15x the bet or more, after its lines: the scene blurs as for the free spin screens and
 	// the win counts up under its name. The name climbs as the count passes each level, from BIG WIN
-	// up to the round's own, slamming in with a burst of sparkles each time. A cat hops beside a ball
-	// of yarn below, and paw prints rain down. Pressing skips to the end of the count, then closes; it
-	// also closes by itself a moment after the count ends (for autoplay). Sizes are in the standard
-	// layout (1920x1080 on desktop, 1080x1920 in portrait).
+	// up to the round's own, slamming in each time. A cat hops beside a ball of yarn below. Pressing
+	// skips to the end of the count, then closes; it also closes by itself a moment after the count
+	// ends (for autoplay). Sizes are in the standard layout (1920x1080 on desktop, 1080x1920 in
+	// portrait).
 	type Level = { level: number; text: string; from: number };
 	// where each level starts, in book units (100 is the bet), as in the math's win levels
 	const LEVELS: Level[] = [
@@ -60,30 +58,39 @@
 	// the amount kicks once more when the count ends
 	const FINISH_KICK = 1.18;
 
-	// soft rays turning slowly behind the name
-	const RAY_COUNT = 14;
-	const RAY_LENGTH = 1100;
-	const RAY_COLOR = 0xfff4d6;
-	const RAY_ALPHA = 0.09;
-	const RAY_SPEED = 0.12;
-
-	// the cat and its ball, standing under the amount
-	const CAT_KEY = 'symbolH4';
-	const CAT_HEIGHT = 230;
+	// A cat and its ball stand under the amount. The cat is the level's: the cats from the lowest
+	// paying up (as in the paytable), so each level up brings a better cat, and the max win keeps
+	// the best.
+	const LEVEL_CATS: Record<number, SymbolImageKey> = {
+		6: 'symbolH3',
+		7: 'symbolH4',
+		8: 'symbolH2',
+		9: 'symbolH1',
+		10: 'symbolH1',
+	};
+	// sized by area, as on the board, so the wide cat looks as big as the tall ones
+	const CAT_SIZE = 212;
+	const catWidth = (key: SymbolImageKey) =>
+		CAT_SIZE * Math.sqrt(SYMBOL_IMAGES[key].image[0] / SYMBOL_IMAGES[key].image[1]);
+	const catHeight = (key: SymbolImageKey) =>
+		CAT_SIZE * Math.sqrt(SYMBOL_IMAGES[key].image[1] / SYMBOL_IMAGES[key].image[0]);
 	const BALL_KEY = 'symbolL1';
 	const BALL_HEIGHT = 115;
-	const widthAt = (key: SymbolImageKey, height: number) =>
-		(SYMBOL_IMAGES[key].image[0] * height) / SYMBOL_IMAGES[key].image[1];
-	const CAT_WIDTH = widthAt(CAT_KEY, CAT_HEIGHT);
-	const BALL_WIDTH = widthAt(BALL_KEY, BALL_HEIGHT);
+	const BALL_WIDTH =
+		(SYMBOL_IMAGES[BALL_KEY].image[0] * BALL_HEIGHT) / SYMBOL_IMAGES[BALL_KEY].image[1];
 	const ART_GAP = 30;
+	// the line they stand on, under the amount
+	const GROUND_Y = AMOUNT_FONT_SIZE * 1.45 + 230;
+	// where the ball stands beside a cat, the two centred together
+	const ballXBeside = (key: SymbolImageKey) => (catWidth(key) + ART_GAP) / 2;
 	// the cat hops every so often (seconds), and the ball rocks when it lands
 	const HOP_EVERY = 1.1;
 	const HOP_LENGTH = 0.65;
 	const BALL_ROCK = (10 * Math.PI) / 180;
-
-	// how many paw prints and paper bits fall at once, more for bigger wins
-	const CONFETTI_COUNT: Record<number, number> = { 6: 30, 7: 45, 8: 60, 9: 75, 10: 90 };
+	// On a new level the cat spins round once on the spot with a little hop, fastest in the middle;
+	// edge-on at the third quarter turn the next cat takes its place (coming in facing out) and
+	// finishes the turn. Seen from behind (the back half of the turn) the art is mirrored.
+	const SPIN = { duration: 700, turns: 1, swapTurn: 0.75, hop: 70 };
 
 	const context = getContext();
 	const layout = $derived(context.stateLayoutDerived.mainLayoutStandard());
@@ -111,14 +118,15 @@
 	const title = $derived(
 		countDone && finalLevel === MAX_WIN.level ? MAX_WIN.text : (step?.text ?? LEVELS[0].text),
 	);
+	const level = $derived(
+		countDone && finalLevel === MAX_WIN.level ? MAX_WIN.level : (step?.level ?? LEVELS[0].level),
+	);
 
-	// the name slams in again whenever it changes, with sparkles bursting out behind it
+	// the name slams in again whenever it changes
 	const titleScale = new Tween(1);
-	let burstId = $state(0);
 	$effect(() => {
 		title;
 		if (!show) return;
-		untrack(() => burstId++);
 		titleScale.set(SLAM_FROM, { duration: 0 });
 		titleScale.set(1, {
 			duration: SLAM_DURATION / stateBetDerived.timeScale(),
@@ -150,7 +158,7 @@
 		}),
 	);
 
-	// seconds since it was shown, for the rays, the cat and the ball
+	// seconds since it was shown, for the cat and the ball
 	let time = $state(0);
 	$effect(() => {
 		const ticker = context.stateApp.pixiApplication?.ticker;
@@ -165,33 +173,79 @@
 	// everything grows in from the middle as the screen opens
 	const opening = $derived(popOut(Math.min(1, time / 0.4), 1.6));
 
+	// the level whose cat is shown, the cat's turns through its spin (0 to SPIN.turns), and where
+	// the ball stands, moving over for the next cat as it spins
+	let shownLevel = $state(LEVELS[0].level);
+	const cat = $derived(LEVEL_CATS[shownLevel]);
+	const turn = new Tween(0);
+	const ballX = new Tween(ballXBeside(LEVEL_CATS[LEVELS[0].level]));
+	const spinning = $derived(turn.current > 0 && turn.current < SPIN.turns);
+	// the hops count from here, so they start again from the ground after a spin
+	let hopsFrom = $state(0);
+
+	// the moment (0 to 1) an easing reaches a value
+	const timeAt = (easing: (t: number) => number, value: number) => {
+		let [low, high] = [0, 1];
+		for (const _step of _.range(30)) {
+			const middle = (low + high) / 2;
+			if (easing(middle) < value) low = middle;
+			else high = middle;
+		}
+		return (low + high) / 2;
+	};
+
+	// one spin, in two parts around the swap so the next cat takes over exactly then
+	const spinOnce = async () => {
+		const duration = SPIN.duration / stateBetDerived.timeScale();
+		const swap = SPIN.swapTurn / SPIN.turns;
+		const swapAt = timeAt(cubicInOut, swap);
+		await turn.set(0, { duration: 0 });
+		await turn.set(SPIN.swapTurn, {
+			duration: duration * swapAt,
+			easing: (u) => cubicInOut(u * swapAt) / swap,
+		});
+		shownLevel = level;
+		ballX.set(ballXBeside(cat), { duration: duration * (1 - swapAt), easing: cubicOut });
+		await turn.set(SPIN.turns, {
+			duration: duration * (1 - swapAt),
+			easing: (u) => (cubicInOut(swapAt + u * (1 - swapAt)) - swap) / (1 - swap),
+		});
+		// just landed: the ball is batted, and the next hop comes after the usual wait
+		hopsFrom = time - HOP_LENGTH;
+	};
+	// spins whenever the level goes up, once more if it went up again after the swap
+	let spinningTo = false;
+	const spinToLevel = async () => {
+		if (spinningTo) return;
+		spinningTo = true;
+		while (show && shownLevel !== level) await spinOnce();
+		spinningTo = false;
+	};
+	$effect(() => {
+		level;
+		if (!show) return;
+		untrack(() => spinToLevel());
+	});
+
 	const catPose = $derived.by(() => {
-		const t = (time % HOP_EVERY) / HOP_LENGTH;
+		if (spinning) {
+			const way = turn.current / SPIN.turns;
+			return {
+				y: -SPIN.hop * Math.sin(Math.PI * way),
+				scaleX: Math.cos(2 * Math.PI * turn.current),
+				scaleY: 1,
+				rotation: 0,
+			};
+		}
+		const t = ((time - hopsFrom) % HOP_EVERY) / HOP_LENGTH;
 		return t < 1 ? hopPose(t, 1) : REST_POSE;
 	});
 	// batted as the cat lands, then rocking to a stop
 	const ballSpin = $derived.by(() => {
-		const sinceLanding = (time % HOP_EVERY) - HOP_LENGTH * 0.7;
+		const sinceLanding = ((time - hopsFrom) % HOP_EVERY) - HOP_LENGTH * 0.7;
 		if (sinceLanding < 0) return 0;
 		return BALL_ROCK * Math.exp(-sinceLanding * 4) * Math.sin(sinceLanding * 14);
 	});
-
-	const drawRays: ComponentProps<typeof Graphics>['draw'] = (graphics) => {
-		const turn = time * RAY_SPEED;
-		const half = Math.PI / RAY_COUNT / 2;
-		for (const index of _.range(RAY_COUNT)) {
-			const angle = turn + (index / RAY_COUNT) * Math.PI * 2;
-			graphics.poly([
-				0,
-				0,
-				Math.cos(angle - half) * RAY_LENGTH,
-				Math.sin(angle - half) * RAY_LENGTH,
-				Math.cos(angle + half) * RAY_LENGTH,
-				Math.sin(angle + half) * RAY_LENGTH,
-			]);
-		}
-		graphics.fill({ color: RAY_COLOR, alpha: RAY_ALPHA });
-	};
 
 	// only touches the blur while shown, so it can't turn off another screen's blur
 	$effect(() => {
@@ -205,7 +259,6 @@
 		countDone = true;
 		context.eventEmitter.broadcast({ type: 'soundStop', name: 'sfx_bigwin_coinloop' });
 		context.eventEmitter.broadcast({ type: 'soundOnce', name: 'sfx_winlevel_end' });
-		burstId++;
 		await amountScale.set(FINISH_KICK, { duration: 120 / stateBetDerived.timeScale() });
 		await amountScale.set(1, {
 			duration: 380 / stateBetDerived.timeScale(),
@@ -230,7 +283,12 @@
 			countDone = false;
 			count.set(0, { duration: 0 });
 			amountScale.set(1, { duration: 0 });
+			// the first level's cat, standing still
+			shownLevel = LEVELS[0].level;
+			turn.set(0, { duration: 0 });
+			ballX.set(ballXBeside(LEVEL_CATS[shownLevel]), { duration: 0 });
 			time = 0;
+			hopsFrom = 0;
 			show = true;
 
 			// each level takes an even share of the count's time
@@ -267,21 +325,8 @@
 	<!-- a little darker, so the text reads on any part of the scene -->
 	<CanvasSizeRectangle backgroundColor={0x000000} backgroundAlpha={0.35} />
 
-	<Confetti active={show && !countDone} count={CONFETTI_COUNT[finalLevel] ?? 40} />
-
 	<MainContainer standard>
 		<Container x={layout.width * 0.5} y={layout.height * 0.4} scale={opening}>
-			<Graphics draw={drawRays} />
-			{#key burstId}
-				<Burst
-					distance={TITLE_FONT_SIZE * 3}
-					size={TITLE_FONT_SIZE * 0.16}
-					count={18}
-					duration={700}
-					colors={BURST_COLORS}
-				/>
-			{/key}
-
 			<Text anchor={{ x: 0.5, y: 1 }} scale={titleScale.current} text={title} style={titleStyle} />
 			<Text
 				anchor={{ x: 0.5, y: 0 }}
@@ -293,17 +338,17 @@
 
 			<!-- the cat and the ball stand together under the amount, centred -->
 			<StandingArt
-				key={CAT_KEY}
-				height={CAT_HEIGHT}
+				key={cat}
+				height={catHeight(cat)}
 				x={-(BALL_WIDTH + ART_GAP) / 2}
-				y={AMOUNT_FONT_SIZE * 1.45 + CAT_HEIGHT}
+				y={GROUND_Y}
 				pose={catPose}
 			/>
 			<StandingArt
 				key={BALL_KEY}
 				height={BALL_HEIGHT}
-				x={(CAT_WIDTH + ART_GAP) / 2}
-				y={AMOUNT_FONT_SIZE * 1.45 + CAT_HEIGHT}
+				x={ballX.current}
+				y={GROUND_Y}
 				spin={ballSpin}
 			/>
 		</Container>
