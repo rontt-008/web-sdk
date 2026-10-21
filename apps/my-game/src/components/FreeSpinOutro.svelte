@@ -24,6 +24,7 @@
 	import { createBoardTextStyle, fitBoardFontSize } from '../game/textStyles';
 	import Burst from './Burst.svelte';
 	import Confetti from './Confetti.svelte';
+	import CountText from './CountText.svelte';
 	import PressToContinue from './PressToContinue.svelte';
 	import StandingArt from './StandingArt.svelte';
 
@@ -220,11 +221,12 @@
 							y={AMOUNT_FONT_SIZE * 0.6}
 							scale={popOut(entrance.amount) * finishScale.current}
 						>
-							<Text
-								anchor={0.5}
+							<!-- digits all one width, so the counting amount holds still (see CountText) -->
+							<CountText
 								text={bookEventAmountToCurrencyString(countUpAmount, {
 									counting: !countUpCompleted,
 								})}
+								fitText={bookEventAmountToCurrencyString(amount)}
 								style={amountStyle}
 							/>
 						</Container>

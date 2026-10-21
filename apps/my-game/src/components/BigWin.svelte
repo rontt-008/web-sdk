@@ -25,6 +25,7 @@
 	import { SYMBOL_IMAGES, type SymbolImageKey } from '../game/constants';
 	import { hopPose, popOut, REST_POSE } from '../game/motion';
 	import { createBoardTextStyle, fitBoardFontSize } from '../game/textStyles';
+	import CountText from './CountText.svelte';
 	import PressToContinue from './PressToContinue.svelte';
 	import StandingArt from './StandingArt.svelte';
 
@@ -330,13 +331,15 @@
 	<MainContainer standard>
 		<Container x={layout.width * 0.5} y={layout.height * 0.4} scale={opening}>
 			<Text anchor={{ x: 0.5, y: 1 }} scale={titleScale.current} text={title} style={titleStyle} />
-			<Text
-				anchor={{ x: 0.5, y: 0 }}
-				y={AMOUNT_FONT_SIZE * 0.1}
-				scale={amountScale.current}
-				text={bookEventAmountToCurrencyString(countAmount, { counting: !countDone })}
-				style={amountStyle}
-			/>
+			<!-- digits all one width, so the counting amount holds still (see CountText) -->
+			<Container y={AMOUNT_FONT_SIZE * 0.1} scale={amountScale.current}>
+				<CountText
+					anchor={{ x: 0.5, y: 0 }}
+					text={bookEventAmountToCurrencyString(countAmount, { counting: !countDone })}
+					fitText={bookEventAmountToCurrencyString(amount)}
+					style={amountStyle}
+				/>
+			</Container>
 
 			<!-- the cat and the ball stand together under the amount, centred -->
 			<StandingArt key={cat} height={shownCatHeight} x={CAT_X} y={GROUND_Y} pose={catPose} />

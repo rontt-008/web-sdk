@@ -29,6 +29,7 @@
 	import { createBoardTextStyle } from '../game/textStyles';
 	import { popOut } from '../game/motion';
 	import BoardContainer from './BoardContainer.svelte';
+	import CountText, { countTextWidth } from './CountText.svelte';
 
 	type Point = { x: number; y: number };
 
@@ -86,9 +87,14 @@
 
 	let line = $state<{
 		centres: Point[];
+		// its win (book units), and how wide that is drawn (by CountText)
+		win: number;
+		winWidth: number;
 		// with a multiplier: it, and the widths of the amount before it and of "× 3X"
 		multiplier?: { value: number; text: string; baseWidth: number; width: number };
 	}>();
+	// while the amount counts up to the win
+	let counting = $state(false);
 	const progress = new Tween(0);
 	const alpha = new Tween(0);
 	const amountScale = new Tween(1);
@@ -126,13 +132,21 @@
 	// the amount sits on the middle of the line; while the multiplier is beside it, the two together
 	// are centred there
 	const amountPosition = $derived(path[Math.round((path.length - 1) / 2)]);
-	// side by side, the amount (before the multiplier) and "× 3X" with a gap between, centred; as they
-	// merge the multiplier vanishes where it is and the amount slides back to the middle
+	// The amount is laid out as wide as the win, its digits to the right (see CountText's fitText),
+	// so counting up adds digits on the left without moving the rest; this is the middle of that
+	// width. Side by side, the amount (before the multiplier) and "× 3X" with a gap between, centred;
+	// as they merge the multiplier vanishes where it is and the amount slides until the win is
+	// centred.
 	const amountX = $derived.by(() => {
 		const centre = amountPosition?.x ?? 0;
 		const multiplier = line?.multiplier;
-		if (!multiplier) return centre;
-		return centre - ((MULTIPLIER_GAP + multiplier.width) / 2) * (1 - merge.current);
+		if (!line || !multiplier) return centre;
+		const baseRight =
+			centre -
+			(multiplier.baseWidth + MULTIPLIER_GAP + multiplier.width) / 2 +
+			multiplier.baseWidth;
+		const beside = baseRight - line.winWidth / 2;
+		return beside + (centre - beside) * merge.current;
 	});
 	const multiplierX = $derived.by(() => {
 		const centre = amountPosition?.x ?? 0;
@@ -145,9 +159,11 @@
 	const MULTIPLIER_VANISH = 0.25;
 	const multiplierAlpha = $derived(Math.max(0, 1 - merge.current / MULTIPLIER_VANISH));
 
-	// in the player's currency, like every other amount: ¥40, $0.004 or 1.40 SC
-	const toAmountText = (bookEventAmount: number) =>
-		bookEventAmountToCurrencyString(bookEventAmount);
+	// in the player's currency, like every other amount: ¥40, $0.004 or 1.40 SC; while counting, with
+	// the currency's own decimals only (an in-between value can come out exact to more, e.g. $7.345,
+	// which would flash in a digit)
+	const toAmountText = (bookEventAmount: number, counting = false) =>
+		bookEventAmountToCurrencyString(bookEventAmount, { counting });
 
 	// the drawn part of the path, ending part way along a step so the line grows smoothly
 	const shownPath = () => {
@@ -189,11 +205,14 @@
 					x: getSymbolX(position.reel),
 					y: context.stateGame.board[position.reel].reelState.symbols[position.row].symbolY(),
 				})),
+				win,
+				winWidth: countTextWidth(toAmountText(win), AMOUNT_STYLE),
 				multiplier: multiplied
 					? {
 							value: multiplier,
 							text: multiplierText,
-							baseWidth: widthOf(toAmountText(base), AMOUNT_STYLE),
+							// drawn by CountText, its digits all one width
+							baseWidth: countTextWidth(toAmountText(base), AMOUNT_STYLE),
 							width: widthOf(multiplierText, MULTIPLIER_STYLE),
 						}
 					: undefined,
@@ -214,7 +233,9 @@
 				await multiplierIn.set(1, { duration: MULTIPLY.pop / timeScale });
 				await waitForTimeout(MULTIPLY.hold / timeScale);
 				merge.set(1, { duration: MULTIPLY.merge / timeScale, easing: cubicOut });
+				counting = true;
 				await amount.set(win, { duration: MULTIPLY.count / timeScale, easing: cubicOut });
+				counting = false;
 				await amountScale.set(MULTIPLY.kick, { duration: (MULTIPLY.kickDuration * 0.4) / timeScale });
 				await amountScale.set(1, {
 					duration: (MULTIPLY.kickDuration * 0.6) / timeScale,
@@ -244,7 +265,13 @@
 				</Container>
 			{/if}
 			<Container x={amountX} y={amountPosition.y} scale={amountScale.current}>
-				<Text anchor={0.5} text={toAmountText(amount.current)} style={AMOUNT_STYLE} />
+				<!-- digits all one width, laid out as wide as the win, so the amount holds still as it
+				     counts up (see CountText) -->
+				<CountText
+					text={toAmountText(amount.current, counting)}
+					fitText={toAmountText(line.win)}
+					style={AMOUNT_STYLE}
+				/>
 			</Container>
 		{/if}
 	</Container>
