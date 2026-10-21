@@ -152,7 +152,9 @@
 			time += seconds;
 			if (ball) step(ball, seconds);
 			else if (time >= nextAt && !context.stateGame.blurScene) start();
-			context.stateGame.yarnBall = ball ? { x: ball.x, y: ball.y } : undefined;
+			// where the cat's eyes follow it; nothing to write while there's no ball and none was
+			if (ball) context.stateGame.yarnBall = { x: ball.x, y: ball.y };
+			else if (context.stateGame.yarnBall) context.stateGame.yarnBall = undefined;
 		};
 		ticker.add(tick);
 		return () => ticker.remove(tick);

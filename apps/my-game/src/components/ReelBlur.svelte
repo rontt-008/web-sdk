@@ -37,6 +37,13 @@
 	});
 	let blurring = $state(false);
 
+	// the screen's scale, kept up to date as the layout changes rather than read every frame: the
+	// layout reads the window's size, which can make the browser lay out the page there and then
+	let screenScale = 1;
+	$effect(() => {
+		screenScale = context.stateLayoutDerived.mainLayout().scale;
+	});
+
 	$effect(() => {
 		const ticker = context.stateApp.pixiApplication?.ticker;
 		if (!ticker || boardContext.animate) return;
@@ -49,11 +56,7 @@
 			last = now;
 			if (moved > JUMP || ticker.deltaMS <= 0) return;
 			const speed = moved / ticker.deltaMS;
-			const strength =
-				BLUR.strength *
-				Math.max(0, speed - BLUR.from) *
-				FRAME_MS *
-				context.stateLayoutDerived.mainLayout().scale;
+			const strength = BLUR.strength * Math.max(0, speed - BLUR.from) * FRAME_MS * screenScale;
 			blur.strengthY = strength;
 			blurring = strength > 0.5;
 		};
