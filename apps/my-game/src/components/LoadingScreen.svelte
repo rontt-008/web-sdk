@@ -1,10 +1,11 @@
 <script lang="ts">
-	import { Container, Sprite } from 'pixi-svelte';
+	import { Container } from 'pixi-svelte';
 	import { FadeContainer, LoadingBar } from 'components-pixi';
 	import { MainContainer } from 'components-layout';
 
 	import { getContext } from '../game/context';
 	import { loadingBarTheme } from '../game/uiTheme';
+	import FloatingLogo from './FloatingLogo.svelte';
 	import PressToContinue from './PressToContinue.svelte';
 
 	type Props = {
@@ -36,7 +37,8 @@
 			x={context.stateLayoutDerived.mainLayout().width * 0.5}
 			y={context.stateLayoutDerived.mainLayout().height * 0.5}
 		>
-			<Sprite key="gameLogo" anchor={0.5} y={LOGO_Y} {...LOGO_SIZES} />
+			<!-- floating, with its Zs, as beside the board -->
+			<FloatingLogo x={0} y={LOGO_Y} {...LOGO_SIZES} />
 			<!-- fades away once everything has loaded, as "press anywhere" fades in -->
 			<FadeContainer show={!context.stateApp.loaded}>
 				<LoadingBar y={BAR_Y} {...BAR_SIZES} theme={loadingBarTheme} />

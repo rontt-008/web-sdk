@@ -111,9 +111,12 @@
 		});
 		flights = flights.filter(({ id }) => id !== flight.id);
 		context.eventEmitter.broadcast({ type: 'catGulp' });
+		// the same sound as the scatter landing on the reels, which can still be playing (they last
+		// over 2 seconds), and a sound already playing is skipped unless forced
 		context.eventEmitter.broadcast({
 			type: 'soundOnce',
 			name: SCATTER_LAND_SOUND_MAP[Math.min(index + 1, 5) as 1 | 2 | 3 | 4 | 5],
+			forcePlay: true,
 		});
 	};
 
