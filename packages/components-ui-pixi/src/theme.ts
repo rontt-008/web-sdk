@@ -109,3 +109,8 @@ export const getMenuButtons = (props: LayoutUiProps, theme: UiTheme | undefined)
 	...(theme?.hideSettings ? [] : [props.buttonSettings]),
 	...(theme?.hideSoundSwitch ? [] : [props.buttonSoundSwitch]),
 ];
+
+// whether the theme hides everything in the menu but the game rules, so the menu button can open
+// them straight away
+export const isMenuOnlyGameRules = (theme: UiTheme | undefined) =>
+	!!theme?.hidePayTable && !!theme?.hideSettings && !!theme?.hideSoundSwitch;

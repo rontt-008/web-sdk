@@ -35,8 +35,9 @@
 	// A winning line draws itself from its first symbol to its last while they hop (see winInfo), its
 	// win amount pops up in the middle, it stays a moment, then fades as the next one is drawn.
 	// With a big wild's multiplier on it, the amount pops up as the win before the multiplier, the
-	// multiplier pops in beside it ("× 3X", coloured as on the big wild), then slides into the amount,
-	// which counts up to the win and kicks (not in turbo, which shows the win straight away).
+	// multiplier pops in beside it ("× 3X", coloured as on the big wild), then vanishes as the amount
+	// slides back to the middle and counts up to the win, and kicks (not in turbo, which shows the win
+	// straight away).
 	const DRAW_DURATION = 150;
 	const HOLD_DURATION = 500;
 	const FADE_DURATION = 100;
@@ -126,7 +127,7 @@
 	// are centred there
 	const amountPosition = $derived(path[Math.round((path.length - 1) / 2)]);
 	// side by side, the amount (before the multiplier) and "× 3X" with a gap between, centred; as they
-	// merge the amount slides back to the middle and the multiplier slides into it
+	// merge the multiplier vanishes where it is and the amount slides back to the middle
 	const amountX = $derived.by(() => {
 		const centre = amountPosition?.x ?? 0;
 		const multiplier = line?.multiplier;
@@ -137,9 +138,12 @@
 		const centre = amountPosition?.x ?? 0;
 		const multiplier = line?.multiplier;
 		if (!multiplier) return centre;
-		const beside = centre + (multiplier.baseWidth + MULTIPLIER_GAP) / 2;
-		return beside + (amountX - beside) * merge.current;
+		return centre + (multiplier.baseWidth + MULTIPLIER_GAP) / 2;
 	});
+	// gone almost at once as they merge (in the first part of it, a frame or two with its easing),
+	// rather than shrinking and sliding into the amount
+	const MULTIPLIER_VANISH = 0.25;
+	const multiplierAlpha = $derived(Math.max(0, 1 - merge.current / MULTIPLIER_VANISH));
 
 	// in the player's currency, like every other amount: ¥40, $0.004 or 1.40 SC
 	const toAmountText = (bookEventAmount: number) =>
@@ -228,13 +232,13 @@
 	<Container alpha={alpha.current}>
 		<Graphics {draw} />
 		{#if line && amountPosition}
-			<!-- the multiplier under the amount, so it slides in behind it -->
+			<!-- the multiplier beside the amount, under it as the amount slides back over its place -->
 			{#if line.multiplier}
 				<Container
 					x={multiplierX}
 					y={amountPosition.y}
-					scale={popOut(multiplierIn.current) * (1 - 0.5 * merge.current)}
-					alpha={1 - merge.current}
+					scale={popOut(multiplierIn.current)}
+					alpha={multiplierAlpha}
 				>
 					<Text anchor={0.5} text={line.multiplier.text} style={MULTIPLIER_STYLE} />
 				</Container>

@@ -13,7 +13,7 @@
 	import _ from 'lodash';
 	import { untrack } from 'svelte';
 	import { Tween } from 'svelte/motion';
-	import { cubicInOut, cubicOut } from 'svelte/easing';
+	import { cubicOut, sineInOut } from 'svelte/easing';
 	import { Container, Text } from 'pixi-svelte';
 	import { CanvasSizeRectangle, MainContainer } from 'components-layout';
 	import { FadeContainer } from 'components-pixi';
@@ -81,16 +81,21 @@
 	const ART_GAP = 30;
 	// the line they stand on, under the amount
 	const GROUND_Y = AMOUNT_FONT_SIZE * 1.45 + 230;
-	// where the ball stands beside a cat, the two centred together
+	// where the cat stands, and the ball beside it, the two centred together
+	const CAT_X = -(BALL_WIDTH + ART_GAP) / 2;
 	const ballXBeside = (key: SymbolImageKey) => (catWidth(key) + ART_GAP) / 2;
 	// the cat hops every so often (seconds), and the ball rocks when it lands
 	const HOP_EVERY = 1.1;
 	const HOP_LENGTH = 0.65;
 	const BALL_ROCK = (10 * Math.PI) / 180;
-	// On a new level the cat spins round once on the spot with a little hop, fastest in the middle;
-	// edge-on at the third quarter turn the next cat takes its place (coming in facing out) and
-	// finishes the turn. Seen from behind (the back half of the turn) the art is mirrored.
-	const SPIN = { duration: 700, turns: 1, swapTurn: 0.75, hop: 70 };
+	// On a new level the cat flips round once on the spot with a little hop, gently speeding up and
+	// slowing down, in one smooth turn. Edge-on at the third quarter turn the next cat takes its
+	// place (coming in facing out) and finishes the turn; seen from behind (the back half of the
+	// turn) the art is mirrored. All through the turn the cat grows or shrinks to the next one's
+	// size, so nothing jumps as they change.
+	//   swapTurn: when (of the turn) they change; hop: how high; blendIn: the part of the turn over
+	//   which a hop the cat was in the middle of gives way to the flip
+	const FLIP = { duration: 800, swapTurn: 0.75, hop: 60, blendIn: 0.25 };
 
 	const context = getContext();
 	const layout = $derived(context.stateLayoutDerived.mainLayoutStandard());
@@ -173,72 +178,68 @@
 	// everything grows in from the middle as the screen opens
 	const opening = $derived(popOut(Math.min(1, time / 0.4), 1.6));
 
-	// the level whose cat is shown, the cat's turns through its spin (0 to SPIN.turns), and where
-	// the ball stands, moving over for the next cat as it spins
+	// the level whose cat stands, the one it is flipping into (while it flips), how far round the
+	// flip is (0 to 1, eased), and where the ball stands, moving over for the next cat as it flips
 	let shownLevel = $state(LEVELS[0].level);
-	const cat = $derived(LEVEL_CATS[shownLevel]);
-	const turn = new Tween(0);
+	let nextLevel = $state<number>();
+	const flip = new Tween(0);
 	const ballX = new Tween(ballXBeside(LEVEL_CATS[LEVELS[0].level]));
-	const spinning = $derived(turn.current > 0 && turn.current < SPIN.turns);
-	// the hops count from here, so they start again from the ground after a spin
+	// the hops count from here, so they start again from the ground after a flip
 	let hopsFrom = $state(0);
 
-	// the moment (0 to 1) an easing reaches a value
-	const timeAt = (easing: (t: number) => number, value: number) => {
-		let [low, high] = [0, 1];
-		for (const _step of _.range(30)) {
-			const middle = (low + high) / 2;
-			if (easing(middle) < value) low = middle;
-			else high = middle;
-		}
-		return (low + high) / 2;
-	};
+	// the cat drawn: the next one from the moment the flip turns it edge-on
+	const cat = $derived(
+		LEVEL_CATS[nextLevel !== undefined && flip.current >= FLIP.swapTurn ? nextLevel : shownLevel],
+	);
+	// its height, going from one cat's to the next's all through the flip
+	const shownCatHeight = $derived.by(() => {
+		const from = catHeight(LEVEL_CATS[shownLevel]);
+		if (nextLevel === undefined) return from;
+		return from + (catHeight(LEVEL_CATS[nextLevel]) - from) * flip.current;
+	});
 
-	// one spin, in two parts around the swap so the next cat takes over exactly then
-	const spinOnce = async () => {
-		const duration = SPIN.duration / stateBetDerived.timeScale();
-		const swap = SPIN.swapTurn / SPIN.turns;
-		const swapAt = timeAt(cubicInOut, swap);
-		await turn.set(0, { duration: 0 });
-		await turn.set(SPIN.swapTurn, {
-			duration: duration * swapAt,
-			easing: (u) => cubicInOut(u * swapAt) / swap,
-		});
-		shownLevel = level;
-		ballX.set(ballXBeside(cat), { duration: duration * (1 - swapAt), easing: cubicOut });
-		await turn.set(SPIN.turns, {
-			duration: duration * (1 - swapAt),
-			easing: (u) => (cubicInOut(swapAt + u * (1 - swapAt)) - swap) / (1 - swap),
-		});
+	const flipOnce = async () => {
+		const duration = FLIP.duration / stateBetDerived.timeScale();
+		nextLevel = level;
+		flip.set(0, { duration: 0 });
+		ballX.set(ballXBeside(LEVEL_CATS[nextLevel]), { duration, easing: sineInOut });
+		await flip.set(1, { duration, easing: sineInOut });
+		shownLevel = nextLevel;
+		nextLevel = undefined;
 		// just landed: the ball is batted, and the next hop comes after the usual wait
 		hopsFrom = time - HOP_LENGTH;
 	};
-	// spins whenever the level goes up, once more if it went up again after the swap
-	let spinningTo = false;
-	const spinToLevel = async () => {
-		if (spinningTo) return;
-		spinningTo = true;
-		while (show && shownLevel !== level) await spinOnce();
-		spinningTo = false;
+	// flips whenever the level goes up, once more if it went up again meanwhile
+	let flipRunning = false;
+	const flipToLevel = async () => {
+		if (flipRunning) return;
+		flipRunning = true;
+		while (show && shownLevel !== level) await flipOnce();
+		flipRunning = false;
 	};
 	$effect(() => {
 		level;
 		if (!show) return;
-		untrack(() => spinToLevel());
+		untrack(() => flipToLevel());
 	});
 
-	const catPose = $derived.by(() => {
-		if (spinning) {
-			const way = turn.current / SPIN.turns;
-			return {
-				y: -SPIN.hop * Math.sin(Math.PI * way),
-				scaleX: Math.cos(2 * Math.PI * turn.current),
-				scaleY: 1,
-				rotation: 0,
-			};
-		}
+	// hopping every so often, between flips
+	const hop = $derived.by(() => {
 		const t = ((time - hopsFrom) % HOP_EVERY) / HOP_LENGTH;
 		return t < 1 ? hopPose(t, 1) : REST_POSE;
+	});
+	const catPose = $derived.by(() => {
+		if (nextLevel === undefined) return hop;
+		const turn = flip.current;
+		// a hop it was in the middle of gives way to the flip's own over the start of the turn
+		const blend = sineInOut(Math.min(1, turn / FLIP.blendIn));
+		const mix = (from: number, to: number) => from + (to - from) * blend;
+		return {
+			y: mix(hop.y, -FLIP.hop * Math.sin(Math.PI * turn)),
+			scaleX: Math.cos(2 * Math.PI * turn) * mix(hop.scaleX, 1),
+			scaleY: mix(hop.scaleY, 1),
+			rotation: mix(hop.rotation, 0),
+		};
 	});
 	// batted as the cat lands, then rocking to a stop
 	const ballSpin = $derived.by(() => {
@@ -285,7 +286,8 @@
 			amountScale.set(1, { duration: 0 });
 			// the first level's cat, standing still
 			shownLevel = LEVELS[0].level;
-			turn.set(0, { duration: 0 });
+			nextLevel = undefined;
+			flip.set(0, { duration: 0 });
 			ballX.set(ballXBeside(LEVEL_CATS[shownLevel]), { duration: 0 });
 			time = 0;
 			hopsFrom = 0;
@@ -337,13 +339,7 @@
 			/>
 
 			<!-- the cat and the ball stand together under the amount, centred -->
-			<StandingArt
-				key={cat}
-				height={catHeight(cat)}
-				x={-(BALL_WIDTH + ART_GAP) / 2}
-				y={GROUND_Y}
-				pose={catPose}
-			/>
+			<StandingArt key={cat} height={shownCatHeight} x={CAT_X} y={GROUND_Y} pose={catPose} />
 			<StandingArt
 				key={BALL_KEY}
 				height={BALL_HEIGHT}

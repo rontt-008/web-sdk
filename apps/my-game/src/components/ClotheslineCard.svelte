@@ -69,7 +69,7 @@
 
 					<div class="patch">
 						<TowelPatch size={8.25}>
-							<BonusCardArt betModeData={card.betModeData} size={3.3} />
+							<BonusCardArt mode={card.betModeData.mode} size={3.3} />
 						</TowelPatch>
 					</div>
 

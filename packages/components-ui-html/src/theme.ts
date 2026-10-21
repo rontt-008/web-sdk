@@ -27,6 +27,11 @@ export type UiHtmlTheme = {
 		background: string;
 		// for long reads like the game rules, where the game showing through gets in the way
 		solidBackground: string;
+		// that solid panel's border, shadow and frame, if not the other panels' (e.g. 'none' for rules
+		// that draw their own cards, with solidBackground 'transparent')
+		solidBorder?: string;
+		solidShadow?: string;
+		solidBorderImage?: string;
 		border: string;
 		radius: string;
 		shadow: string;
@@ -210,6 +215,9 @@ export const uiHtmlThemeStyle = (theme: UiHtmlTheme) =>
 		'--ui-panel-shadow': theme.panel.shadow,
 		'--ui-panel-border-image': theme.panel.borderImage,
 		'--ui-panel-outset': theme.panel.outset,
+		'--ui-panel-border-solid': theme.panel.solidBorder,
+		'--ui-panel-shadow-solid': theme.panel.solidShadow,
+		'--ui-panel-border-image-solid': theme.panel.solidBorderImage,
 		'--ui-card-bg': theme.card.background,
 		'--ui-card-border': theme.card.border,
 		'--ui-card-radius': theme.card.radius,
@@ -249,5 +257,7 @@ export const uiHtmlThemeStyle = (theme: UiHtmlTheme) =>
 		'--ui-price': theme.price,
 		'--ui-danger': theme.danger,
 	})
+		// an optional one left out falls back to what the styles give it
+		.filter(([, value]) => value !== undefined)
 		.map(([name, value]) => `${name}: ${value}`)
 		.join('; ');

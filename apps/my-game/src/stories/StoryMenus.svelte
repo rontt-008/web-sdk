@@ -76,7 +76,7 @@
 
 <!-- the game's FS symbols on each bonus, as in the game -->
 {#snippet bonusArt(betModeData: BetModeData)}
-	<BonusCardArt {betModeData} />
+	<BonusCardArt mode={betModeData.mode} />
 {/snippet}
 
 {#snippet gameRules()}

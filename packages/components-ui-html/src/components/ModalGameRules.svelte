@@ -20,12 +20,11 @@
 
 {#if stateModal.modal?.name === 'gameRules'}
 	<Popup zIndex={zIndex.modal} onclose={() => (stateModal.modal = null)}>
-		<BaseContent maxWidth="100%" solid>
-			{#if props.content}
-				<BaseTitle>GAME RULES</BaseTitle>
-			{/if}
+		<BaseContent maxWidth="80%" solid>
 			<BaseScrollable type="column">
 				{#if props.content}
+					<!-- at the top of the rules, scrolling away with them -->
+					<BaseTitle>GAME RULES</BaseTitle>
 					{@render props.content()}
 				{:else}
 					<span>ADD YOUR GAME RULES</span>

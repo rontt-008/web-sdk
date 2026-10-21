@@ -1,5 +1,4 @@
 <script lang="ts">
-	import type { BetModeData } from 'state-shared';
 	import { HeadingText } from 'components-ui-html';
 
 	import assets from '../game/assets';
@@ -12,9 +11,12 @@
 	} from '../game/betModes';
 
 	type Props = {
-		betModeData: BetModeData;
-		// the size of one of three fanned FS symbols, in rem; a single symbol is bigger and four are
-		// a little smaller, to fill about the same room
+		// the bonus's bet mode (a bonus menu card's betModeData.mode)
+		mode?: string;
+		// this many fanned FS symbols instead, as for the mythic free spins (5), which can't be bought
+		scatters?: number;
+		// the size of one of three fanned FS symbols, in rem; a single symbol is bigger and four or
+		// five are a little smaller, to fill about the same room
 		size?: number;
 	};
 
@@ -39,13 +41,14 @@
 		[FEATURE_MODE]: assets.symbolW.src,
 	};
 
-	const count = $derived(SCATTER_COUNT[props.betModeData.mode] ?? 1);
-	const SIZE_BY_COUNT: Record<number, number> = { 1: 1.3, 4: 0.9 };
+	const mode = $derived(props.mode ?? '');
+	const count = $derived(props.scatters ?? SCATTER_COUNT[mode] ?? 1);
+	const SIZE_BY_COUNT: Record<number, number> = { 1: 1.3, 4: 0.9, 5: 0.8 };
 	const fontSize = $derived(
 		props.size ? `${props.size * (SIZE_BY_COUNT[count] ?? 1)}rem` : undefined,
 	);
-	const image = $derived(IMAGE[props.betModeData.mode] ?? assets.symbolS.src);
-	const badge = $derived(BADGE[props.betModeData.mode]);
+	const image = $derived(IMAGE[mode] ?? assets.symbolS.src);
+	const badge = $derived(BADGE[mode]);
 
 	// fanned out like a hand of cards, the middle one in front, the outer ones lower and tilted
 	const FAN_DROP = 0.3;

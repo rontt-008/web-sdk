@@ -105,7 +105,7 @@
 		{#if wide}
 			<!-- one row under the board: menu, turbo, win, bet, real cost, replay -->
 			<Container x={rowX.menu} y={rowY} scale={0.7 * boost}>
-				<ButtonMenu anchor={0.5} />
+				<ButtonMenu anchor={0.5} keepMenu />
 			</Container>
 			<Container x={rowX.turbo} y={rowY} scale={0.7 * boost}>
 				<ButtonTurbo anchor={0.5} />
@@ -135,7 +135,7 @@
 				<LabelReplayBet realCost stacked />
 			</Container>
 			<Container x={center - 350} y={height - 390 - 15} scale={0.7}>
-				<ButtonMenu />
+				<ButtonMenu keepMenu />
 			</Container>
 			<Container x={center - 350} y={height - 270 - 15} scale={0.7}>
 				<ButtonTurbo />

@@ -138,7 +138,7 @@
 		<GameVersion version="0.0.0" />
 	{/snippet}
 	{#snippet bonusArt(betModeData)}
-		<BonusCardArt {betModeData} />
+		<BonusCardArt mode={betModeData.mode} />
 	{/snippet}
 	<!-- the bonuses hang as dish towels pegged to a washing line -->
 	{#snippet bonusCard({ levels, levelRow })}
