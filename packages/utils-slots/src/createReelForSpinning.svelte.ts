@@ -67,6 +67,9 @@ export function createReelForSpinning<TRawSymbol extends object, TSymbolState ex
 	const reelState = $state({
 		symbols: createReelSymbols(reelOptions.initialSymbols),
 		motion: 'stopped' as SpinningReelMotion,
+		// from the moment it starts to spin (its pre-spin too) until it stops and bounces back: its
+		// symbols just scroll by, at rest, so a game can draw them more simply meanwhile
+		scrolling: false,
 		spinType: 'normal' as SpinType,
 		anticipating: false,
 		readyToSpin: () => {},
@@ -274,6 +277,7 @@ export function createReelForSpinning<TRawSymbol extends object, TSymbolState ex
 
 		isPreSpinning = true;
 		skipRequested = false;
+		reelState.scrolling = true;
 		reelState.spinType = isTurboBeforeAll ? 'fast' : 'normal';
 		await preSpinPadding({ preSpinPaddingRawReel });
 		if (!isTurboBeforeAll) await delaySpinByReelIndex();
@@ -304,6 +308,8 @@ export function createReelForSpinning<TRawSymbol extends object, TSymbolState ex
 			await interruptible.add(slideDown);
 		}
 
+		// stopping: from here (with its symbols back to the board's) they are drawn as usual
+		reelState.scrolling = false;
 		reelState.motion = 'bouncing';
 		onSpinFinishing();
 		await removePaddingAndBounceBack();
@@ -418,6 +424,7 @@ export function createReelForSpinning<TRawSymbol extends object, TSymbolState ex
 		// neither pre-spinning nor moving: it starts from rest
 		fromRest = !isPreSpinning && reelState.motion === 'stopped';
 		isPreSpinning = false;
+		reelState.scrolling = true;
 
 		await SPIN_MAP[reelState.spinType]();
 
@@ -429,6 +436,7 @@ export function createReelForSpinning<TRawSymbol extends object, TSymbolState ex
 
 	const setSymbolsWithReelSymbols = (reelSymbols?: ReelSymbol[]) => {
 		reelState.motion = 'stopped';
+		reelState.scrolling = false;
 		placeY(defaultY);
 		if (reelSymbols) {
 			prevSymbols = [...reelSymbols];
