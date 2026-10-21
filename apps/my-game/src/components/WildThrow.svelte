@@ -29,6 +29,8 @@
 	const FLIGHT_DURATION = 600;
 	// the fish leave one after another
 	const FLIGHT_STAGGER = 200;
+	// how long a landed wild's pop lasts (a wild landing's motion, see SymbolSprite)
+	const LANDING_HOLD = 480;
 	// the fish in the cat's mouth: its middle, across and down the big wild's art (which covers the
 	// whole reel), and its width, of the reel's
 	const MOUTH_FISH = { x: 0.404, y: 0.508, width: 0.456 };
@@ -195,6 +197,11 @@
 					await throwFish({ reel, position, targets, last: index === targets.length - 1 });
 				}),
 			);
+			// the last wild pops into place before the round goes on: in turbo, with autoplay or the
+			// space bar held, the next spin starts straight away and would take it off with its reel
+			if (targets.length > 0) {
+				await waitForTimeout(LANDING_HOLD / stateBetDerived.timeScale());
+			}
 		},
 	});
 </script>

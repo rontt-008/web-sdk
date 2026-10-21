@@ -75,8 +75,10 @@
 	let oncomplete = $state(() => {});
 	let onCountUpComplete = $state(() => {});
 
-	// the bonus type is cleared only after this closes, so it is still set here
-	const cat = $derived(BONUS_CAT[context.stateGame.bonusType ?? 'normal']);
+	// the bonus it shows for, kept from when it opens: the game clears the bonus type as this starts
+	// to fade out, which would swap the cat mid-fade
+	let bonusType = $state<BonusType>('normal');
+	const cat = $derived(BONUS_CAT[bonusType]);
 	const catWidth = $derived(widthAt(cat.key, CAT_HEIGHT));
 	const ballWidth = widthAt(BALL_KEY, BALL_HEIGHT);
 	const artWidth = $derived(catWidth + ART_GAP + ballWidth);
@@ -150,6 +152,7 @@
 
 	context.eventEmitter.subscribeOnMount({
 		freeSpinOutroShow: () => {
+			bonusType = context.stateGame.bonusType ?? 'normal';
 			time = 0;
 			finishScale.set(1, { duration: 0 });
 			show = true;

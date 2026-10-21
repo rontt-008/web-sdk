@@ -182,6 +182,9 @@ export const bookEventHandlerMap: BookEventHandlerMap<BookEvent, BookEventContex
 					type: 'winLineShow',
 					positions: win.positions,
 					amount: win.win,
+					// a big wild's multiplier on the line: its win before it, then multiplied
+					multiplier: win.meta.multiplier,
+					base: win.meta.winWithoutMult,
 				}),
 			]);
 		}

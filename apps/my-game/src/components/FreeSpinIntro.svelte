@@ -7,11 +7,11 @@
 
 <script lang="ts">
 	import _ from 'lodash';
-	import { cubicOut } from 'svelte/easing';
-	import { CanvasSizeRectangle, MainContainer } from 'components-layout';
+	import { FillGradient } from 'pixi.js';
+	import { MainContainer } from 'components-layout';
 	import { FadeContainer } from 'components-pixi';
 	import { waitForResolve } from 'utils-shared/wait';
-	import { Container, Text } from 'pixi-svelte';
+	import { Container, Graphics, Sprite, Text } from 'pixi-svelte';
 
 	import { getContext } from '../game/context';
 	import {
@@ -20,120 +20,153 @@
 		SYMBOL_IMAGES,
 		type SymbolImageKey,
 	} from '../game/constants';
-	import { hopPose, popOut, REST_POSE, stage } from '../game/motion';
-	import type { BonusType } from '../game/types';
-	import { createBoardTextStyle, fitBoardFontSize } from '../game/textStyles';
+	import { popOut, REST_POSE, stage } from '../game/motion';
 	import Burst from './Burst.svelte';
 	import PressToContinue from './PressToContinue.svelte';
 	import StandingArt from './StandingArt.svelte';
 
-	// Cuts straight to the game scene, blurred (see SceneBlur), with the bonus's name in light yellow,
-	// the number of spins and, smaller, how the bonus works. Sizes are in the standard layout
-	// (1920x1080 on desktop, 1080x1920 in portrait).
-	const OUTLINE_COLOR = 0x4a1c00;
-	const TITLE_FONT_SIZE = 120;
-	const SPINS_FONT_SIZE = 64;
-	const DESCRIPTION_FONT_SIZE = 40;
-	const DESCRIPTION_MAX_WIDTH = 1100;
+	// The game scene, blurred (see SceneBlur) and darkened, a warm glow in the middle, the bonus's
+	// name small at the top and the number of spins huge in gold under it, with cats standing in a
+	// row in front of it and how the bonus works written under them. Laid out as in its design: a
+	// 960x540 card on wide screens and a 300x620 one on tall ones, in the card's own units (scaled up
+	// to fit the screen, see S), the cards' parts placed by their middles and their feet.
+	type Cat = { key: SymbolImageKey; x: number; feet: number; width: number; mirror?: boolean; float?: number };
+	type Look = {
+		card: { width: number; height: number };
+		glow: { x: number; y: number; size: number };
+		title: { top: number; fontSize: number; spacing: number };
+		count: { fontSize: number };
+		// the word SPINS under the number (tall screens only)
+		spins?: { fontSize: number; spacing: number };
+		cats: Cat[];
+		ball?: { x: number; feet: number; size: number };
+		// the description: this far under the cats' feet, no lower than this far from the card's
+		// bottom (shrunk if it would be), its letter size and widest
+		description: { gap: number; bottom: number; fontSize: number; width: number };
+	};
+	const LOOKS: Record<'wide' | 'tall', Look> = {
+		wide: {
+			card: { width: 960, height: 540 },
+			glow: { x: 480, y: 259, size: 700 },
+			title: { top: 48, fontSize: 34, spacing: 6 },
+			count: { fontSize: 300 },
+			cats: [
+				{ key: 'symbolH2', x: 358, feet: 420, width: 170, float: 0 },
+				{ key: 'symbolH1', x: 612, feet: 422, width: 150, float: 0.6 },
+				{ key: 'symbolH3', x: 480, feet: 428, width: 118 },
+			],
+			ball: { x: 408, feet: 424, size: 40 },
+			description: { gap: 4, bottom: 58, fontSize: 19, width: 560 },
+		},
+		tall: {
+			card: { width: 300, height: 620 },
+			glow: { x: 150, y: 248, size: 420 },
+			title: { top: 70, fontSize: 24, spacing: 4 },
+			count: { fontSize: 220 },
+			spins: { fontSize: 22, spacing: 4 },
+			cats: [
+				{ key: 'symbolH2', x: 74, feet: 470, width: 120, float: 0 },
+				{ key: 'symbolH1', x: 228, feet: 470, width: 104, float: 0.6 },
+			],
+			description: { gap: 16, bottom: 56, fontSize: 14, width: 252 },
+		},
+	};
+	const CREAM = 0xffe9a3;
 	const FADE_DURATION = 250;
 
-	// It comes in a piece at a time (in seconds from showing): the title slams down with sparkles
-	// bursting behind it, the spins pop up under it, the description rises in and the cat hops in.
+	// It comes in a piece at a time (in seconds from showing): the name fades in, the number pops
+	// out of the glow with sparkles, the description rises in. Then the cats float gently, out of
+	// step, and the ball rolls slowly.
 	const ENTRANCE = {
-		title: { start: 0, length: 0.45 },
-		spins: { start: 0.25, length: 0.4 },
-		description: { start: 0.4, length: 0.35 },
-		cat: { start: 0.5, length: 0.65 },
-		ball: { start: 0.65, length: 0.4 },
+		title: { start: 0, length: 0.35 },
+		count: { start: 0.15, length: 0.7 },
+		cats: { start: 0.35, length: 0.4 },
+		description: { start: 0.55, length: 0.35 },
 	};
-	const TITLE_SLAM_FROM = 1.8;
-	const DESCRIPTION_RISE = 24;
-	// then the cat hops again every so often
-	const CAT_HOP_EVERY = 2.4;
-
-	// Under the text, the cat that comes with the bonus and a ball of yarn in front of it, both from
-	// the symbol art (with their soft shadows).
-	const BONUS_CAT: Record<BonusType, { key: SymbolImageKey; facing: 'left' | 'right' }> = {
-		normal: { key: 'symbolH4', facing: 'left' },
-		super: { key: 'symbolH2', facing: 'left' },
-		mythic: { key: 'symbolH1', facing: 'right' },
-	};
-	const BALL_KEY = 'symbolL1';
-	const CAT_HEIGHT = 230;
-	const BALL_HEIGHT = 115;
-	// between the cat and the ball
-	const ART_GAP = 12;
-	// between the last line of text and the cat
-	const ART_TOP_GAP = 36;
-	// the ball rocks back and forth as if the cat has just batted it
-	const BALL_ROCK_ANGLE = (8 * Math.PI) / 180;
-	const BALL_ROCK_PERIOD = 1.6;
-	const widthAt = (key: SymbolImageKey, height: number) =>
-		(SYMBOL_IMAGES[key].image[0] * height) / SYMBOL_IMAGES[key].image[1];
-
-	// down from the title's bottom
-	const SPINS_Y = SPINS_FONT_SIZE * 0.1;
-	const DESCRIPTION_Y = SPINS_FONT_SIZE * 1.5 + DESCRIPTION_FONT_SIZE * 0.6;
-	// where the middle of the whole block (title to cat) sits, as a share of the screen's height:
-	// a little above the middle, clear of the "press anywhere" prompt at the bottom
-	const BLOCK_CENTER_Y = 0.46;
+	const DESCRIPTION_RISE = 10;
+	const FLOAT = { distance: 6, period: 3.2 };
+	const BALL_TURN_PERIOD = 7;
 
 	const context = getContext();
 	const layout = $derived(context.stateLayoutDerived.mainLayoutStandard());
-	const maxWidth = $derived(layout.width * 0.85);
+	const canvas = $derived(context.stateLayoutDerived.canvasSizes());
+	const look = $derived(layout.height > layout.width ? LOOKS.tall : LOOKS.wide);
+	// the card's units to the screen's: as big as fits, centred
+	const S = $derived(Math.min(layout.width / look.card.width, layout.height / look.card.height));
+	const left = $derived((layout.width - look.card.width * S) / 2);
+	const top = $derived((layout.height - look.card.height * S) / 2);
+	const at = (x: number, y: number) => ({ x: left + x * S, y: top + y * S });
+
 	const bonusType = $derived(context.stateGame.bonusType ?? 'normal');
 	const title = $derived([BONUS_NAME[bonusType], 'FREE SPINS'].filter(Boolean).join(' '));
 	const description = $derived(BONUS_DESCRIPTION[bonusType]);
 
-	const titleFontSize = $derived(
-		fitBoardFontSize({ text: title, fontSize: TITLE_FONT_SIZE, maxWidth }),
-	);
-	const titleStyle = $derived(
-		createBoardTextStyle({
-			fontSize: titleFontSize,
-			top: 0xfffbe6,
-			bottom: 0xffe27a,
-			outline: OUTLINE_COLOR,
-		}),
-	);
-
-	// the cat and the ball side by side, centred, the ball on the side the cat faces
-	const cat = $derived(BONUS_CAT[bonusType]);
-	const catWidth = $derived(widthAt(cat.key, CAT_HEIGHT));
-	const ballWidth = widthAt(BALL_KEY, BALL_HEIGHT);
-	const artWidth = $derived(catWidth + ART_GAP + ballWidth);
-	const towardsBall = $derived(cat.facing === 'left' ? -1 : 1);
-	const catX = $derived(((artWidth - catWidth) / 2) * -towardsBall);
-	const ballX = $derived(((artWidth - ballWidth) / 2) * towardsBall);
-
-	const spinsStyle = createBoardTextStyle({
-		fontSize: SPINS_FONT_SIZE,
-		top: 0xffffff,
-		bottom: 0xfff2c2,
-		outline: OUTLINE_COLOR,
-	});
-	const descriptionStyle = $derived({
+	// cream text with a hard brown shadow under it
+	const shadowed = (fontSize: number, spacing = 0) => ({
 		fontFamily: 'Titan One',
-		fontSize: DESCRIPTION_FONT_SIZE,
-		lineHeight: DESCRIPTION_FONT_SIZE * 1.3,
-		fill: 0xfff6e2,
-		stroke: { color: OUTLINE_COLOR, width: DESCRIPTION_FONT_SIZE * 0.12, join: 'round' },
-		align: 'center',
-		wordWrap: true,
-		wordWrapWidth: Math.min(DESCRIPTION_MAX_WIDTH, maxWidth),
-	} as const);
+		fontSize,
+		fill: CREAM,
+		letterSpacing: spacing,
+		dropShadow: { color: 0x8a4414, alpha: 1, angle: Math.PI / 2, blur: 0, distance: fontSize * 0.07 },
+	});
+	// the name's letters are spaced wide: shrunk, spacing and all, so a long name still fits
+	const titleSize = $derived.by(() => {
+		const spacing = look.title.spacing / look.title.fontSize;
+		const fitted = Math.min(
+			look.title.fontSize * S,
+			(look.card.width * S * 0.9) / (title.length * (0.67 + spacing)),
+		);
+		return { fontSize: fitted, spacing: fitted * spacing };
+	});
+	const styles = $derived({
+		title: shadowed(titleSize.fontSize, titleSize.spacing),
+		// the number in gold, light at the top to deep orange at the bottom
+		count: {
+			fontFamily: 'Titan One',
+			fontSize: look.count.fontSize * S,
+			fill: new FillGradient({
+				type: 'linear',
+				start: { x: 0, y: 0 },
+				end: { x: 0, y: 1 },
+				textureSpace: 'local',
+				colorStops: [
+					{ offset: 0, color: 0xfff2b3 },
+					{ offset: 0.55, color: 0xffb627 },
+					{ offset: 1, color: 0xf57b1a },
+				],
+			}),
+			dropShadow: { color: 0x7a3a10, alpha: 1, angle: Math.PI / 2, blur: 0, distance: look.count.fontSize * S * 0.02 },
+		},
+		spins: look.spins && shadowed(look.spins.fontSize * S, look.spins.spacing * S),
+		description: {
+			fontFamily: 'Titan One',
+			fontSize: look.description.fontSize * S,
+			fill: 0xfff3dc,
+			lineHeight: look.description.fontSize * S * 1.3,
+			align: 'center' as const,
+			wordWrap: true,
+			wordWrapWidth: look.description.width * S,
+			dropShadow: { color: 0x3c1e0a, alpha: 0.9, angle: Math.PI / 2, blur: 0, distance: look.description.fontSize * S * 0.1 },
+		},
+	});
 
-	// measured text heights (the description wraps to however many lines it needs), starting from
-	// estimates until the text has been drawn
-	let titleHeight = $state(TITLE_FONT_SIZE * 1.3);
-	let spinsHeight = $state(SPINS_FONT_SIZE * 1.3);
+	// measured heights, starting from estimates until the text has been drawn
+	let titleHeight = $state(80);
+	let countHeight = $state(500);
+	// the number right under the name (its line is 0.85 of its size, as in the design), SPINS
+	// tucked just under it
+	const titleBottom = $derived(top + look.title.top * S + titleHeight);
+	const countMiddle = $derived(titleBottom + (look.count.fontSize * S * 0.85) / 2);
+	const spinsTop = $derived(countMiddle + countHeight * 0.4);
+	// the description under the cats, shrunk if it would come too low
 	let descriptionHeight = $state(0);
-	const textBottom = $derived(
-		description ? DESCRIPTION_Y + descriptionHeight : SPINS_Y + spinsHeight,
+	const descriptionTop = $derived(
+		top + (Math.max(...look.cats.map((cat) => cat.feet)) + look.description.gap) * S,
 	);
-	// the cat and the ball stand on this line, under the text
-	const artBottom = $derived(textBottom + ART_TOP_GAP + CAT_HEIGHT);
-	const blockY = $derived(layout.height * BLOCK_CENTER_Y - (artBottom - titleHeight) / 2);
+	const descriptionRoom = $derived(top + (look.card.height - look.description.bottom) * S - descriptionTop);
+	const descriptionScale = $derived(
+		descriptionHeight > 0 ? Math.min(1, descriptionRoom / descriptionHeight) : 1,
+	);
 
 	let show = $state(false);
 	let freeSpins = $state(0);
@@ -141,26 +174,46 @@
 
 	// seconds since it was shown
 	let time = $state(0);
-	const ballRotation = $derived(
-		Math.sin((time * 2 * Math.PI) / BALL_ROCK_PERIOD) * BALL_ROCK_ANGLE,
-	);
-
 	const entrance = $derived(_.mapValues(ENTRANCE, (step) => stage(time, step.start, step.length)));
-	const titleScale = $derived(TITLE_SLAM_FROM + (1 - TITLE_SLAM_FROM) * popOut(entrance.title, 2.6));
-	const catPose = $derived.by(() => {
-		if (time < ENTRANCE.cat.start + ENTRANCE.cat.length) return hopPose(entrance.cat);
-		const sinceHop = (time - ENTRANCE.cat.start) % CAT_HOP_EVERY;
-		return sinceHop < ENTRANCE.cat.length ? hopPose(sinceHop / ENTRANCE.cat.length) : REST_POSE;
+	const floatY = (phase: number | undefined) =>
+		phase === undefined
+			? 0
+			: -FLOAT.distance * S * (0.5 - 0.5 * Math.cos((2 * Math.PI * (time - phase)) / FLOAT.period));
+	const catHeight = (cat: Cat) =>
+		(cat.width * SYMBOL_IMAGES[cat.key].image[1]) / SYMBOL_IMAGES[cat.key].image[0];
+
+	// darker at the top and much darker at the bottom, lightest a little above the middle
+	const shade = new FillGradient({
+		type: 'linear',
+		start: { x: 0, y: 0 },
+		end: { x: 0, y: 1 },
+		textureSpace: 'local',
+		colorStops: [
+			{ offset: 0, color: 'rgba(25, 12, 5, 0.55)' },
+			{ offset: 0.4, color: 'rgba(25, 12, 5, 0.35)' },
+			{ offset: 1, color: 'rgba(25, 12, 5, 0.8)' },
+		],
+	});
+	// a warm glow behind the number, gone by six tenths of the way out
+	const glow = new FillGradient({
+		type: 'radial',
+		center: { x: 0.5, y: 0.5 },
+		innerRadius: 0,
+		outerCenter: { x: 0.5, y: 0.5 },
+		outerRadius: 0.5,
+		colorStops: [
+			{ offset: 0, color: 'rgba(255, 214, 120, 0.35)' },
+			{ offset: 0.6, color: 'rgba(255, 214, 120, 0)' },
+			{ offset: 1, color: 'rgba(255, 214, 120, 0)' },
+		],
 	});
 
 	$effect(() => {
 		const ticker = context.stateApp.pixiApplication?.ticker;
 		if (!ticker) return;
-
 		const tick = () => {
 			if (show) time += ticker.deltaMS / 1000;
 		};
-
 		ticker.add(tick);
 		return () => ticker.remove(tick);
 	});
@@ -186,69 +239,103 @@
 </script>
 
 <FadeContainer {show} duration={FADE_DURATION}>
-	<!-- a little darker, so the text reads on any part of the scene -->
-	<CanvasSizeRectangle backgroundColor={0x000000} backgroundAlpha={0.25} />
+	<Graphics
+		draw={(graphics) => {
+			graphics.clear();
+			graphics.rect(0, 0, canvas.width, canvas.height).fill(shade);
+		}}
+	/>
 
 	<MainContainer standard>
-		<!-- at the title's bottom; the rest is below it -->
-		<Container x={layout.width * 0.5} y={blockY}>
-			{#if show}
-				<Burst
-					y={-titleHeight * 0.5}
-					distance={TITLE_FONT_SIZE * 3}
-					size={TITLE_FONT_SIZE * 0.16}
-					count={18}
-					duration={700}
-				/>
-			{/if}
-			<!-- scaled about their middles; the texts themselves keep their size, which places the rest -->
-			<Container
-				y={-titleHeight * 0.5}
-				scale={titleScale}
-				alpha={Math.min(1, entrance.title * 4)}
-			>
-				<Text
-					anchor={0.5}
-					text={title}
-					style={titleStyle}
-					onresize={(sizes) => (titleHeight = sizes.height)}
-				/>
-			</Container>
-			<Container y={SPINS_Y + spinsHeight * 0.5} scale={popOut(entrance.spins)}>
-				<Text
-					anchor={0.5}
-					text={`${freeSpins} SPINS`}
-					style={spinsStyle}
-					onresize={(sizes) => (spinsHeight = sizes.height)}
-				/>
-			</Container>
-			{#if description}
-				<Text
-					anchor={{ x: 0.5, y: 0 }}
-					y={DESCRIPTION_Y + DESCRIPTION_RISE * (1 - cubicOut(entrance.description))}
-					alpha={entrance.description}
-					text={description}
-					style={descriptionStyle}
-					onresize={(sizes) => (descriptionHeight = sizes.height)}
-				/>
-			{/if}
-			<StandingArt
-				key={cat.key}
-				height={CAT_HEIGHT}
-				x={catX}
-				y={artBottom}
-				pose={catPose}
-				alpha={Math.min(1, entrance.cat * 5)}
+		<Graphics
+			{...at(look.glow.x, look.glow.y)}
+			draw={(graphics) => {
+				const radius = (look.glow.size * S) / 2;
+				graphics.clear();
+				graphics.circle(0, 0, radius).fill(glow);
+			}}
+		/>
+
+		<Text
+			anchor={{ x: 0.5, y: 0 }}
+			x={layout.width / 2}
+			y={top + look.title.top * S}
+			alpha={entrance.title}
+			text={title}
+			style={styles.title}
+			onresize={(sizes) => (titleHeight = sizes.height)}
+		/>
+		{#if show && entrance.count > 0}
+			<Burst
+				x={layout.width / 2}
+				y={countMiddle}
+				distance={look.count.fontSize * S * 0.9}
+				size={look.count.fontSize * S * 0.05}
+				count={18}
+				duration={800}
 			/>
-			<StandingArt
-				key={BALL_KEY}
-				height={BALL_HEIGHT}
-				x={ballX}
-				y={artBottom}
-				pose={{ ...REST_POSE, scaleX: popOut(entrance.ball), scaleY: popOut(entrance.ball) }}
-				spin={ballRotation}
+		{/if}
+		<!-- the number pops out about its middle -->
+		<Container x={layout.width / 2} y={countMiddle} scale={popOut(entrance.count, 2.6)}>
+			<Text
+				anchor={0.5}
+				text={`${freeSpins}`}
+				style={styles.count}
+				onresize={(sizes) => (countHeight = sizes.height)}
 			/>
 		</Container>
+		{#if styles.spins}
+			<Text
+				anchor={{ x: 0.5, y: 0 }}
+				x={layout.width / 2}
+				y={spinsTop}
+				alpha={entrance.count}
+				text="SPINS"
+				style={styles.spins}
+			/>
+		{/if}
+
+		<!-- the cats in a row in front of the number, the ball by them -->
+		{#each look.cats as cat (cat.key)}
+			<Container
+				x={at(cat.x, cat.feet).x}
+				y={at(cat.x, cat.feet).y + floatY(cat.float)}
+				scale={{ x: cat.mirror ? -1 : 1, y: 1 }}
+			>
+				<StandingArt
+					key={cat.key}
+					height={catHeight(cat) * S}
+					pose={{ ...REST_POSE, scaleX: popOut(entrance.cats), scaleY: popOut(entrance.cats) }}
+				/>
+			</Container>
+		{/each}
+		{#if look.ball}
+			<Sprite
+				key="yarnBall"
+				anchor={0.5}
+				{...at(look.ball.x, look.ball.feet - look.ball.size / 2)}
+				width={look.ball.size * S}
+				height={look.ball.size * S}
+				alpha={entrance.cats}
+				rotation={(2 * Math.PI * time) / BALL_TURN_PERIOD}
+			/>
+		{/if}
+
+		{#if description}
+			<Container
+				x={layout.width / 2}
+				y={descriptionTop + DESCRIPTION_RISE * S * (1 - entrance.description)}
+				scale={descriptionScale}
+				alpha={entrance.description}
+			>
+				<Text
+					anchor={{ x: 0.5, y: 0 }}
+					text={description}
+					style={styles.description}
+					onresize={(sizes) => (descriptionHeight = sizes.height)}
+				/>
+			</Container>
+		{/if}
 	</MainContainer>
 
 	<PressToContinue onpress={() => oncomplete()} />

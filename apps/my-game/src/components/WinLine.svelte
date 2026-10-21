@@ -6,6 +6,9 @@
 		positions: Position[];
 		// in book units, like the amounts in book events
 		amount: number;
+		// with a big wild's multiplier on the line (above 1): the win before it (book units)
+		multiplier?: number;
+		base?: number;
 	};
 </script>
 
@@ -14,8 +17,9 @@
 	import type { ComponentProps } from 'svelte';
 	import { Tween } from 'svelte/motion';
 	import { cubicOut } from 'svelte/easing';
+	import { CanvasTextMetrics, TextStyle } from 'pixi.js';
 	import { Container, Graphics, Text } from 'pixi-svelte';
-	import { stateBetDerived } from 'state-shared';
+	import { stateBet, stateBetDerived } from 'state-shared';
 	import { waitForTimeout } from 'utils-shared/wait';
 	import { bookEventAmountToCurrencyString } from 'utils-shared/amount';
 
@@ -30,6 +34,9 @@
 
 	// A winning line draws itself from its first symbol to its last while they hop (see winInfo), its
 	// win amount pops up in the middle, it stays a moment, then fades as the next one is drawn.
+	// With a big wild's multiplier on it, the amount pops up as the win before the multiplier, the
+	// multiplier pops in beside it ("× 3X", coloured as on the big wild), then slides into the amount,
+	// which counts up to the win and kicks (not in turbo, which shows the win straight away).
 	const DRAW_DURATION = 150;
 	const HOLD_DURATION = 500;
 	const FADE_DURATION = 100;
@@ -43,6 +50,25 @@
 		bottom: 0x6dff7a,
 		outline: 0x0a2350,
 	});
+	// the multiplier, in the big wild's colours (see Symbol), the same size as the amount
+	const MULTIPLIER_STYLE = createBoardTextStyle({
+		fontSize: SYMBOL_SIZE * 0.5,
+		top: 0xffe234,
+		bottom: 0xff8c1a,
+		outline: 0x4a1c00,
+	});
+	const MULTIPLIER_GAP = SYMBOL_SIZE * 0.12;
+	// after the base amount is up: the multiplier pops in, stays, then slides into the amount as it
+	// counts up to the win, which kicks at the end
+	const MULTIPLY = {
+		wait: 150,
+		pop: 250,
+		hold: 350,
+		merge: 250,
+		count: 450,
+		kick: 1.25,
+		kickDuration: 250,
+	};
 	const SAMPLES_PER_SEGMENT = 16;
 	// a soft wide light blue glow under a bright, nearly white blue core
 	const STROKES = [
@@ -52,10 +78,24 @@
 
 	const context = getContext();
 
-	let line = $state<{ centres: Point[]; amountText: string }>();
+	// how wide a text is drawn: measured up front, so nothing is placed by last frame's width while
+	// the amount counts up
+	const widthOf = (text: string, style: typeof AMOUNT_STYLE) =>
+		CanvasTextMetrics.measureText(text, new TextStyle(style)).width;
+
+	let line = $state<{
+		centres: Point[];
+		// with a multiplier: it, and the widths of the amount before it and of "× 3X"
+		multiplier?: { value: number; text: string; baseWidth: number; width: number };
+	}>();
 	const progress = new Tween(0);
 	const alpha = new Tween(0);
 	const amountScale = new Tween(1);
+	// the amount shown, counting up as the multiplier goes in (book units)
+	const amount = new Tween(0);
+	// the multiplier: how far it has popped in, and how far it has gone into the amount
+	const multiplierIn = new Tween(0);
+	const merge = new Tween(0);
 
 	// Catmull-Rom spline: a smooth curve through every centre, sampled into short straight steps
 	const smoothPath = (points: Point[]) => {
@@ -82,8 +122,24 @@
 	};
 
 	const path = $derived(line ? smoothPath(line.centres) : []);
-	// the amount sits on the middle of the line
+	// the amount sits on the middle of the line; while the multiplier is beside it, the two together
+	// are centred there
 	const amountPosition = $derived(path[Math.round((path.length - 1) / 2)]);
+	// side by side, the amount (before the multiplier) and "× 3X" with a gap between, centred; as they
+	// merge the amount slides back to the middle and the multiplier slides into it
+	const amountX = $derived.by(() => {
+		const centre = amountPosition?.x ?? 0;
+		const multiplier = line?.multiplier;
+		if (!multiplier) return centre;
+		return centre - ((MULTIPLIER_GAP + multiplier.width) / 2) * (1 - merge.current);
+	});
+	const multiplierX = $derived.by(() => {
+		const centre = amountPosition?.x ?? 0;
+		const multiplier = line?.multiplier;
+		if (!multiplier) return centre;
+		const beside = centre + (multiplier.baseWidth + MULTIPLIER_GAP) / 2;
+		return beside + (amountX - beside) * merge.current;
+	});
 
 	// in the player's currency, like every other amount: ¥40, $0.004 or 1.40 SC
 	const toAmountText = (bookEventAmount: number) =>
@@ -118,20 +174,50 @@
 
 	context.eventEmitter.subscribeOnMount({
 		// resolves as the line starts to fade, so the next line or the end of the spin comes in over it
-		winLineShow: async ({ positions, amount }) => {
+		winLineShow: async ({ positions, amount: win, multiplier, base }) => {
 			const timeScale = stateBetDerived.timeScale();
+			// in turbo the line just shows its win, as one without a multiplier does
+			const multiplied =
+				!stateBet.isTurbo && !!multiplier && multiplier > 1 && base !== undefined && base < win;
+			const multiplierText = `× ${multiplier}X`;
 			line = {
 				centres: _.sortBy(positions, ['reel', 'row']).map((position) => ({
 					x: getSymbolX(position.reel),
 					y: context.stateGame.board[position.reel].reelState.symbols[position.row].symbolY(),
 				})),
-				amountText: toAmountText(amount),
+				multiplier: multiplied
+					? {
+							value: multiplier,
+							text: multiplierText,
+							baseWidth: widthOf(toAmountText(base), AMOUNT_STYLE),
+							width: widthOf(multiplierText, MULTIPLIER_STYLE),
+						}
+					: undefined,
 			};
+			amount.set(multiplied ? base : win, { duration: 0 });
+			multiplierIn.set(0, { duration: 0 });
+			merge.set(0, { duration: 0 });
 			alpha.set(1, { duration: 0 });
 			progress.set(0, { duration: 0 });
 			amountScale.set(AMOUNT_POP_START, { duration: 0 });
 			amountScale.set(1, { duration: AMOUNT_POP_DURATION / timeScale, easing: (t) => popOut(t) });
 			await progress.set(1, { duration: DRAW_DURATION / timeScale, easing: cubicOut });
+
+			if (multiplied) {
+				// the base amount, then × the multiplier beside it, then into it, counting up to the win
+				await waitForTimeout(MULTIPLY.wait / timeScale);
+				// eased where it is drawn (popOut)
+				await multiplierIn.set(1, { duration: MULTIPLY.pop / timeScale });
+				await waitForTimeout(MULTIPLY.hold / timeScale);
+				merge.set(1, { duration: MULTIPLY.merge / timeScale, easing: cubicOut });
+				await amount.set(win, { duration: MULTIPLY.count / timeScale, easing: cubicOut });
+				await amountScale.set(MULTIPLY.kick, { duration: (MULTIPLY.kickDuration * 0.4) / timeScale });
+				await amountScale.set(1, {
+					duration: (MULTIPLY.kickDuration * 0.6) / timeScale,
+					easing: (t) => popOut(t),
+				});
+			}
+
 			await waitForTimeout(HOLD_DURATION / timeScale);
 			alpha.set(0, { duration: FADE_DURATION / timeScale });
 		},
@@ -142,14 +228,20 @@
 	<Container alpha={alpha.current}>
 		<Graphics {draw} />
 		{#if line && amountPosition}
-			<Text
-				anchor={0.5}
-				x={amountPosition.x}
-				y={amountPosition.y}
-				scale={amountScale.current}
-				text={line.amountText}
-				style={AMOUNT_STYLE}
-			/>
+			<!-- the multiplier under the amount, so it slides in behind it -->
+			{#if line.multiplier}
+				<Container
+					x={multiplierX}
+					y={amountPosition.y}
+					scale={popOut(multiplierIn.current) * (1 - 0.5 * merge.current)}
+					alpha={1 - merge.current}
+				>
+					<Text anchor={0.5} text={line.multiplier.text} style={MULTIPLIER_STYLE} />
+				</Container>
+			{/if}
+			<Container x={amountX} y={amountPosition.y} scale={amountScale.current}>
+				<Text anchor={0.5} text={toAmountText(amount.current)} style={AMOUNT_STYLE} />
+			</Container>
 		{/if}
 	</Container>
 </BoardContainer>
