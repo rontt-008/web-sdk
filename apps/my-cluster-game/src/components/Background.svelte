@@ -1,28 +1,21 @@
 <script lang="ts">
-	import { Rectangle, Sprite } from 'pixi-svelte';
+	import { Container, Rectangle, Sprite } from 'pixi-svelte';
 
 	import { getContext } from '../game/context';
+	import Clouds from './Clouds.svelte';
 
 	const context = getContext();
 
 	const canvas = $derived(context.stateLayoutDerived.canvasSizes());
-	// the loaded picture (a texture), for its size
-	const texture = $derived(
-		context.stateApp.loadedAssets?.background as { width: number; height: number } | undefined,
-	);
-
-	// the picture keeps its shape on every screen (wide, tall or square): scaled to cover the screen,
-	// centred on it, with the overflow cropped by the screen's edges
-	const layout = $derived.by(() => {
-		const imageWidth = texture?.width || canvas.width;
-		const imageHeight = texture?.height || canvas.height;
-		const scale = Math.max(canvas.width / imageWidth, canvas.height / imageHeight);
-		const width = imageWidth * scale;
-		const height = imageHeight * scale;
-		return { x: (canvas.width - width) / 2, y: (canvas.height - height) / 2, width, height };
-	});
+	const layout = $derived(context.stateGameDerived.backgroundLayout());
 </script>
 
 <Rectangle {...canvas} backgroundColor={0x000000} zIndex={-3} />
 
-<Sprite key="background" {...layout} zIndex={-2} />
+<!-- in the picture's pixels: the picture, the clouds drifting across its sky, and the tree at its top
+	left (static/assets/background-tree.webp, cut out of it) in front of them -->
+<Container x={layout.x} y={layout.y} scale={layout.scale} zIndex={-2}>
+	<Sprite key="background" />
+	<Clouds width={layout.width} />
+	<Sprite key="backgroundTree" />
+</Container>

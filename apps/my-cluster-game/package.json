@@ -35,6 +35,7 @@
 		"envs": "workspace:*",
 		"rgs-requests": "workspace:*",
 		"pixi-svelte": "workspace:*",
+		"pixi.js": "8.8.1",
 		"state-shared": "workspace:*",
 		"constants-shared": "workspace:*",
 		"components-storybook": "workspace:*",

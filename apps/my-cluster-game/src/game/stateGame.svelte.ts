@@ -149,6 +149,32 @@ const boardFrameLayout = () => {
 	};
 };
 
+// The background picture (static/assets/background.webp): its size, and how far down it the dirt
+// path in front of the rocks on the right is, where the fox stands, in its pixels.
+const BACKGROUND_ART = { width: 1672, height: 941, ground: 745 };
+
+// the picture keeps its shape on every screen (wide, tall or square): scaled to cover the screen,
+// centred on it, with the overflow cropped by the screen's edges
+const backgroundLayout = () => {
+	const canvas = stateLayoutDerived.canvasSizes();
+	const scale = Math.max(canvas.width / BACKGROUND_ART.width, canvas.height / BACKGROUND_ART.height);
+	return {
+		x: (canvas.width - BACKGROUND_ART.width * scale) / 2,
+		y: (canvas.height - BACKGROUND_ART.height * scale) / 2,
+		scale,
+		width: BACKGROUND_ART.width,
+		height: BACKGROUND_ART.height,
+	};
+};
+
+// how far down the main layout (the board's) the background's ground is
+const backgroundGround = () => {
+	const background = backgroundLayout();
+	const main = stateLayoutDerived.mainLayout();
+	const canvasY = background.y + BACKGROUND_ART.ground * background.scale;
+	return main.height / 2 + (canvasY - main.y) / main.scale;
+};
+
 const boardRaw = () =>
 	board.map((reel) => reel.reelState.symbols.map((reelSymbol) => reelSymbol.rawSymbol));
 
@@ -180,6 +206,8 @@ export const stateGameDerived = {
 	onSymbolLand,
 	boardLayout,
 	boardFrameLayout,
+	backgroundLayout,
+	backgroundGround,
 	boardRaw,
 	tumbleBoardCombined,
 	scatterLandIndex,

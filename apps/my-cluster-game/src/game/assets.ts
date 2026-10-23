@@ -195,6 +195,18 @@ export default {
 		src: new URL('../../assets/background.webp', import.meta.url).href,
 		preload: true,
 	},
+	// the tree at the background's top left, cut out of it, so the clouds pass behind it (see Background)
+	backgroundTree: {
+		type: 'sprite',
+		src: new URL('../../assets/background-tree.webp', import.meta.url).href,
+		preload: true,
+	},
+	// cloud_1 to cloud_5, drifting across the background's sky (see Clouds)
+	clouds: {
+		type: 'sprites',
+		src: new URL('../../assets/sprites/clouds/clouds.json', import.meta.url).href,
+		preload: true,
+	},
 	// the red swoosh on the buy bonus button: white on transparent, tinted by the UI (see uiTheme's
 	// buyBonus), the same as Cat Hunt's
 	buyBonusLogo: {
@@ -212,10 +224,15 @@ export default {
 		src: new URL('../../assets/board-frame.webp', import.meta.url).href,
 		preload: true,
 	},
-	// standing right of the board (see Fox)
-	fox: {
-		type: 'sprite',
-		src: new URL('../../assets/fox.webp', import.meta.url).href,
+	// standing right of the board, idling, with a gust of wind swinging its tail every so often (see Fox)
+	foxIdle: {
+		type: 'spriteSheet',
+		src: new URL('../../assets/sprites/fox/fox-idle.json', import.meta.url).href,
+		preload: true,
+	},
+	foxGust: {
+		type: 'spriteSheet',
+		src: new URL('../../assets/sprites/fox/fox-gust.json', import.meta.url).href,
 		preload: true,
 	},
 	tumble_multiplier: {
