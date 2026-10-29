@@ -92,10 +92,11 @@ export const stateGame = $state({
 // how far above the middle of the screen the board sits, so its frame clears the UI under it (on
 // wide screens its posts reach almost to the top of the screen, and their feet just behind the bar)
 const BOARD_RAISE = { desktop: 27, landscape: 55, tablet: 55, portrait: 40 };
-// how far right of the middle (left when negative): on wide screens a little left, to leave the fox
-// room on the right; on phones held sideways, right to clear the menu, mute and buy bonus buttons on
-// the left
-const BOARD_SHIFT = { desktop: -80, landscape: 100, tablet: 0, portrait: 0 };
+// how far right of the middle (left when negative): on wide screens a little left, sharing the room
+// between the rune ladder on its left and the logo, bonus meter and fox on its right (further left
+// makes those bigger and the ladder smaller); on phones held sideways, right to clear the menu, mute
+// and buy bonus buttons on the left
+const BOARD_SHIFT = { desktop: -30, landscape: 100, tablet: 0, portrait: 0 };
 
 const boardLayout = () => ({
 	x:

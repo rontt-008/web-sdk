@@ -7,7 +7,7 @@ import type { Texture, TextureSource } from 'pixi.js';
 // frames into each other.)
 export const SMOOTH_TEXTURE_KEYS = [
 	'boardFrame',
-	'runeBoxFrame',
+	'runeLadder',
 	'bonusMeterFrame',
 	'bonusMeterFill',
 	'logo',

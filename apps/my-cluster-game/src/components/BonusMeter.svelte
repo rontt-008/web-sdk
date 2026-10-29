@@ -10,6 +10,7 @@
 </script>
 
 <script lang="ts">
+	import { onMount } from 'svelte';
 	import { Tween } from 'svelte/motion';
 	import { cubicOut } from 'svelte/easing';
 
@@ -20,7 +21,7 @@
 	import { getContext } from '../game/context';
 	import { BONUS_TRIGGER } from '../game/constants';
 	import { BONUS_METER_ART } from '../game/stateGame.svelte';
-	import { uiTheme } from '../game/uiTheme';
+	import { SIGN_FONT, signTextStyle } from '../game/signText';
 
 	const context = getContext();
 
@@ -32,8 +33,15 @@
 		planks: { x: 138, y: 259, width: 1504, height: 189 },
 		sign: { x: 885, y: 146, height: 150 },
 	};
-	// the count dark brown, as if burnt into the sign
-	const COUNT = 0x1e0d05;
+	// the count in lettering like the logo's (see signText), once its font is ready: text drawn
+	// before it would stay in the fallback
+	let fontReady = $state(false);
+	onMount(() => {
+		document.fonts
+			.load(`16px ${SIGN_FONT}`)
+			.catch(() => {})
+			.finally(() => (fontReady = true));
+	});
 
 	const layout = $derived(context.stateGameDerived.bonusMeterLayout());
 	// the frame's pixels to the layout's
@@ -98,17 +106,14 @@
 		{/each}
 
 		<!-- the count on the sign -->
-		<Text
-			x={ART.sign.x * scale}
-			y={ART.sign.y * scale}
-			anchor={{ x: 0.5, y: 0.5 }}
-			text={`${Math.min(amount, BONUS_TRIGGER)} / ${BONUS_TRIGGER}`}
-			style={{
-				fontFamily: uiTheme.fontFamily,
-				fontSize: countSize,
-				fontWeight: '800',
-				fill: COUNT,
-			}}
-		/>
+		{#if fontReady}
+			<Text
+				x={ART.sign.x * scale}
+				y={ART.sign.y * scale}
+				anchor={{ x: 0.5, y: 0.5 }}
+				text={`${Math.min(amount, BONUS_TRIGGER)} / ${BONUS_TRIGGER}`}
+				style={signTextStyle(countSize)}
+			/>
+		{/if}
 	</FadeContainer>
 </MainContainer>

@@ -42,7 +42,7 @@ export const RUNES: Record<RuneName, Rune> = {
 	},
 	fehu: {
 		power: 'multiplier',
-		powerText: `x${POWER_MULT} WINS`,
+		powerText: `${POWER_MULT}x MULTIPLIER`,
 		spots: [[2, 0], [3, 0], [2, 1], [3, 1], [2, 2], [2, 3], [2, 4]],
 		strokes: [
 			[

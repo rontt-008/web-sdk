@@ -62,14 +62,16 @@ Originals of art that is processed before it goes into `static/assets` (not load
   text inside) and the script that rendered their win animations into sprite sheets; not used since
   the framed tiles replaced them. Don't run `symbol-sheets.py` for the tiles: it would also draw
   the old symbols' stills over the new ones.
-- `rune-box-frame.webp`: the frame of branches wound with vines round each rune box left of the board
-  (the user's 1376 x 768 PNG, see-through outside and in the middle; haze under alpha 16 cleared,
-  alpha 240+ made solid, cropped to the art with 4 px round it: 1298 x 723, lossless).
-  `wood-frames.py rune-box-frame` draws `static/assets/rune-box-frame.webp` from it in the board's
-  duller look (LOOK), webp:90, and prints the opening (96-1196 x 84-641). The game cuts it into nine
-  (`src/components/NineSliceSprite.svelte`; cuts and opening in RUNE_BOX_FRAME in
-  `src/components/RuneTablet.svelte`): the corners, with the posts' crossings and their vines, keep
-  their shape and the branches between them stretch, so it fits the boxes on any screen.
+- `rune-ladder.webp`: the ladder of branches with maple leaves the four rune boxes sit in, left of
+  the board (the user's 1024 x 1536 PNG, see-through outside and in its four compartments; haze
+  under alpha 16 cleared, alpha 240+ made solid, cropped to the art with 4 px round it: 606 x 1499,
+  lossless). `wood-frames.py rune-ladder` draws `static/assets/rune-ladder.webp` (104 KB) in its own
+  colours, and prints the compartments (medians of the branches' inner edges: LADDER_ART in
+  `src/components/RuneTablets.svelte`). The game draws it as it is, keeping its shape, standing up
+  left of the board, or lying down in the bonus meter's place on phones held upright, with a box in
+  each compartment under it.
+- `rune-box-frame.webp`: the frame that was round each rune box before the ladder (the user's
+  1376 x 768 PNG, cleaned the same way: 1298 x 723); not used now.
 - `bonus-meter-frame.webp`: the bonus meter, branches and maple leaves round a bar of planks, with a
   wooden sign over it (the user's 1792 x 534 PNG, see-through outside; cleaned and cropped the same
   way, which moved its pixels -8, 4: 1783 x 541, lossless). `wood-frames.py bonus-meter-frame` draws
@@ -88,7 +90,7 @@ Originals of art that is processed before it goes into `static/assets` (not load
   `src/game/stateGame.svelte.ts`, `src/components/Logo.svelte`).
 - Run `wood-frames.py` from apps/my-cluster-game with the Python that comes with Blender, with the
   frame's name and, for a new one, its PNG:
-  `"<Blender>/5.2/python/bin/python.exe" -I art-source/wood-frames.py <rune-box-frame|bonus-meter-frame|logo> [<new frame.png>]`.
+  `"<Blender>/5.2/python/bin/python.exe" -I art-source/wood-frames.py <rune-ladder|bonus-meter-frame|logo> [<new frame.png>]`.
 - `board-frame-plain.webp`: the frame of branches wound with vines and autumn leaves, without its
   outline (the user's 1254 x 1254 PNG, see-through in the middle, haze under alpha 16 cleared, alpha
   240+ made solid, lossless). `board-frame.py` draws `static/assets/board-frame.webp` from it: a

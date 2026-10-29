@@ -105,6 +105,13 @@ export default {
 			scale: 2,
 		},
 	},
+	// Germania One (OFL, Google Fonts), chunky carved letters like the logo's, for the bonus meter's
+	// count; registered as "Germania One" from its file's name, loaded before the game shows
+	germaniaOne: {
+		type: 'font',
+		src: new URL('../../assets/fonts/germaniaOne/germania-one.ttf', import.meta.url).href,
+		preload: true,
+	},
 	goldFont: {
 		type: 'font',
 		src: new URL('../../assets/fonts/goldFont/mm_gold.xml', import.meta.url).href,
@@ -206,10 +213,11 @@ export default {
 		src: new URL('../../assets/bonus-meter-fill.webp', import.meta.url).href,
 	},
 
-	// the frame round each rune box left of the board (see RuneTablet, art-source/wood-frames.py)
-	runeBoxFrame: {
+	// the ladder of branches the rune boxes sit in, left of the board (see RuneTablets,
+	// art-source/wood-frames.py)
+	runeLadder: {
 		type: 'sprite',
-		src: new URL('../../assets/rune-box-frame.webp', import.meta.url).href,
+		src: new URL('../../assets/rune-ladder.webp', import.meta.url).href,
 	},
 	// the wooden frame around the board (see boardFrameLayout)
 	boardFrame: {

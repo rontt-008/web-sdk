@@ -1,8 +1,8 @@
 """Draws the wooden frames and signs drawn round parts of the game's UI, from the user's PNGs:
 
-- rune-box-frame: round each rune box left of the board (RuneTablet.svelte; the game cuts it into
-  nine, NineSliceSprite, so it fits boxes of any shape: the corners keep their shape and the branches
-  between them stretch)
+- rune-ladder: the ladder of branches the four rune boxes sit in, left of the board (RuneTablets.svelte;
+  drawn as it is, it keeps its shape; lying down above the board on phones held upright)
+- rune-box-frame: round each rune box (not used now: the ladder replaced it)
 - bonus-meter-frame: the bonus meter, branches round a bar of planks, with a sign over it for the
   count (BonusMeter.svelte; drawn as it is, the meter keeps its shape), and its planks green alone
   (PLANKS), which the game reveals from the left as the meter fills
@@ -16,9 +16,9 @@ For each:
 - static/assets/<name>.webp: that in the board's duller, a little greyer look (LOOK, as the board
   frame has it)
 
-It prints the art's size and, for a frame see-through in the middle, where its opening is (the inner
-edges of its branches, along the lines through the middle of the opening), in its pixels: the
-numbers in the components above. A frame that is solid all over (the meter's planks) is measured by
+It prints the art's size and, for a frame see-through in the middle, where its openings are (the
+inner edges of its branches, the medians along the middle half of each opening, so a vine or leaf
+reaching in doesn't count), in its pixels: the numbers in the components above. A frame that is solid all over (the meter's planks) is measured by
 hand: cleaning a new PNG prints how far its crop moved it.
 
 Run from apps/my-cluster-game with the Python that comes with Blender (it has numpy and OpenImageIO):
@@ -32,11 +32,16 @@ import numpy as np
 import OpenImageIO as oiio
 
 HERE = os.path.dirname(os.path.abspath(__file__))
-# a point inside each frame's see-through opening, as a share of the cropped art's width and height
-# (None: it has none)
-FRAMES = {'rune-box-frame': (0.5, 0.5), 'bonus-meter-frame': None, 'logo': None}
+# a point inside each of a frame's see-through openings, as a share of the cropped art's width and
+# height (none: it has none)
+FRAMES = {
+    'rune-ladder': [(0.5, 0.17), (0.5, 0.41), (0.5, 0.645), (0.5, 0.865)],
+    'rune-box-frame': [(0.5, 0.5)],
+    'bonus-meter-frame': [],
+    'logo': [],
+}
 # kept in their own colours, without the board's duller look (the meter's planks went grey in it)
-VIVID = {'bonus-meter-frame', 'logo'}
+VIVID = {'rune-ladder', 'bonus-meter-frame', 'logo'}
 # The meter's planks again, green (static/assets/<out>, the game reveals them as it fills): found
 # by spreading from the middle of the bar within `within` (left, top, right, bottom) through pixels
 # lighter than `dark`, so it stops at the branches' and leaves' outlines, then `edge` px over their
@@ -175,12 +180,22 @@ if filled is not None:
     layer, (left, top) = filled
     write(layer, os.path.join(HERE, '..', 'static', 'assets', PLANKS[name]['out']), 'webp:90')
     print(f'{PLANKS[name]["out"]}: {layer.shape[1]} x {layer.shape[0]} at {left}, {top}')
-if FRAMES[name] is None:
-    sys.exit()
-cx, cy = round(width * FRAMES[name][0]), round(height * FRAMES[name][1])
-assert not solid[cy, cx], 'the point inside the opening is on the art'
-left = cx - np.argmax(solid[cy, :cx][::-1])
-right = cx + np.argmax(solid[cy, cx:])
-top = cy - np.argmax(solid[:cy, cx][::-1])
-bottom = cy + np.argmax(solid[cy:, cx])
-print(f'opening: left {left}, top {top}, right {right}, bottom {bottom}')
+
+
+def first(line):
+    """How far along a line of see-through-or-not pixels the first solid one is."""
+    return int(np.argmax(line)) if line.any() else len(line)
+
+
+for cx, cy in ((round(width * x), round(height * y)) for x, y in FRAMES[name]):
+    assert not solid[cy, cx], f'the point {cx}, {cy} inside an opening is on the art'
+    # roughly, along the lines through the point, then the medians along its middle half
+    left, right = cx - first(solid[cy, :cx][::-1]), cx + first(solid[cy, cx:])
+    top, bottom = cy - first(solid[:cy, cx][::-1]), cy + first(solid[cy:, cx])
+    rows = range(top + (bottom - top) // 4, bottom - (bottom - top) // 4)
+    cols = range(left + (right - left) // 4, right - (right - left) // 4)
+    left = round(np.median([cx - first(solid[y, :cx][::-1]) for y in rows]))
+    right = round(np.median([cx + first(solid[y, cx:]) for y in rows]))
+    top = round(np.median([cy - first(solid[:cy, x][::-1]) for x in cols]))
+    bottom = round(np.median([cy + first(solid[cy:, x]) for x in cols]))
+    print(f'opening: left {left}, top {top}, right {right}, bottom {bottom}')

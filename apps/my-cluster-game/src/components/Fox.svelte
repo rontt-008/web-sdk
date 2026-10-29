@@ -7,7 +7,7 @@
 	import { getContext } from '../game/context';
 	import { LAYOUT_UNIT } from '../game/constants';
 	import { FOX_EYES } from '../game/foxEyes';
-	import { LOOK_MATRIX } from '../game/look';
+	import { FOX_LOOK, lookMatrix } from '../game/look';
 
 	const context = getContext();
 
@@ -35,10 +35,10 @@
 	};
 	const BLINK_LENGTH = BLINK.close + BLINK.shut + BLINK.open;
 
-	// the fox duller and a little greyer than its art (see look.ts): a filter over the fox and its
-	// lids, so the lids still match the fur; at the screen's resolution, so it stays sharp
+	// the fox a little duller and greyer than its art (FOX_LOOK, see look.ts): a filter over the fox
+	// and its lids, so the lids still match the fur; at the screen's resolution, so it stays sharp
 	const lookFilter = new ColorMatrixFilter({ resolution: 'inherit' });
-	lookFilter.matrix = LOOK_MATRIX;
+	lookFilter.matrix = lookMatrix(FOX_LOOK);
 
 	let gusting = $state(false);
 	let lastGust = performance.now();

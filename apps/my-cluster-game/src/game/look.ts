@@ -1,29 +1,33 @@
 import type { ColorMatrix } from 'pixi.js';
 
-// A duller, a little greyer look for art brighter than the dusk scene (the fox, the board): colours
-// keep this share of their saturation, then are mixed this much with mid grey. The board frame's art
-// has it baked in (art-source/board-frame.py, with the same numbers).
+// A duller, a little greyer look for art brighter than the dusk scene (the board): colours keep this
+// share of their saturation, then are mixed this much with mid grey. The board frame's art has it
+// baked in (art-source/board-frame.py, with the same numbers).
 export const LOOK = { saturation: 0.6, grey: 0.08 };
+// the fox's, 25% more vibrant: a quarter more of its saturation kept, a quarter less grey
+export const FOX_LOOK = { saturation: LOOK.saturation * 1.25, grey: LOOK.grey * 0.75 };
+type Look = typeof LOOK;
 const LUMINANCE = [0.2126, 0.7152, 0.0722];
 const MID_GREY = 0.5;
 
-// a row of the look's colour matrix: [red, green, blue, alpha, offset] into the channel
-const lookRow = (channel: number) => [
+// a row of a look's colour matrix: [red, green, blue, alpha, offset] into the channel
+const lookRow = (channel: number, look: Look = LOOK) => [
 	...LUMINANCE.map((weight, k) => {
-		const kept = (1 - LOOK.saturation) * weight + (k === channel ? LOOK.saturation : 0);
-		return (1 - LOOK.grey) * kept;
+		const kept = (1 - look.saturation) * weight + (k === channel ? look.saturation : 0);
+		return (1 - look.grey) * kept;
 	}),
 	0,
-	LOOK.grey * MID_GREY,
+	look.grey * MID_GREY,
 ];
 
 // for a ColorMatrixFilter
-export const LOOK_MATRIX = [
-	...lookRow(0),
-	...lookRow(1),
-	...lookRow(2),
-	...[0, 0, 0, 1, 0],
-] as ColorMatrix;
+export const lookMatrix = (look: Look = LOOK) =>
+	[
+		...lookRow(0, look),
+		...lookRow(1, look),
+		...lookRow(2, look),
+		...[0, 0, 0, 1, 0],
+	] as ColorMatrix;
 
 // a colour (0xrrggbb) in the look
 export const lookColor = (color: number) => {
