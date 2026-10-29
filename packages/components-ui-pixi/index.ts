@@ -2,6 +2,11 @@ import UI from './src/components/UI.svelte';
 import UiGameName from './src/components/UiGameName.svelte';
 // a bottom bar of panels, for a theme's `layouts`
 import LayoutDesktopBar from './src/components/LayoutDesktopBar.svelte';
+// the controls on boxes in the two bottom corners and the win in the middle, for a theme's `layouts`
+import LayoutDesktopCorners from './src/components/LayoutDesktopCorners.svelte';
+// a chunky panel right across the bottom with the win and the bet in wells and a spin disc, for a
+// theme's `layouts` (its look: UiTheme.shadow and UiTheme.panelBar)
+import LayoutDesktopPanel from './src/components/LayoutDesktopPanel.svelte';
 // for tall screens: a panel of amounts, the spin row and a pill of menu and sound, for a theme's
 // `layouts`
 import LayoutPortraitBar from './src/components/LayoutPortraitBar.svelte';
@@ -27,6 +32,8 @@ export {
 	UI,
 	UiGameName,
 	LayoutDesktopBar,
+	LayoutDesktopCorners,
+	LayoutDesktopPanel,
 	LayoutPortraitBar,
 	LayoutLandscapeBar,
 };

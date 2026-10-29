@@ -7,16 +7,7 @@
 	import UiVolumeSlider from './UiVolumeSlider.svelte';
 	import { getContext } from '../context';
 	import { getMenuButtons, getPanelCornerRadius, getUiTheme } from '../theme';
-	import {
-		ARROW_SCALE,
-		BAR_SCALE,
-		ICON_SCALE,
-		LABEL_WIDTH,
-		PANEL_GAP,
-		PANEL_HEIGHT,
-		SPIN_SCALE,
-		getDesktopBar,
-	} from '../desktopBar';
+	import { ARROW_SCALE, ICON_SCALE, PANEL_HEIGHT, SPIN_SCALE, getDesktopBar } from '../desktopBar';
 	import type { LayoutUiProps } from '../types';
 
 	const props: LayoutUiProps = $props();
@@ -88,7 +79,7 @@
 </Container>
 
 <MainContainer standard alignVertical="bottom">
-	<Container x={bar.left} y={barY} scale={BAR_SCALE}>
+	<Container x={bar.left} y={barY} scale={bar.scale}>
 		{#each bar.panels as panel}
 			{#if panel.notch}
 				<Graphics
@@ -122,7 +113,7 @@
 				x={bar.muteMusic}
 				bind:value={stateSound.volumeValueMusic}
 				buttonSize={PANEL_HEIGHT}
-				gap={PANEL_GAP}
+				gap={bar.panelGap}
 			>
 				<Container scale={ICON_SCALE}>
 					{@render props.buttonMuteMusic({ anchor: 0.5, bare: true })}
@@ -133,7 +124,7 @@
 				x={bar.muteSounds}
 				bind:value={stateSound.volumeValueSoundEffect}
 				buttonSize={PANEL_HEIGHT}
-				gap={PANEL_GAP}
+				gap={bar.panelGap}
 			>
 				<Container scale={ICON_SCALE}>
 					{@render props.buttonMuteSounds({ anchor: 0.5, bare: true })}
@@ -143,16 +134,20 @@
 
 		<Container x={bar.balance} scale={LABEL_SCALE}>
 			{@render props.amountBalance({
-				plain: { width: LABEL_WIDTH.balance / LABEL_SCALE, align: 'left' },
+				plain: { width: bar.labelWidth.balance / LABEL_SCALE, align: 'left' },
 			})}
 		</Container>
 
 		<Container x={bar.win} scale={LABEL_SCALE}>
-			{@render props.amountWin({ plain: { width: LABEL_WIDTH.win / LABEL_SCALE, align: 'right' } })}
+			{@render props.amountWin({
+				plain: { width: bar.labelWidth.win / LABEL_SCALE, align: 'right' },
+			})}
 		</Container>
 
 		<Container x={bar.bet} scale={LABEL_SCALE}>
-			{@render props.amountBet({ plain: { width: LABEL_WIDTH.bet / LABEL_SCALE, align: 'left' } })}
+			{@render props.amountBet({
+				plain: { width: bar.labelWidth.bet / LABEL_SCALE, align: 'left' },
+			})}
 		</Container>
 
 		<Container x={bar.betArrows} y={-ARROW_OFFSET} scale={ARROW_SCALE}>
@@ -163,9 +158,16 @@
 			{@render props.buttonDecrease({ anchor: 0.5, arrow: true, bare: true })}
 		</Container>
 
-		<Container x={bar.turbo} scale={ICON_SCALE}>
-			{@render props.buttonTurbo({ anchor: 0.5, bare: true })}
-		</Container>
+		<!-- on its panel as a bare icon, or apart at the bar's left end as a round button -->
+		{#if bar.turboApart}
+			<Container x={bar.turbo} scale={bar.turboScale}>
+				{@render props.buttonTurbo({ anchor: 0.5 })}
+			</Container>
+		{:else}
+			<Container x={bar.turbo} scale={ICON_SCALE}>
+				{@render props.buttonTurbo({ anchor: 0.5, bare: true })}
+			</Container>
+		{/if}
 
 		<Container x={bar.autoSpin} scale={ICON_SCALE}>
 			{@render props.buttonAutoSpin({ anchor: 0.5, bare: true })}
@@ -199,7 +201,7 @@
 
 	<!-- menu items stack up from the menu button, which turns into the close button -->
 	<MainContainer standard alignVertical="bottom">
-		<Container x={bar.left + bar.menu * BAR_SCALE} y={barY} scale={BAR_SCALE}>
+		<Container x={bar.left + bar.menu * bar.scale} y={barY} scale={bar.scale}>
 			{#each menuButtons as button, index}
 				<Container scale={MENU_ITEM_SCALE} y={-MENU_ITEM_SPACING * (menuButtons.length - index)}>
 					{@render button({ anchor: 0.5 })}

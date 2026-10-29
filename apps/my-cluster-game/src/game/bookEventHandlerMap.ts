@@ -10,6 +10,7 @@ import { winLevelMap, type WinLevel, type WinLevelData } from './winLevelMap';
 import { stateGame, stateGameDerived } from './stateGame.svelte';
 import type { BookEvent, BookEventOfType, BookEventContext } from './typesBookEvent';
 import type { Position } from './types';
+import type { RuneName, RuneOffset } from './runes';
 
 const winLevelSoundsPlay = ({ winLevelData }: { winLevelData: WinLevelData }) => {
 	if (winLevelData?.alias === 'max') eventEmitter.broadcastAsync({ type: 'uiHide' });
@@ -33,6 +34,29 @@ const winLevelSoundsStop = () => {
 		eventEmitter.broadcast({ type: 'soundMusic', name: 'bgm_main' });
 	}
 	eventEmitter.broadcastAsync({ type: 'uiShow' });
+};
+
+// the runes as the book's events so far leave them: the one behind the board (none once the power
+// spins start or all are collected) with its lit spots, those collected, and where each lies or lay
+const runesSoFar = ({ bookEvents }: { bookEvents: BookEvent[] }) => {
+	let rune: RuneName | undefined;
+	const offsets: Partial<Record<RuneName, RuneOffset>> = {};
+	let lit: Position[] = [];
+	const collected: RuneName[] = [];
+	for (const bookEvent of bookEvents) {
+		if (bookEvent.type === 'runeShow') {
+			rune = bookEvent.rune;
+			offsets[bookEvent.rune] = bookEvent.offset;
+			lit = [];
+		}
+		if (bookEvent.type === 'runeLight') lit = [...lit, ...bookEvent.positions];
+		if (bookEvent.type === 'runeComplete') {
+			collected.push(bookEvent.rune);
+			rune = undefined;
+		}
+		if (bookEvent.type === 'powerSpinsTrigger') rune = undefined;
+	}
+	return { rune, offsets, lit, collected };
 };
 
 const animateSymbols = async ({ positions }: { positions: Position[] }) => {
@@ -59,7 +83,13 @@ export const bookEventHandlerMap: BookEventHandlerMap<BookEvent, BookEventContex
 	winInfo: async (bookEvent: BookEventOfType<'winInfo'>) => {
 		const promise1 = async () => {
 			eventEmitter.broadcast({ type: 'soundOnce', name: 'sfx_winlevel_small' });
-			await animateSymbols({ positions: _.flatten(bookEvent.wins.map((win) => win.positions)) });
+			// a wild in two clusters once: a symbol animated twice would wait forever for its first win
+			await animateSymbols({
+				positions: _.uniqBy(
+					_.flatten(bookEvent.wins.map((win) => win.positions)),
+					(position) => `${position.reel}:${position.row}`,
+				),
+			});
 		};
 
 		const promise2 = async () => {
@@ -122,6 +152,7 @@ export const bookEventHandlerMap: BookEventHandlerMap<BookEvent, BookEventContex
 			type: 'freeSpinCounterUpdate',
 			current: undefined,
 			total: bookEvent.totalFs,
+			title: 'FREE SPIN',
 		});
 		await eventEmitter.broadcastAsync({ type: 'uiShow' });
 		await eventEmitter.broadcastAsync({ type: 'drawerButtonShow' });
@@ -196,6 +227,7 @@ export const bookEventHandlerMap: BookEventHandlerMap<BookEvent, BookEventContex
 		eventEmitter.broadcast({ type: 'freeSpinCounterHide' });
 		eventEmitter.broadcast({ type: 'globalMultiplierHide' });
 		eventEmitter.broadcast({ type: 'tumbleWinAmountHide' });
+		eventEmitter.broadcast({ type: 'runesReset' });
 		await eventEmitter.broadcastAsync({ type: 'transition' });
 		await eventEmitter.broadcastAsync({ type: 'uiShow' });
 		await eventEmitter.broadcastAsync({ type: 'drawerUnfold' });
@@ -235,13 +267,48 @@ export const bookEventHandlerMap: BookEventHandlerMap<BookEvent, BookEventContex
 		winLevelSoundsStop();
 		eventEmitter.broadcast({ type: 'winHide' });
 	},
-	updateGrid: async (bookEvent: BookEventOfType<'updateGrid'>) => {
-		eventEmitter.broadcast({ type: 'multiplierGridShow' });
-		eventEmitter.broadcast({ type: 'multiplierGridUpdate', grid: bookEvent.gridMultipliers });
+	runeShow: async (bookEvent: BookEventOfType<'runeShow'>) => {
+		await eventEmitter.broadcastAsync({
+			type: 'runesShow',
+			rune: bookEvent.rune,
+			offset: bookEvent.offset,
+		});
+	},
+	runeLight: async (bookEvent: BookEventOfType<'runeLight'>) => {
+		eventEmitter.broadcast({ type: 'soundOnce', name: 'sfx_multiplier_up' });
+		await eventEmitter.broadcastAsync({ type: 'runesLight', positions: bookEvent.positions });
+	},
+	runeComplete: async (bookEvent: BookEventOfType<'runeComplete'>) => {
+		eventEmitter.broadcast({ type: 'soundOnce', name: 'sfx_scatter_win' });
+		await eventEmitter.broadcastAsync({ type: 'runesComplete', rune: bookEvent.rune });
+	},
+	powerSpinsTrigger: async (bookEvent: BookEventOfType<'powerSpinsTrigger'>) => {
+		// the free spins are over: their rune goes, and the power spins start
+		await eventEmitter.broadcastAsync({ type: 'runesHide' });
+		eventEmitter.broadcast({ type: 'freeSpinCounterHide' });
+		eventEmitter.broadcast({ type: 'tumbleWinAmountHide' });
+		await eventEmitter.broadcastAsync({ type: 'uiHide' });
+		eventEmitter.broadcast({ type: 'soundOnce', name: 'sfx_superfreespin' });
+		eventEmitter.broadcast({ type: 'soundOnce', name: 'jng_intro_fs' });
+		await eventEmitter.broadcastAsync({
+			type: 'powerSpinsIntro',
+			totalSpins: bookEvent.totalSpins,
+			runes: bookEvent.runes,
+		});
+		// back to x1 from the last free spin's, so the power spins' x3 (Fehu) counts up from it
+		await eventEmitter.broadcastAsync({ type: 'globalMultiplierUpdate', multiplier: 1 });
+		await eventEmitter.broadcastAsync({ type: 'uiShow' });
+	},
+	updatePowerSpin: async (bookEvent: BookEventOfType<'updatePowerSpin'>) => {
+		eventEmitter.broadcast({ type: 'freeSpinCounterShow' });
+		eventEmitter.broadcast({
+			type: 'freeSpinCounterUpdate',
+			current: bookEvent.amount,
+			total: bookEvent.total,
+			title: 'POWER SPIN',
+		});
 	},
 	finalWin: async (bookEvent: BookEventOfType<'finalWin'>) => {
-		eventEmitter.broadcast({ type: 'multiplierGridClear' });
-		eventEmitter.broadcast({ type: 'multiplierGridHide' });
 		eventEmitter.broadcast({ type: 'globalMultiplierHide' });
 		eventEmitter.broadcast({ type: 'tumbleWinAmountHide' });
 	},
@@ -259,10 +326,15 @@ export const bookEventHandlerMap: BookEventHandlerMap<BookEvent, BookEventContex
 		const lastUpdateFreeSpinEvent = findLastBookEvent('updateFreeSpin' as const);
 		const lastSetTotalWinEvent = findLastBookEvent('setTotalWin' as const);
 		const lastUpdateGlobalMultEvent = findLastBookEvent('updateGlobalMult' as const);
+		const lastUpdatePowerSpinEvent = findLastBookEvent('updatePowerSpin' as const);
 
 		if (lastFreeSpinTriggerEvent) await playBookEvent(lastFreeSpinTriggerEvent, { bookEvents });
 		if (lastUpdateFreeSpinEvent) playBookEvent(lastUpdateFreeSpinEvent, { bookEvents });
+		if (lastUpdatePowerSpinEvent) playBookEvent(lastUpdatePowerSpinEvent, { bookEvents });
 		if (lastSetTotalWinEvent) playBookEvent(lastSetTotalWinEvent, { bookEvents });
 		if (lastUpdateGlobalMultEvent) playBookEvent(lastUpdateGlobalMultEvent, { bookEvents });
+		if (lastFreeSpinTriggerEvent) {
+			eventEmitter.broadcast({ type: 'runesRestore', ...runesSoFar({ bookEvents }) });
+		}
 	},
 };

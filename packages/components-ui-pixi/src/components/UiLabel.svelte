@@ -13,10 +13,28 @@
 		label: string;
 		value: string;
 		tiled?: boolean;
+		// with a theme: the value in this colour instead of the theme's (like a win in its own colour)
+		valueColor?: number;
 	};
 
 	const props: Props = $props();
 	const theme = getUiTheme();
+
+	// with the theme's hard shadow (see UiTheme.shadow): text casts one straight down, this share of
+	// its size
+	const TEXT_SHADOW_DROP = 0.1;
+	const textShadow = (fontSize: number) =>
+		theme?.shadow
+			? {
+					dropShadow: {
+						color: theme.shadow.color,
+						alpha: 1,
+						angle: Math.PI / 2,
+						blur: 0,
+						distance: fontSize * TEXT_SHADOW_DROP,
+					},
+				}
+			: {};
 
 	const labelStyle = {
 		fontFamily: UI_FONT_FAMILY,
@@ -39,12 +57,14 @@
 		fontWeight: '700',
 		letterSpacing: 3,
 		fill: theme?.label.label,
+		...textShadow(UI_BASE_FONT_SIZE * 0.55),
 	} as const);
 	const themedValueStyle = $derived({
 		fontFamily: theme?.fontFamily,
 		fontSize: UI_BASE_FONT_SIZE * 0.95,
 		fontWeight: '800',
-		fill: theme?.label.value,
+		fill: props.valueColor ?? theme?.label.value,
+		...textShadow(UI_BASE_FONT_SIZE * 0.95),
 	} as const);
 
 	// long values, like MX$1,234,567.89 or a big balance, shrink to stay inside the pill: stacked
@@ -63,24 +83,33 @@
 			? Math.min(1, props.plain.width / Math.max(1, textWidth(props.label, themedLabelStyle)))
 			: 1,
 	);
+
+	// plain and outlined (on the game's art): the label and the value in an outline of the panel's
+	// colour this wide
+	const OUTLINE_WIDTH = { label: 5, value: 7 };
+	const outlined = <Style extends object>(style: Style, width: number) =>
+		props.plain?.outline && theme
+			? { ...style, stroke: { color: theme.label.panel, width, join: 'round' as const } }
+			: style;
+	const ALIGN_ANCHOR_X = { left: 0, center: 0.5, right: 1 };
 </script>
 
 {#if theme}
 	{#if props.plain}
-		{@const anchorX = props.plain.align === 'left' ? 0 : 1}
+		{@const anchorX = ALIGN_ANCHOR_X[props.plain.align]}
 		<Text
 			anchor={{ x: anchorX, y: 1 }}
 			y={-UI_BASE_FONT_SIZE * 0.12}
 			scale={labelScale}
 			text={props.label}
-			style={themedLabelStyle}
+			style={outlined(themedLabelStyle, OUTLINE_WIDTH.label)}
 		/>
 		<Text
 			anchor={{ x: anchorX, y: 0 }}
 			y={-UI_BASE_FONT_SIZE * 0.2}
 			scale={valueScale}
 			text={props.value}
-			style={themedValueStyle}
+			style={outlined(themedValueStyle, OUTLINE_WIDTH.value)}
 		/>
 	{:else if props.stacked}
 		<Rectangle

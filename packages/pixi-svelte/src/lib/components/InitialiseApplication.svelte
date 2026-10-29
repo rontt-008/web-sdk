@@ -34,7 +34,9 @@
 			multiView: false,
 			antialias: true,
 			clearBeforeRender: true,
-			preference: 'webgpu',
+			// WebGL, PixiJS's own default: WebGPU is new in Firefox (on by default on Windows) and hung its
+			// GPU process (the one drawing every tab), freezing the whole browser
+			preference: 'webgl',
 			powerPreference: 'high-performance',
 			resolution: Math.min(devicePixelRatio.current ?? 1, MAX_RESOLUTION),
 			resizeTo: window,

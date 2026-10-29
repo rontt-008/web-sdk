@@ -22,20 +22,20 @@
 
 	import BoardContainer from './BoardContainer.svelte';
 	import { getContext } from '../game/context';
-	import { SYMBOL_SIZE } from '../game/constants';
+	import { LAYOUT_UNIT } from '../game/constants';
 
 	type AnimationName = 'static' | 'win' | 'reset' | 'increment';
 
-	const PANEL_WIDTH = SYMBOL_SIZE * 0.641;
+	const PANEL_WIDTH = LAYOUT_UNIT * 0.641;
 	const context = getContext();
 	const scale = $derived(context.stateLayoutDerived.isStacked() ? 1.28 : 1);
 	const desktopPosition = $derived({
 		x: context.stateGameDerived.boardLayout().width - PANEL_WIDTH * 1.3,
-		y: -SYMBOL_SIZE * 0.47,
+		y: -LAYOUT_UNIT * 0.47,
 	});
 	const portraitPosition = $derived({
 		x: context.stateGameDerived.boardLayout().width - PANEL_WIDTH * 1.5,
-		y: -SYMBOL_SIZE * 0.55,
+		y: -LAYOUT_UNIT * 0.55,
 	});
 	const position = $derived(
 		context.stateLayoutDerived.isStacked() ? portraitPosition : desktopPosition,
@@ -94,7 +94,7 @@
 							text={`${Math.round(previousMultiplier.current)}×`}
 							style={{
 								fontFamily: 'gold',
-								fontSize: SYMBOL_SIZE * 5.2,
+								fontSize: LAYOUT_UNIT * 5.2,
 							}}
 						/>
 					</SpineSlot>
@@ -104,7 +104,7 @@
 							text={`${multiplier}×`}
 							style={{
 								fontFamily: 'gold',
-								fontSize: SYMBOL_SIZE * 5.2,
+								fontSize: LAYOUT_UNIT * 5.2,
 							}}
 						/>
 					</SpineSlot>

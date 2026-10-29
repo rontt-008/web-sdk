@@ -1,12 +1,13 @@
 <script lang="ts">
 	import _ from 'lodash';
 	import type { ComponentProps } from 'svelte';
-	import { FillGradient } from 'pixi.js';
+	import { ColorMatrixFilter, FillGradient } from 'pixi.js';
 	import { Container, Graphics, SpriteSheet } from 'pixi-svelte';
 
 	import { getContext } from '../game/context';
-	import { SYMBOL_SIZE } from '../game/constants';
+	import { LAYOUT_UNIT } from '../game/constants';
 	import { FOX_EYES } from '../game/foxEyes';
+	import { LOOK_MATRIX } from '../game/look';
 
 	const context = getContext();
 
@@ -34,6 +35,11 @@
 	};
 	const BLINK_LENGTH = BLINK.close + BLINK.shut + BLINK.open;
 
+	// the fox duller and a little greyer than its art (see look.ts): a filter over the fox and its
+	// lids, so the lids still match the fur; at the screen's resolution, so it stays sharp
+	const lookFilter = new ColorMatrixFilter({ resolution: 'inherit' });
+	lookFilter.matrix = LOOK_MATRIX;
+
 	let gusting = $state(false);
 	let lastGust = performance.now();
 
@@ -45,14 +51,16 @@
 	const onGustComplete = () => (gusting = false);
 	// sizes are of the whole art, shadow included
 	const FOX = {
-		maxHeight: SYMBOL_SIZE * 3.7,
+		maxHeight: LAYOUT_UNIT * 3.7,
 		// smaller than this, it is left out (narrow screens have no room beside the board)
-		minHeight: SYMBOL_SIZE * 1.65,
+		minHeight: LAYOUT_UNIT * 1.65,
 		// at least this from its nose to the board frame, and from the tip of its tail to the screen's edge
-		gapToBoard: SYMBOL_SIZE * 0.15,
-		screenMargin: SYMBOL_SIZE * 0.15,
+		gapToBoard: LAYOUT_UNIT * 0.15,
+		screenMargin: LAYOUT_UNIT * 0.15,
 		// right of the middle of the room, as far as the room allows
-		nudgeRight: SYMBOL_SIZE * 0.3,
+		nudgeRight: LAYOUT_UNIT * 0.3,
+		// below the ground (or the frame's bottom), so it stands further forward on the path
+		nudgeDown: LAYOUT_UNIT * 0.55,
 	};
 
 	// about the middle of the room right of the board frame, as big as the room allows, standing on the
@@ -70,7 +78,7 @@
 
 		return {
 			x: Math.min((left + right) / 2 + FOX.nudgeRight, right - width / 2),
-			y: Math.min(context.stateGameDerived.backgroundGround(), frame.bottom),
+			y: Math.min(context.stateGameDerived.backgroundGround(), frame.bottom) + FOX.nudgeDown,
 			width,
 			height,
 		};
@@ -159,7 +167,12 @@
 
 <!-- only on wide screens: phones held sideways have the spin and bet buttons right of the board -->
 {#if context.stateLayoutDerived.layoutType() === 'desktop' && layout.height >= FOX.minHeight}
-	<Container x={layout.x} y={layout.y} scale={layout.height / FOX_ART.height}>
+	<Container
+		x={layout.x}
+		y={layout.y}
+		scale={layout.height / FOX_ART.height}
+		filters={[lookFilter]}
+	>
 		<SpriteSheet
 			key={gusting ? 'foxGust' : 'foxIdle'}
 			anchor={{ x: 0.5, y: FOX_ART.paws / FOX_ART.height }}

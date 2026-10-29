@@ -38,12 +38,14 @@ SHEET_WIDTH = 2048
 GAP = 2
 
 TREE_MASK = os.path.join(HERE, 'background-tree-mask.png')
-# the tree: the top left of the background, above the hills; its sky is fitted with a smooth surface
-# over this much of the picture, and pixels this far from it (in 0-255 RGB) are sky, tree or between
+# the tree: the top left of the background, above the hills (the clouds stay above y 228). The sky,
+# painted clouds and all, is muted and light, the leaves saturated, the trunk and outlines dark: a
+# pixel is sky below this saturation and above this brightness (its brightest channel), over this
+# much soft edge; a gap enclosed by the tree is sky only when bluer than red by this much (a muted
+# lilac leaf is redder)
 TREE_AREA = {'width': 680, 'height': 300}
-FIT_AREA = {'width': 1100, 'height': 300}
-FIT_ROWS = 270
-SKY_DISTANCE = (14, 30)
+SKY = {'saturation': 0.43, 'brightness': 0.37, 'soft': 0.06}
+GAP_BLUE = 12 / 255
 
 UNASSOCIATED = oiio.ImageSpec()
 UNASSOCIATED.attribute('oiio:UnassociatedAlpha', 1)
@@ -193,29 +195,32 @@ def read_rgb(path):
 
 
 def cut_tree_mask(picture):
-    """How much each pixel of the top left is tree rather than sky, in 0 to 1. Cut by colour, so from
-    a picture whose sky stands out from the leaves."""
-    area = picture[: FIT_AREA['height'], : FIT_AREA['width']] * 255
-    height, width = area.shape[:2]
-    ys, xs = np.mgrid[0:height, 0:width].astype(np.float32)
-    u, v = xs / width, ys / height
-    terms = np.stack([u**i * v**j for i in range(5) for j in range(5) if i + j <= 4], axis=-1)
+    """How much each pixel of the top left is tree rather than sky, in 0 to 1. Cut by colour (see
+    SKY): the tree is what looks like tree joined to the top left corner, the sky what is open to the
+    area's right or bottom, or a gap in the tree bluer than red; the edge is soft."""
+    area = picture[: TREE_AREA['height'], : TREE_AREA['width']]
+    brightness = area.max(axis=2)
+    saturation = (brightness - area.min(axis=2)) / np.maximum(brightness, 1e-6)
+    soft = SKY['soft']
+    sky = np.clip((SKY['saturation'] - saturation) / soft + 0.5, 0, 1) * np.clip(
+        (brightness - SKY['brightness']) / soft + 0.5, 0, 1
+    )
+    tree = 1 - sky
 
-    # the sky as a smooth surface, fitted first to the clear sky right of the tree, then again to
-    # everything that looks like sky
-    sky_mask = np.zeros((height, width), bool)
-    sky_mask[:FIT_ROWS, TREE_AREA['width'] - 40 :] = True
-    for _ in range(4):
-        sky = np.empty_like(area)
-        for c in range(3):
-            coefficients, *_ = np.linalg.lstsq(terms[sky_mask][::7], area[..., c][sky_mask][::7], rcond=None)
-            sky[..., c] = terms @ coefficients
-        distance = np.sqrt(((area - sky) ** 2).sum(axis=2))
-        sky_mask = distance < SKY_DISTANCE[0] - 2
-        sky_mask[FIT_ROWS:] = False
+    parts, _ = label(tree > 0.5)
+    joined = parts == parts[0, 0]
+    gaps, count = label(~joined)
+    open_gaps = set(np.unique(np.concatenate([gaps[-1], gaps[:, -1]]))) - {0}
+    for k in range(1, count + 1):
+        if k in open_gaps:
+            continue
+        gap = gaps == k
+        red, _, blue = area[gap].mean(axis=0)
+        if blue - red < GAP_BLUE:
+            joined |= gap
 
-    lo, hi = SKY_DISTANCE
-    return np.clip((distance - lo) / (hi - lo), 0, 1)[: TREE_AREA['height'], : TREE_AREA['width']]
+    # the tree solid, and the pixels just outside it as much tree as they look, for a soft edge
+    return np.where(joined, 1, np.where(grow(joined, 2), np.clip(tree * 2, 0, 1), 0))
 
 
 def write_tree():

@@ -64,7 +64,7 @@
 						diameter={sizes.width * theme.spin.scale}
 						icon={['spin_default', 'spin_disabled'].includes(key) ? 'spin' : 'stop'}
 						iconColor={theme.spin.icon}
-						outlineWidth={theme.outlineWidth * 1.3}
+						outlineWidth={theme.spin.outlineWidth ?? theme.outlineWidth * 1.3}
 						outline={faceDisabled ? theme.outlineDisabled : (theme.spin.outline ?? theme.outline)}
 						fill={faceDisabled
 							? theme.spin.fillDisabled

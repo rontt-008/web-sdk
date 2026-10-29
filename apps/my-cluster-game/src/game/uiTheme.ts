@@ -1,48 +1,76 @@
-import { UI_THEME_CLEAN, LayoutDesktopBar, type UiTheme } from 'components-ui-pixi';
+import { UI_THEME_CLEAN, LayoutDesktopPanel, type UiTheme } from 'components-ui-pixi';
 import { UI_HTML_THEME_CLEAN, type UiHtmlTheme } from 'components-ui-html';
 
-// The same UI as Cat Hunt (apps/my-game/src/game/uiTheme.ts): black buttons and panels, a bar along
-// the bottom on wide screens, the red swoosh buy bonus button and black menus.
+// The UI chunky and charcoal, from the user's mock: near-black outlines, hard drop shadows under the
+// buttons, panels and text, a faint highlight along their tops; on wide screens a panel right across
+// the bottom with the win and the bet in recessed wells and a big spin disc. The menus are black.
 
-// the UI is black instead of the clean theme's charcoal
+const OUTLINE = 0x0a0a0c;
+const PANEL = 0x232227;
+const BUTTON = 0x34333a;
+const WHITE = 0xffffff;
+const CREAM = 0xf1ece1;
+const LABEL = 0xb8b4c6;
 const BLACK = 0x000000;
+
+// outlines are drawn in a button's own units, before it is scaled to its size on the bar: these come
+// out about 3 px around the small buttons and 4 px around the spin and buy bonus discs, as in the mock
+const BUTTON_OUTLINE = 6.8;
+const SPIN_OUTLINE = 5;
+const BUY_BONUS_OUTLINE = 4.1;
 
 export const uiTheme: UiTheme = {
 	...UI_THEME_CLEAN,
 	button: {
 		...UI_THEME_CLEAN.button,
-		fill: BLACK,
-		fillHovered: 0x262626,
-		fillPressed: 0x141414,
-		iconActive: BLACK,
+		fill: BUTTON,
+		fillHovered: 0x403f47,
+		fillPressed: 0x2a2930,
+		fillActive: CREAM,
+		fillDisabled: 0x2a2930,
+		icon: WHITE,
+		iconActive: PANEL,
+		iconDisabled: 0x77757f,
 	},
-	// a dark grey spin button with a white icon, a little lighter than the black panels around it
+	// a dark spin disc with a white arrow
 	spin: {
 		...UI_THEME_CLEAN.spin,
-		fill: 0x2b2b2b,
-		fillHovered: 0x3a3a3a,
-		fillPressed: 0x1f1f1f,
-		fillDisabled: 0x45474e,
-		icon: 0xffffff,
+		fill: 0x26252a,
+		fillHovered: 0x302f35,
+		fillPressed: 0x1d1c20,
+		fillDisabled: 0x3a3940,
+		icon: WHITE,
+		outline: OUTLINE,
+		outlineWidth: SPIN_OUTLINE,
 	},
-	// dark panels behind the balance, win and bet amounts so they read on the background
-	label: { ...UI_THEME_CLEAN.label, panel: BLACK, panelAlpha: 0.92 },
-	// no outlines around the buttons and panels, and slightly rounded corners on the panels
-	outlineWidth: 0,
-	panelCornerRadius: 0.12,
-	// on wide and almost square screens, a bar of panels along the bottom
-	layouts: { desktop: LayoutDesktopBar, tablet: LayoutDesktopBar },
-	// one round buy bonus button right of the spin button: the bonus logo in red with a thin black
-	// outline, on solid near-black in a thin white ring, with no shadow
+	// the panels charcoal, greyish lilac labels over white amounts
+	label: { panel: PANEL, panelAlpha: 1, label: LABEL, value: WHITE },
+	outline: OUTLINE,
+	outlineDisabled: OUTLINE,
+	outlineWidth: BUTTON_OUTLINE,
+	outlineAlpha: 1,
+	panelCornerRadius: 0.21,
+	shadow: { color: BLACK, highlight: { color: WHITE, alpha: 0.09 } },
+	panelBar: {
+		outlineWidth: 4,
+		divider: 0x36353c,
+		well: { fill: 0x111014, border: 0x2e2d33 },
+		betWell: 0x131216,
+		betLevel: { track: 0x2d2c33, fill: CREAM },
+		win: 0xffd34d,
+	},
+	// on wide and almost square screens, the chunky panel right across the bottom
+	layouts: { desktop: LayoutDesktopPanel, tablet: LayoutDesktopPanel },
+	// the buy bonus button a disc at the bar's left end: the bonus logo in red with a thin black
+	// outline, on charcoal
 	buyBonus: {
-		fill: 0x0c0c0c,
-		fillHovered: 0x1f1f1f,
-		fillPressed: 0x050505,
-		shadow: false,
-		icon: 0xb50208,
+		fill: 0x2c2b31,
+		fillHovered: 0x37363d,
+		fillPressed: PANEL,
+		icon: 0xd3140c,
 		sprite: 'buyBonusLogo',
 		spriteOutline: { key: 'buyBonusLogoOutline', color: BLACK },
-		ring: { color: 0xffffff, width: 3 },
+		ring: { color: OUTLINE, width: BUY_BONUS_OUTLINE },
 	},
 	// mute music and mute sounds buttons beside the menu button, instead of the menu's sound switch
 	muteButtons: true,

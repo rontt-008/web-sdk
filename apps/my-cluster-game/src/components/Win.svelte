@@ -18,7 +18,7 @@
 	import WinCoins from './WinCoins.svelte';
 	import WinAnimation from './WinAnimation.svelte';
 	import PressToContinue from './PressToContinue.svelte';
-	import { SYMBOL_SIZE } from '../game/constants';
+	import { LAYOUT_UNIT } from '../game/constants';
 	import { getContext } from '../game/context';
 
 	const context = getContext();
@@ -71,7 +71,7 @@
 									text={bookEventAmountToCurrencyString(countUpAmount)}
 									style={{
 										fontFamily: 'gold',
-										fontSize: SYMBOL_SIZE * 3.6,
+										fontSize: LAYOUT_UNIT * 3.6,
 										align: 'center',
 										fontWeight: 'bold',
 										letterSpacing: 0,
@@ -86,7 +86,7 @@
 								text={bookEventAmountToCurrencyString(countUpAmount)}
 								style={{
 									fontFamily: 'gold',
-									fontSize: SYMBOL_SIZE,
+									fontSize: LAYOUT_UNIT,
 									align: 'center',
 									fontWeight: 'bold',
 									letterSpacing: 0,

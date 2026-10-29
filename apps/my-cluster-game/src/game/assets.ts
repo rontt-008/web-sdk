@@ -13,38 +13,25 @@ export default {
 		src: new URL('../../assets/sprites/pressToContinueText/MM_pressanywhere.json', import.meta.url).href,
 		preload: true,
 	},
-	H1: {
-		type: 'spine',
-		src: {
-			atlas: new URL('../../assets/spines/symbols/symbols.atlas', import.meta.url).href,
-			skeleton: new URL('../../assets/spines/symbols/h1.json', import.meta.url).href,
-			scale: 2,
-		},
+	// the high symbols (see SYMBOL_INFO_MAP): their idle loops, 120 frames of 256 x 256 at 30 a
+	// second, played in every state (see art-source/symbol-idles.py)
+	blueberriesIdle: {
+		type: 'spriteSheet',
+		src: new URL('../../assets/sprites/symbolIdles/blueberries-idle.json', import.meta.url).href,
 	},
-	H2: {
-		type: 'spine',
-		src: {
-			atlas: new URL('../../assets/spines/symbols/symbols.atlas', import.meta.url).href,
-			skeleton: new URL('../../assets/spines/symbols/h2.json', import.meta.url).href,
-			scale: 2,
-		},
+	runestoneIdle: {
+		type: 'spriteSheet',
+		src: new URL('../../assets/sprites/symbolIdles/runestone-idle.json', import.meta.url).href,
 	},
-	H3: {
-		type: 'spine',
-		src: {
-			atlas: new URL('../../assets/spines/symbols/symbols.atlas', import.meta.url).href,
-			skeleton: new URL('../../assets/spines/symbols/h3.json', import.meta.url).href,
-			scale: 2,
-		},
+	mushroomIdle: {
+		type: 'spriteSheet',
+		src: new URL('../../assets/sprites/symbolIdles/mushroom-idle.json', import.meta.url).href,
 	},
-	H4: {
-		type: 'spine',
-		src: {
-			atlas: new URL('../../assets/spines/symbols/symbols.atlas', import.meta.url).href,
-			skeleton: new URL('../../assets/spines/symbols/h4.json', import.meta.url).href,
-			scale: 2,
-		},
+	acornIdle: {
+		type: 'spriteSheet',
+		src: new URL('../../assets/sprites/symbolIdles/acorn-idle.json', import.meta.url).href,
 	},
+	// the sample's fifth high symbol, not in this game's config
 	H5: {
 		type: 'spine',
 		src: {
@@ -53,37 +40,22 @@ export default {
 			scale: 2,
 		},
 	},
-	L1: {
-		type: 'spine',
-		src: {
-			atlas: new URL('../../assets/spines/symbols/symbols.atlas', import.meta.url).href,
-			skeleton: new URL('../../assets/spines/symbols/l1.json', import.meta.url).href,
-			scale: 2,
-		},
+	// the low symbols (see SYMBOL_INFO_MAP), 256 x 256 (see art-source/README.md)
+	leafGreen: {
+		type: 'sprite',
+		src: new URL('../../assets/symbols/leaf-green.webp', import.meta.url).href,
 	},
-	L2: {
-		type: 'spine',
-		src: {
-			atlas: new URL('../../assets/spines/symbols/symbols.atlas', import.meta.url).href,
-			skeleton: new URL('../../assets/spines/symbols/l2.json', import.meta.url).href,
-			scale: 2,
-		},
+	leafBrown: {
+		type: 'sprite',
+		src: new URL('../../assets/symbols/leaf-brown.webp', import.meta.url).href,
 	},
-	L3: {
-		type: 'spine',
-		src: {
-			atlas: new URL('../../assets/spines/symbols/symbols.atlas', import.meta.url).href,
-			skeleton: new URL('../../assets/spines/symbols/l3.json', import.meta.url).href,
-			scale: 2,
-		},
+	leafRed: {
+		type: 'sprite',
+		src: new URL('../../assets/symbols/leaf-red.webp', import.meta.url).href,
 	},
-	L4: {
-		type: 'spine',
-		src: {
-			atlas: new URL('../../assets/spines/symbols/symbols.atlas', import.meta.url).href,
-			skeleton: new URL('../../assets/spines/symbols/l4.json', import.meta.url).href,
-			scale: 2,
-		},
+	leafYellow: {
+		type: 'sprite',
+		src: new URL('../../assets/symbols/leaf-yellow.webp', import.meta.url).href,
 	},
 	M: {
 		type: 'spine',

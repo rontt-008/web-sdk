@@ -11,6 +11,7 @@ import { winLevelMap } from './winLevelMap';
 import { eventEmitter } from './eventEmitter';
 import {
 	SYMBOL_SIZE,
+	LAYOUT_UNIT,
 	BOARD_SIZES,
 	INITIAL_BOARD,
 	BOARD_DIMENSIONS,
@@ -88,11 +89,13 @@ export const stateGame = $state({
 	scatterCounter: 0,
 });
 
-// how far above the middle of the screen the board sits, so its frame clears the UI under it
-const BOARD_RAISE = { desktop: 59, landscape: 55, tablet: 55, portrait: 40 };
-// how far right of the middle (left when negative): on wide screens, left to leave the fox room on
-// the right; on phones held sideways, right to clear the menu, mute and buy bonus buttons on the left
-const BOARD_SHIFT = { desktop: -150, landscape: 100, tablet: 0, portrait: 0 };
+// how far above the middle of the screen the board sits, so its frame clears the UI under it (on
+// wide screens its posts reach almost to the top of the screen, and their feet just behind the bar)
+const BOARD_RAISE = { desktop: 27, landscape: 55, tablet: 55, portrait: 40 };
+// how far right of the middle (left when negative): on wide screens a little left, to leave the fox
+// room on the right; on phones held sideways, right to clear the menu, mute and buy bonus buttons on
+// the left
+const BOARD_SHIFT = { desktop: -80, landscape: 100, tablet: 0, portrait: 0 };
 
 const boardLayout = () => ({
 	x:
@@ -107,44 +110,48 @@ const boardLayout = () => ({
 });
 
 // The board frame art (static/assets/board-frame.webp, made from art-source/board-frame-plain.webp
-// with a dark outline and a soft shadow): the square it is drawn on, the see-through opening the
-// symbols show in, and how far the wood, rocks, leaves and outline reach, in the art's pixels.
+// by art-source/board-frame.py): its size, the inner edges of its branches (the opening, which
+// BoardFrame fills with a panel), and how far the branches and leaves reach, in the art's pixels.
 const BOARD_FRAME_ART = {
-	size: 1342,
-	opening: { left: 187, top: 192, right: 1156, bottom: 1146 },
-	visible: { left: 64, top: 61, right: 1278, bottom: 1270 },
+	width: 1342,
+	height: 1342,
+	opening: { left: 186, top: 234, right: 1175, bottom: 1148 },
+	visible: { left: 64, top: 102, right: 1287, bottom: 1256 },
 };
-// between the outer symbols and the wood
-const BOARD_FRAME_MARGIN = SYMBOL_SIZE * 0.1;
+// between the outer symbols and the branches
+const BOARD_FRAME_MARGIN = LAYOUT_UNIT * 0.1;
 
-// the frame drawn so its opening is the board plus a margin; `opening` and `visible` are where its
-// opening and its art reach
+// the frame drawn so its opening fits the board plus a margin, centred on it; `opening` and
+// `visible` are where its opening and its art reach
 const boardFrameLayout = () => {
 	const board = boardLayout();
-	const { size, opening, visible } = BOARD_FRAME_ART;
-	// the board's units per pixel of the art
-	const scaleX = (board.width + BOARD_FRAME_MARGIN * 2) / (opening.right - opening.left);
-	const scaleY = (board.height + BOARD_FRAME_MARGIN * 2) / (opening.bottom - opening.top);
+	const { width, height, opening, visible } = BOARD_FRAME_ART;
+	// the board's units per pixel of the art, the same both ways so the art keeps its shape: the
+	// opening is a little wider than tall, so there is more panel left and right of the board
+	const scale = Math.max(
+		(board.width + BOARD_FRAME_MARGIN * 2) / (opening.right - opening.left),
+		(board.height + BOARD_FRAME_MARGIN * 2) / (opening.bottom - opening.top),
+	);
 	const openingX = (opening.left + opening.right) / 2;
 	const openingY = (opening.top + opening.bottom) / 2;
 
 	return {
 		x: board.x,
 		y: board.y,
-		anchor: { x: openingX / size, y: openingY / size },
-		width: size * scaleX,
-		height: size * scaleY,
+		anchor: { x: openingX / width, y: openingY / height },
+		width: width * scale,
+		height: height * scale,
 		opening: {
-			left: board.x - (openingX - opening.left) * scaleX,
-			right: board.x + (opening.right - openingX) * scaleX,
-			top: board.y - (openingY - opening.top) * scaleY,
-			bottom: board.y + (opening.bottom - openingY) * scaleY,
+			left: board.x - (openingX - opening.left) * scale,
+			right: board.x + (opening.right - openingX) * scale,
+			top: board.y - (openingY - opening.top) * scale,
+			bottom: board.y + (opening.bottom - openingY) * scale,
 		},
 		visible: {
-			left: board.x - (openingX - visible.left) * scaleX,
-			right: board.x + (visible.right - openingX) * scaleX,
-			top: board.y - (openingY - visible.top) * scaleY,
-			bottom: board.y + (visible.bottom - openingY) * scaleY,
+			left: board.x - (openingX - visible.left) * scale,
+			right: board.x + (visible.right - openingX) * scale,
+			top: board.y - (openingY - visible.top) * scale,
+			bottom: board.y + (visible.bottom - openingY) * scale,
 		},
 	};
 };

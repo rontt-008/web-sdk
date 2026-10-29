@@ -1,6 +1,7 @@
 import type { BetType } from 'rgs-requests';
 
 import type { SymbolName, RawSymbol, GameType, Position } from './types';
+import type { RuneName, RuneOffset } from './runes';
 
 type BookEventReveal = {
 	index: number;
@@ -88,17 +89,48 @@ type BookEventSetWin = {
 };
 
 // new
-type BookEventUpdateGrid = {
-	index: number;
-	type: 'updateGrid';
-	gridMultipliers: number[][];
-};
-
 type BookEventFreeSpinRetrigger = {
 	index: number;
 	type: 'freeSpinRetrigger';
 	totalFs: number;
 	positions: Position[];
+};
+
+// the runes (see runes.ts): a rune shows behind the symbols, `offset` from where RUNES has it, its
+// spots under winning clusters light up, and with all lit it is collected (and the next one shows)
+type BookEventRuneShow = {
+	index: number;
+	type: 'runeShow';
+	rune: RuneName;
+	offset: RuneOffset;
+};
+
+type BookEventRuneLight = {
+	index: number;
+	type: 'runeLight';
+	rune: RuneName;
+	positions: Position[];
+};
+
+type BookEventRuneComplete = {
+	index: number;
+	type: 'runeComplete';
+	rune: RuneName;
+};
+
+// after the free spins: the power spins, with the collected runes' powers
+type BookEventPowerSpinsTrigger = {
+	index: number;
+	type: 'powerSpinsTrigger';
+	totalSpins: number;
+	runes: RuneName[];
+};
+
+type BookEventUpdatePowerSpin = {
+	index: number;
+	type: 'updatePowerSpin';
+	amount: number;
+	total: number;
 };
 
 // customised
@@ -122,8 +154,12 @@ export type BookEvent =
 	| BookEventSetWin
 	| BookEventFreeSpinEnd
 	// new
-	| BookEventUpdateGrid
 	| BookEventFreeSpinRetrigger
+	| BookEventRuneShow
+	| BookEventRuneLight
+	| BookEventRuneComplete
+	| BookEventPowerSpinsTrigger
+	| BookEventUpdatePowerSpin
 	// customised
 	| BookEventCreateBonusSnapshot;
 
