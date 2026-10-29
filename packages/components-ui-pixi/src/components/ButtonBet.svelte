@@ -1,4 +1,7 @@
 <script lang="ts">
+	import { backOut } from 'svelte/easing';
+	import { Tween } from 'svelte/motion';
+
 	import { Container, Text } from 'pixi-svelte';
 	import { UI_FONT_FAMILY } from 'constants-shared/fonts';
 	import { Button, type ButtonProps } from 'components-pixi';
@@ -7,6 +10,7 @@
 
 	import UiSprite from './UiSprite.svelte';
 	import UiThemeButtonFace from './UiThemeButtonFace.svelte';
+	import UiThemeSpinFace from './UiThemeSpinFace.svelte';
 	import ButtonBetProvider from './ButtonBetProvider.svelte';
 	import { UI_BASE_FONT_SIZE, UI_BASE_SIZE } from '../constants';
 	import { i18nDerived } from '../i18n/i18nDerived';
@@ -27,6 +31,17 @@
 	);
 	const sizes = { width: UI_BASE_SIZE, height: UI_BASE_SIZE };
 	const theme = getUiTheme();
+
+	// the rimmed face's sync icon turns a full circle, overshooting a little, as each spin starts
+	// (from the button, the space bar or auto play)
+	const SPIN_TURN = { duration: 800, easing: backOut };
+	const iconRotation = new Tween(0, SPIN_TURN);
+	let wasIdle = context.stateXstateDerived.isIdle();
+	$effect(() => {
+		const idle = context.stateXstateDerived.isIdle();
+		if (wasIdle && !idle) iconRotation.target += 360;
+		wasIdle = idle;
+	});
 </script>
 
 <!-- over the disabled button: why it can't be pressed -->
@@ -54,7 +69,26 @@
 <ButtonBetProvider>
 	{#snippet children({ key, onpress })}
 		<OnHotkey hotkey="Space" disabled={hotkeyDisabled} {onpress} />
-		{#if theme}
+		{#if theme?.spin.rim}
+			{@const rim = theme.spin.rim}
+			{@const faceDisabled = disabled || ['spin_disabled', 'stop_disabled'].includes(key)}
+			<Button {...props} {sizes} {onpress} {disabled}>
+				{#snippet children({ center, hovered, pressed })}
+					<UiThemeSpinFace
+						{center}
+						{hovered}
+						{pressed}
+						diameter={sizes.width * theme.spin.scale}
+						fill={faceDisabled ? theme.spin.fillDisabled : theme.spin.fill}
+						rim={rim.color}
+						rimWidth={rim.width}
+						iconColor={faceDisabled ? theme.button.iconDisabled : theme.spin.icon}
+						rotation={iconRotation.current}
+					/>
+					{@render notEnoughBalanceText(center)}
+				{/snippet}
+			</Button>
+		{:else if theme}
 			{@const faceDisabled = disabled || ['spin_disabled', 'stop_disabled'].includes(key)}
 			<Button {...props} {sizes} {onpress} {disabled}>
 				{#snippet children({ center, hovered, pressed })}

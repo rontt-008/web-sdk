@@ -52,14 +52,15 @@ export const uiTheme: UiTheme = {
 		fillPressed: 0x141414,
 		iconActive: BLACK,
 	},
-	// a dark grey spin button with a white icon, a little lighter than the black panels around it
+	// a near-black disc in a grey rim with a white sync icon that turns on each spin
 	spin: {
 		...UI_THEME_CLEAN.spin,
-		fill: 0x2b2b2b,
+		fill: 0x1c1c1f,
 		fillHovered: 0x3a3a3a,
 		fillPressed: 0x1f1f1f,
 		fillDisabled: 0x45474e,
 		icon: 0xffffff,
+		rim: { color: 0x3a3a40, width: 6 / 166 },
 	},
 	// dark panels behind the balance, win and bet (BOOSTER) amounts so they read on the background
 	label: { ...UI_THEME_CLEAN.label, panel: BLACK, panelAlpha: 0.92 },

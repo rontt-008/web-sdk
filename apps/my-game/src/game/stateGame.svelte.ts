@@ -97,6 +97,11 @@ export const stateGame = $state({
 	scatterCounter: 0,
 	// blurs the background, board and logo behind a screen shown over them (see SceneBlur)
 	blurScene: false,
+	// fades the board, logo and the rest of the scene away, leaving only the background (the free
+	// spin outro, see Game)
+	hideScene: false,
+	// bumped when a big wild slams onto the board so the scene gives a little ground shake
+	groundShake: 0,
 	// while a win is shown, the positions in it (big wilds by their top row): the rest of the board
 	// is shaded (see ReelSymbol)
 	winHighlight: undefined as Position[] | undefined,

@@ -2,16 +2,24 @@
 	import { CanvasTextMetrics, TextStyle, type TextStyleOptions } from 'pixi.js';
 
 	const DIGITS = '0123456789';
+	const advancesCache = new Map<
+		string,
+		{ stroke: number; advance: (char: string) => number }
+	>();
 
 	// How far each character moves the next one along, without the outline (which Pixi measures as
 	// one stroke width on top of the glyph): the digits all as far as the widest, as tabular figures.
 	const advancesFor = (style: TextStyleOptions) => {
-		const textStyle = new TextStyle(style);
 		const stroke = (style.stroke as { width?: number } | undefined)?.width ?? 0;
+		const key = `${style.fontFamily ?? ''}:${style.fontSize ?? ''}:${stroke}`;
+		const cached = advancesCache.get(key);
+		if (cached) return cached;
+
+		const textStyle = new TextStyle(style);
 		const measure = (char: string) => CanvasTextMetrics.measureText(char, textStyle).width - stroke;
 		const digit = Math.max(...[...DIGITS].map(measure));
 		const cache = new Map<string, number>();
-		return {
+		const entry = {
 			stroke,
 			advance: (char: string) => {
 				if (DIGITS.includes(char)) return digit;
@@ -19,6 +27,8 @@
 				return cache.get(char)!;
 			},
 		};
+		advancesCache.set(key, entry);
+		return entry;
 	};
 
 	// how wide an amount is drawn by CountText in this style, outline included

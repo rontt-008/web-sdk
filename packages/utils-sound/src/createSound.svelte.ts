@@ -32,16 +32,25 @@ function createSound<TSoundName extends string>() {
 		// loadedAudio
 		loadedAudio = loadedAudioValue;
 
-		const newHowl = ({ src, sprite }: LoadedAudio<TSoundName>) =>
-			new Howl({ src, sprite, volume: 1 });
+		const newHowl = ({ src, sprite }: LoadedAudio<TSoundName>, preload = true) =>
+			new Howl({ src, sprite, volume: 1, preload });
 		const howl = newHowl(loadedAudio);
-		const musicHowl = loadedMusic ? newHowl(loadedMusic) : howl;
+		const musicHowl = loadedMusic ? newHowl(loadedMusic, false) : howl;
+		if (loadedMusic) {
+			howl.once('load', () => {
+				if (musicHowl.state() === 'unloaded') musicHowl.load();
+			});
+		}
 		// players
 		players = {
 			music: createPlayer<TSoundName, PlayMusic>({ loadedAudio: loadedMusic ?? loadedAudio, loop: true, howl: musicHowl, createPlay: createPlayMusic<TSoundName> }), // prettier-ignore
 			loop: createPlayer<TSoundName, PlayLoop>({ loadedAudio, loop: true, howl, createPlay: createPlayLoop<TSoundName> }), // prettier-ignore
 			once: createPlayer<TSoundName, PlayOnce>({ loadedAudio, loop: false, howl, createPlay: createPlayOnce<TSoundName> }), //  prettier-ignore
 		};
+
+		volumeMusicEffect();
+		volumeLoopEffect();
+		volumeOnceEffect();
 
 		// audioContextState and visibilityState
 		const onAudioContextChange = () => (audioContextState = Howler.ctx.state);

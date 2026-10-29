@@ -52,7 +52,8 @@
 	);
 	// same look as the win amounts on the lines, in yellow fading down to orange
 	const bigWildMultiplierStyle = $derived(
-		createBoardTextStyle({
+		bigWildMultiplier &&
+			createBoardTextStyle({
 			fontSize: bigWildMultiplierFontSize,
 			top: 0xffe234,
 			bottom: 0xff8c1a,
@@ -108,7 +109,7 @@
 		dimmed={props.dimmed}
 		oncomplete={props.oncomplete}
 	>
-		{#if bigWildMultiplier}
+		{#if bigWildMultiplier && bigWildMultiplierStyle}
 			<Text
 				anchor={0.5}
 				y={BIG_WILD_MULTIPLIER.y}

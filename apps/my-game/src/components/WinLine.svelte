@@ -250,7 +250,7 @@
 </script>
 
 <BoardContainer>
-	<Container alpha={alpha.current}>
+	<Container alpha={alpha.current} visible={alpha.current > 0}>
 		<Graphics {draw} />
 		{#if line && amountPosition}
 			<!-- the multiplier beside the amount, under it as the amount slides back over its place -->

@@ -142,9 +142,19 @@
 
 	const amountScale = new Tween(1);
 
+	const titleFontSize = $derived(
+		fitBoardFontSize({ text: title, fontSize: TITLE_FONT_SIZE, maxWidth }),
+	);
+	const amountFontSize = $derived(
+		fitBoardFontSize({
+			text: bookEventAmountToCurrencyString(amount),
+			fontSize: AMOUNT_FONT_SIZE,
+			maxWidth,
+		}),
+	);
 	const titleStyle = $derived(
 		createBoardTextStyle({
-			fontSize: fitBoardFontSize({ text: title, fontSize: TITLE_FONT_SIZE, maxWidth }),
+			fontSize: titleFontSize,
 			top: 0xfff27a,
 			bottom: 0xffc21a,
 			outline: OUTLINE_COLOR,
@@ -168,7 +178,7 @@
 	let time = $state(0);
 	$effect(() => {
 		const ticker = context.stateApp.pixiApplication?.ticker;
-		if (!ticker) return;
+		if (!show || !ticker) return;
 		const tick = () => {
 			if (show) time += ticker.deltaMS / 1000;
 		};
@@ -324,7 +334,7 @@
 	});
 </script>
 
-<FadeContainer {show} duration={FADE_DURATION}>
+<FadeContainer persistent {show} duration={FADE_DURATION}>
 	<!-- a little darker, so the text reads on any part of the scene -->
 	<CanvasSizeRectangle backgroundColor={0x000000} backgroundAlpha={0.35} />
 
@@ -336,7 +346,6 @@
 				<CountText
 					anchor={{ x: 0.5, y: 0 }}
 					text={bookEventAmountToCurrencyString(countAmount, { counting: !countDone })}
-					fitText={bookEventAmountToCurrencyString(amount)}
 					style={amountStyle}
 				/>
 			</Container>
@@ -353,5 +362,5 @@
 		</Container>
 	</MainContainer>
 
-	<PressToContinue onpress={() => onpress()} />
+	{#if show}<PressToContinue onpress={() => onpress()} />{/if}
 </FadeContainer>

@@ -13,6 +13,12 @@ export default {
 		type: 'sprite',
 		src: new URL('../../assets/hands.webp', import.meta.url).href,
 	},
+	// the leafy archway that slides in from both sides around the free spin outro's total win (see
+	// FreeSpinOutro); its middle is see-through
+	leafArchway: {
+		type: 'sprite',
+		src: new URL('../../assets/leaf-archway.png', import.meta.url).href,
+	},
 	// also shown on the loading screen, so it loads first
 	gameLogo: {
 		type: 'sprite',
@@ -210,11 +216,9 @@ export default {
 	sound: {
 		type: 'audio',
 		src: new URL('../../assets/audio/sounds.json', import.meta.url).href,
-		preload: true,
 	},
 	music: {
 		type: 'audio',
 		src: new URL('../../assets/audio/music.json', import.meta.url).href,
-		preload: true,
 	},
 } as const;

@@ -28,7 +28,7 @@
 </script>
 
 {#if alpha.current > 0 || persistent}
-	<Container {...restProps} alpha={alpha.current}>
+	<Container {...restProps} alpha={alpha.current} visible={alpha.current > 0}>
 		{@render children()}
 	</Container>
 {/if}

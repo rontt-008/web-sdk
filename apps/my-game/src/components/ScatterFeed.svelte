@@ -122,11 +122,10 @@
 
 	// the cat's mouth opens as the next scatter comes, and its eyes follow that one
 	$effect(() => {
+		const catFeed = context.stateGame.catFeed;
 		const ticker = context.stateApp.pixiApplication?.ticker;
-		if (!ticker) return;
+		if (!catFeed || !ticker) return;
 		const tick = () => {
-			const catFeed = context.stateGame.catFeed;
-			if (!catFeed) return;
 			const next = _.maxBy(flights, (flight) => flight.progress.current);
 			const t = next?.progress.current ?? 0;
 			catFeed.open = next ? Math.max(0, (t - MOUTH_OPENS_AT) / (1 - MOUTH_OPENS_AT)) : 0;
