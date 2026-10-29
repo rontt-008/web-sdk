@@ -11,6 +11,7 @@
 	import { GameVersion, Modals } from 'components-ui-html';
 
 	import { getContext } from '../game/context';
+	import { SMOOTH_TEXTURE_KEYS, smoothTexture } from '../game/smoothTextures';
 	import { uiTheme, uiHtmlTheme } from '../game/uiTheme';
 	import EnableSound from './EnableSound.svelte';
 	import EnableGameActor from './EnableGameActor.svelte';
@@ -33,11 +34,21 @@
 	import Transition from './Transition.svelte';
 	import RuneBoard from './RuneBoard.svelte';
 	import RuneTablets from './RuneTablets.svelte';
+	import BonusMeter from './BonusMeter.svelte';
+	import Logo from './Logo.svelte';
 	import PowerSpinsIntro from './PowerSpinsIntro.svelte';
 
 	const context = getContext();
 
 	onMount(() => (context.stateLayout.showLoadingScreen = true));
+
+	// the wooden frames smoothed when drawn small, once they are loaded (see smoothTextures)
+	$effect(() => {
+		for (const key of SMOOTH_TEXTURE_KEYS) {
+			const texture = context.stateApp.loadedAssets?.[key];
+			if (texture && 'source' in texture) smoothTexture(texture);
+		}
+	});
 
 	context.eventEmitter.subscribeOnMount({
 		buyBonusConfirm: () => {
@@ -90,6 +101,8 @@
 		</MainContainer>
 
 		<RuneTablets />
+		<Logo />
+		<BonusMeter />
 
 		<UI theme={uiTheme}>
 			{#snippet gameName()}

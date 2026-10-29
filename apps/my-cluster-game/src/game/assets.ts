@@ -190,6 +190,27 @@ export default {
 		type: 'sprite',
 		src: new URL('../../assets/buy-bonus-logo-outline.png', import.meta.url).href,
 	},
+	// the game's name on a wooden sign, over the bonus meter (see Logo, art-source/wood-frames.py)
+	logo: {
+		type: 'sprite',
+		src: new URL('../../assets/logo.webp', import.meta.url).href,
+	},
+	// the frame round the bonus meter, with the sign for its count (see BonusMeter,
+	// art-source/wood-frames.py)
+	bonusMeterFrame: {
+		type: 'sprite',
+		src: new URL('../../assets/bonus-meter-frame.webp', import.meta.url).href,
+	},	// its planks green alone, revealed from the left as it fills
+	bonusMeterFill: {
+		type: 'sprite',
+		src: new URL('../../assets/bonus-meter-fill.webp', import.meta.url).href,
+	},
+
+	// the frame round each rune box left of the board (see RuneTablet, art-source/wood-frames.py)
+	runeBoxFrame: {
+		type: 'sprite',
+		src: new URL('../../assets/rune-box-frame.webp', import.meta.url).href,
+	},
 	// the wooden frame around the board (see boardFrameLayout)
 	boardFrame: {
 		type: 'sprite',

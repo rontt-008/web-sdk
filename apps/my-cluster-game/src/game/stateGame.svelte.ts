@@ -111,12 +111,13 @@ const boardLayout = () => ({
 
 // The board frame art (static/assets/board-frame.webp, made from art-source/board-frame-plain.webp
 // by art-source/board-frame.py): its size, the inner edges of its branches (the opening, which
-// BoardFrame fills with a panel), and how far the branches and leaves reach, in the art's pixels.
+// BoardFrame fills with a panel), and how far the branches and leaves reach, in the art's pixels
+// (`upperRight`: how far right they reach down to 450 px, beside the bonus meter).
 const BOARD_FRAME_ART = {
 	width: 1342,
 	height: 1342,
 	opening: { left: 186, top: 234, right: 1175, bottom: 1148 },
-	visible: { left: 64, top: 102, right: 1287, bottom: 1256 },
+	visible: { left: 64, top: 102, right: 1287, bottom: 1256, upperRight: 1273 },
 };
 // between the outer symbols and the branches
 const BOARD_FRAME_MARGIN = LAYOUT_UNIT * 0.1;
@@ -152,9 +153,78 @@ const boardFrameLayout = () => {
 			right: board.x + (visible.right - openingX) * scale,
 			top: board.y - (openingY - visible.top) * scale,
 			bottom: board.y + (visible.bottom - openingY) * scale,
+			upperRight: board.x + (visible.upperRight - openingX) * scale,
 		},
 	};
 };
+
+// The logo (Logo) with the bonus meter (BonusMeter) under it, both keeping their shapes (their art
+// is LOGO_ART and BONUS_METER_ART, width x height) and as wide as each other: right of the board
+// frame, as big as fits between it (clear of it) and the screen's edge, from the top of the screen
+// down to no lower than the middle of the board (the fox stands below them; no wider than maxWidth
+// on very wide screens). With too little room there (phones held upright, almost square screens),
+// the meter over the middle of the frame's top as wide as it, and the logo over it as big as fits.
+export const LOGO_ART = { width: 1579, height: 849 };
+export const BONUS_METER_ART = { width: 1783, height: 541 };
+const SIDE = {
+	gap: LAYOUT_UNIT * 0.04,
+	between: LAYOUT_UNIT * 0.1,
+	above: LAYOUT_UNIT * 0.15,
+	margin: LAYOUT_UNIT * 0.04,
+	minWidth: LAYOUT_UNIT * 2.5,
+	maxWidth: LAYOUT_UNIT * 7,
+};
+const LOGO_ASPECT = LOGO_ART.width / LOGO_ART.height;
+const BONUS_METER_ASPECT = BONUS_METER_ART.width / BONUS_METER_ART.height;
+
+const sideLayout = () => {
+	const board = boardLayout();
+	const frame = boardFrameLayout().visible;
+	const main = stateLayoutDerived.mainLayout();
+	const screenRight = main.width / 2 + stateLayoutDerived.canvasSizes().width / 2 / main.scale;
+	const screenTop = main.height / 2 - main.y / main.scale;
+	const left = frame.upperRight + SIDE.gap;
+	const room = screenRight - SIDE.margin - left;
+
+	if (room >= SIDE.minWidth) {
+		const top = screenTop + SIDE.margin;
+		const fits = (board.y - top - SIDE.between) / (1 / LOGO_ASPECT + 1 / BONUS_METER_ASPECT);
+		const width = Math.min(SIDE.maxWidth, room, fits);
+		const x = left + (room - width) / 2;
+		const logo = { x, y: top, width, height: width / LOGO_ASPECT };
+		const meter = {
+			x,
+			y: logo.y + logo.height + SIDE.between,
+			width,
+			height: width / BONUS_METER_ASPECT,
+		};
+		return { logo, meter };
+	}
+
+	const middle = (frame.left + frame.right) / 2;
+	const bottom = frame.top - SIDE.above;
+	const meterWidth = Math.min(
+		frame.right - frame.left,
+		(bottom - screenTop - SIDE.margin) * BONUS_METER_ASPECT,
+	);
+	const meterHeight = meterWidth / BONUS_METER_ASPECT;
+	const meter = { x: middle - meterWidth / 2, y: bottom - meterHeight, width: meterWidth, height: meterHeight };
+	const logoHeight = Math.max(
+		0,
+		Math.min(meterWidth / LOGO_ASPECT, meter.y - SIDE.between - screenTop - SIDE.margin),
+	);
+	const logoWidth = logoHeight * LOGO_ASPECT;
+	const logo = {
+		x: middle - logoWidth / 2,
+		y: meter.y - SIDE.between - logoHeight,
+		width: logoWidth,
+		height: logoHeight,
+	};
+	return { logo, meter };
+};
+
+const logoLayout = () => sideLayout().logo;
+const bonusMeterLayout = () => sideLayout().meter;
 
 // The background picture (static/assets/background.webp): its size, and how far down it the dirt
 // path in front of the rocks on the right is, where the fox stands, in its pixels.
@@ -213,6 +283,8 @@ export const stateGameDerived = {
 	onSymbolLand,
 	boardLayout,
 	boardFrameLayout,
+	bonusMeterLayout,
+	logoLayout,
 	backgroundLayout,
 	backgroundGround,
 	boardRaw,

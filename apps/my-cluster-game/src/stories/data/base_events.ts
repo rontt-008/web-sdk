@@ -6,7 +6,85 @@ export default {
 		"board": [
 			[
 				{
-					"name": "H3"
+					"name": "L2"
+				},
+				{
+					"name": "L3"
+				},
+				{
+					"name": "L4"
+				},
+				{
+					"name": "L4"
+				},
+				{
+					"name": "L2"
+				},
+				{
+					"name": "L2"
+				},
+				{
+					"name": "H4"
+				}
+			],
+			[
+				{
+					"name": "L4"
+				},
+				{
+					"name": "L2"
+				},
+				{
+					"name": "L1"
+				},
+				{
+					"name": "H4"
+				},
+				{
+					"name": "L3"
+				},
+				{
+					"name": "L3"
+				},
+				{
+					"name": "L3"
+				}
+			],
+			[
+				{
+					"name": "L3"
+				},
+				{
+					"name": "L4"
+				},
+				{
+					"name": "L2"
+				},
+				{
+					"name": "L4"
+				},
+				{
+					"name": "L3"
+				},
+				{
+					"name": "L3"
+				},
+				{
+					"name": "L4"
+				}
+			],
+			[
+				{
+					"name": "L3"
+				},
+				{
+					"name": "L4"
+				},
+				{
+					"name": "L4"
+				},
+				{
+					"name": "L4"
 				},
 				{
 					"name": "L2"
@@ -15,106 +93,27 @@ export default {
 					"name": "H2"
 				},
 				{
+					"name": "L2"
+				}
+			],
+			[
+				{
 					"name": "L4"
 				},
 				{
-					"name": "L2"
+					"name": "L1"
+				},
+				{
+					"name": "L4"
 				},
 				{
 					"name": "L4"
 				},
 				{
 					"name": "L3"
-				}
-			],
-			[
-				{
-					"name": "L2"
-				},
-				{
-					"name": "S",
-					"scatter": true
 				},
 				{
 					"name": "H4"
-				},
-				{
-					"name": "L3"
-				},
-				{
-					"name": "H1"
-				},
-				{
-					"name": "H4"
-				},
-				{
-					"name": "H3"
-				}
-			],
-			[
-				{
-					"name": "L4"
-				},
-				{
-					"name": "H3"
-				},
-				{
-					"name": "L4"
-				},
-				{
-					"name": "L2"
-				},
-				{
-					"name": "L3"
-				},
-				{
-					"name": "L3"
-				},
-				{
-					"name": "L3"
-				}
-			],
-			[
-				{
-					"name": "L1"
-				},
-				{
-					"name": "L4"
-				},
-				{
-					"name": "L3"
-				},
-				{
-					"name": "L1"
-				},
-				{
-					"name": "L4"
-				},
-				{
-					"name": "L4"
-				},
-				{
-					"name": "L3"
-				}
-			],
-			[
-				{
-					"name": "L3"
-				},
-				{
-					"name": "L2"
-				},
-				{
-					"name": "L3"
-				},
-				{
-					"name": "L4"
-				},
-				{
-					"name": "L4"
-				},
-				{
-					"name": "L1"
 				},
 				{
 					"name": "L2"
@@ -122,11 +121,11 @@ export default {
 			]
 		],
 		"paddingPositions": [
-			238,
-			29,
-			9,
-			8,
-			179
+			39,
+			204,
+			186,
+			134,
+			232
 		],
 		"gameType": "basegame",
 		"anticipation": [
@@ -139,40 +138,28 @@ export default {
 	},
 	"setTotalWin": {
 		"type": "setTotalWin",
-		"amount": 400
+		"amount": 50
 	},
 	"finalWin": {
 		"type": "finalWin",
-		"amount": 51830
+		"amount": 50
 	},
 	"winInfo": {
 		"type": "winInfo",
-		"totalWin": 260,
+		"totalWin": 50,
 		"wins": [
 			{
-				"symbol": "L2",
+				"symbol": "L4",
 				"clusterSize": 7,
-				"win": 240,
+				"win": 50,
 				"positions": [
 					{
-						"reel": 0,
-						"row": 4
-					},
-					{
-						"reel": 1,
-						"row": 4
-					},
-					{
 						"reel": 2,
-						"row": 4
+						"row": 1
 					},
 					{
 						"reel": 3,
-						"row": 4
-					},
-					{
-						"reel": 3,
-						"row": 3
+						"row": 1
 					},
 					{
 						"reel": 3,
@@ -181,50 +168,26 @@ export default {
 					{
 						"reel": 4,
 						"row": 2
-					}
-				],
-				"meta": {
-					"globalMult": 2,
-					"clusterMult": 1,
-					"winWithoutMult": 1.2,
-					"overlay": {
-						"reel": 2,
-						"row": 4
-					}
-				}
-			},
-			{
-				"symbol": "L4",
-				"clusterSize": 5,
-				"win": 20,
-				"positions": [
-					{
-						"reel": 1,
-						"row": 3
-					},
-					{
-						"reel": 2,
-						"row": 3
-					},
-					{
-						"reel": 2,
-						"row": 2
-					},
-					{
-						"reel": 2,
-						"row": 1
 					},
 					{
 						"reel": 3,
-						"row": 1
+						"row": 3
+					},
+					{
+						"reel": 4,
+						"row": 3
+					},
+					{
+						"reel": 2,
+						"row": 3
 					}
 				],
 				"meta": {
-					"globalMult": 2,
+					"globalMult": 1,
 					"clusterMult": 1,
-					"winWithoutMult": 0.1,
+					"winWithoutMult": 0.5,
 					"overlay": {
-						"reel": 2,
+						"reel": 3,
 						"row": 2
 					}
 				}
@@ -233,47 +196,16 @@ export default {
 	},
 	"updateTumbleWin": {
 		"type": "updateTumbleWin",
-		"amount": 260
+		"amount": 50
 	},
 	"tumbleBoard": {
 		"type": "tumbleBoard",
 		"newSymbols": [
+			[],
+			[],
 			[
-				{
-					"name": "L4"
-				}
-			],
-			[
-				{
-					"name": "L3"
-				},
-				{
-					"name": "L4"
-				}
-			],
-			[
-				{
-					"name": "L3"
-				},
 				{
 					"name": "L2"
-				},
-				{
-					"name": "L4"
-				},
-				{
-					"name": "L3"
-				}
-			],
-			[
-				{
-					"name": "L4"
-				},
-				{
-					"name": "L4"
-				},
-				{
-					"name": "L3"
 				},
 				{
 					"name": "L4"
@@ -282,41 +214,31 @@ export default {
 			[
 				{
 					"name": "L2"
+				},
+				{
+					"name": "L3"
+				},
+				{
+					"name": "L4"
+				}
+			],
+			[
+				{
+					"name": "L3"
+				},
+				{
+					"name": "L3"
 				}
 			]
 		],
 		"explodingSymbols": [
 			{
-				"reel": 0,
-				"row": 4
-			},
-			{
-				"reel": 1,
-				"row": 4
-			},
-			{
-				"reel": 1,
-				"row": 3
-			},
-			{
-				"reel": 2,
-				"row": 4
-			},
-			{
 				"reel": 2,
 				"row": 3
-			},
-			{
-				"reel": 2,
-				"row": 2
 			},
 			{
 				"reel": 2,
 				"row": 1
-			},
-			{
-				"reel": 3,
-				"row": 4
 			},
 			{
 				"reel": 3,
@@ -329,6 +251,10 @@ export default {
 			{
 				"reel": 3,
 				"row": 1
+			},
+			{
+				"reel": 4,
+				"row": 3
 			},
 			{
 				"reel": 4,
@@ -338,30 +264,17 @@ export default {
 	},
 	"setWin": {
 		"type": "setWin",
-		"amount": 400,
-		"winLevel": 4
+		"amount": 50,
+		"winLevel": 2
 	},
 	"freeSpinTrigger": {
 		"type": "freeSpinTrigger",
 		"totalFs": 10,
-		"positions": [
-			{
-				"reel": 0,
-				"row": 5
-			},
-			{
-				"reel": 3,
-				"row": 2
-			},
-			{
-				"reel": 4,
-				"row": 4
-			},
-			{
-				"reel": 4,
-				"row": 5
-			}
-		]
+		"positions": []
+	},
+	"updateBonusMeter": {
+		"type": "updateBonusMeter",
+		"amount": 25
 	},
 	"updateFreeSpin": {
 		"type": "updateFreeSpin",
@@ -374,15 +287,15 @@ export default {
 	},
 	"freeSpinEnd": {
 		"type": "freeSpinEnd",
-		"amount": 51830,
-		"winLevel": 9
+		"amount": 3350,
+		"winLevel": 5
 	},
 	"runeShow": {
 		"type": "runeShow",
 		"rune": "hagall",
 		"offset": {
-			"reel": 0,
-			"row": 1
+			"reel": 1,
+			"row": -1
 		}
 	},
 	"runeLight": {
@@ -390,19 +303,23 @@ export default {
 		"rune": "hagall",
 		"positions": [
 			{
-				"reel": 1,
-				"row": 3
-			},
-			{
-				"reel": 2,
-				"row": 4
-			},
-			{
 				"reel": 2,
 				"row": 3
 			},
 			{
 				"reel": 3,
+				"row": 3
+			},
+			{
+				"reel": 3,
+				"row": 2
+			},
+			{
+				"reel": 3,
+				"row": 1
+			},
+			{
+				"reel": 4,
 				"row": 3
 			}
 		]
@@ -415,53 +332,34 @@ export default {
 		"type": "runeShow",
 		"rune": "hagall",
 		"offset": {
-			"reel": 0,
-			"row": 1
+			"reel": 1,
+			"row": -1
 		}
 	},
 	"runeCompleteShow": {
 		"type": "runeShow",
 		"rune": "hagall",
 		"offset": {
-			"reel": 0,
-			"row": 1
+			"reel": 1,
+			"row": -1
 		}
 	},
 	"powerSpinsTrigger": {
 		"type": "powerSpinsTrigger",
-		"totalSpins": 3,
+		"totalSpins": 2,
 		"runes": [
-			"hagall",
-			"fehu",
-			"ingwaz",
-			"othala"
+			"othala",
+			"fehu"
 		]
 	},
 	"updatePowerSpin": {
 		"type": "updatePowerSpin",
 		"amount": 1,
-		"total": 3
+		"total": 2
 	},
 	"freeSpinRetrigger": {
 		"type": "freeSpinRetrigger",
 		"totalFs": 15,
-		"positions": [
-			{
-				"reel": 0,
-				"row": 5
-			},
-			{
-				"reel": 3,
-				"row": 2
-			},
-			{
-				"reel": 4,
-				"row": 4
-			},
-			{
-				"reel": 4,
-				"row": 5
-			}
-		]
+		"positions": []
 	}
 };

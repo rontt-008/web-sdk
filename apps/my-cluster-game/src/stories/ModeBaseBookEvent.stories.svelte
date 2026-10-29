@@ -56,6 +56,16 @@
 />
 
 <Story
+	name="updateBonusMeter"
+	args={templateArgs({
+		skipLoadingScreen: true,
+		data: events.updateBonusMeter,
+		action: async (data) => await playBookEvent(data, { bookEvents: [] }),
+	})}
+	{template}
+/>
+
+<Story
 	name="freeSpinTrigger"
 	args={templateArgs({
 		skipLoadingScreen: true,

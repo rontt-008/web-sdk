@@ -28,6 +28,10 @@ export const BOARD_SIZES = {
 	height: SYMBOL_SIZE * BOARD_DIMENSIONS.y,
 };
 
+// symbols in a base game spin's clusters, all its tumbles together, that start the free spins (the
+// bar right of the board counts them, see BonusMeter); the same as in scripts/generate-5x5-books.mjs
+export const BONUS_TRIGGER = 35;
+
 export const BACKGROUND_RATIO = 2039 / 1000;
 export const PORTRAIT_BACKGROUND_RATIO = 1242 / 2208;
 const PORTRAIT_RATIO = 800 / 1422;

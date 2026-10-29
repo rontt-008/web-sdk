@@ -118,6 +118,14 @@ type BookEventRuneComplete = {
 	rune: RuneName;
 };
 
+// in a base game spin, after each win: how many symbols its clusters have had so far, all its tumbles
+// together (with BONUS_TRIGGER, the free spins start)
+type BookEventUpdateBonusMeter = {
+	index: number;
+	type: 'updateBonusMeter';
+	amount: number;
+};
+
 // after the free spins: the power spins, with the collected runes' powers
 type BookEventPowerSpinsTrigger = {
 	index: number;
@@ -158,6 +166,7 @@ export type BookEvent =
 	| BookEventRuneShow
 	| BookEventRuneLight
 	| BookEventRuneComplete
+	| BookEventUpdateBonusMeter
 	| BookEventPowerSpinsTrigger
 	| BookEventUpdatePowerSpin
 	// customised

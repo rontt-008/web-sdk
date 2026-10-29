@@ -12,6 +12,7 @@ import type { EmitterEventSound } from '../components/Sound.svelte';
 import type { EmitterEventTransition } from '../components/Transition.svelte';
 import type { EmitterEventRunes } from '../components/RuneBoard.svelte';
 import type { EmitterEventPowerSpinsIntro } from '../components/PowerSpinsIntro.svelte';
+import type { EmitterEventBonusMeter } from '../components/BonusMeter.svelte';
 
 export type EmitterEventGame =
 	| EmitterEventBoard
@@ -27,4 +28,5 @@ export type EmitterEventGame =
 	| EmitterEventSound
 	| EmitterEventTransition
 	| EmitterEventRunes
-	| EmitterEventPowerSpinsIntro;
+	| EmitterEventPowerSpinsIntro
+	| EmitterEventBonusMeter;

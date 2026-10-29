@@ -5,14 +5,17 @@
 //
 // It plays the cluster sample's rules on a 5x5 board and writes the rounds in the same book format
 // the math SDK exports: clusters of 5+ matching symbols (side by side) pay the config's paytable and
-// tumble out, new symbols drop in from above; 4+ scatters give 10 free spins, where the global
-// multiplier is the free spin's number.
+// tumble out, new symbols drop in from above. A base game spin whose clusters, over all its
+// tumbles, have 35 or more symbols (BONUS_TRIGGER; the bar right of the board counts them,
+// updateBonusMeter) gives 10 free spins, where the global multiplier is the free spin's number; the
+// bonus bet mode buys them. There are no scatters.
 //
 // Runes: in the free spins one of four runes (RUNES, in random order) lies behind the symbols,
 // anywhere on the board it fits. A spot of it lights up when a winning cluster covers it; when all
 // its spots are lit, its power is collected, and the next rune shows when the next spin starts.
-// After the free spins come 2 power spins (POWER_SPINS) with the collected powers: Fehu x3 on every win (POWER_MULT), Hagall a 3x3 block of wilds on the board,
-// Othala only premiums, Ingwaz one power spin more. Wilds join any symbol's clusters.
+// After the free spins come 2 power spins (POWER_SPINS) with the collected powers: Fehu x3 on
+// every win (POWER_MULT), Hagall a 3x3 block of wilds on the board, Othala only premiums, Ingwaz one
+// power spin more. Wilds join any symbol's clusters.
 //
 // The odds are not tuned: this is for seeing the game, not for its RTP.
 import { readFileSync, writeFileSync } from 'node:fs';
@@ -26,15 +29,17 @@ const REELS = 5;
 const ROWS = 5;
 const MIN_CLUSTER = 5;
 const FREE_SPINS = 10;
-const SCATTERS_TO_TRIGGER = 4;
+// symbols in a base spin's clusters, all its tumbles together, that start the free spins: the same
+// as BONUS_TRIGGER in src/game/constants.ts
+const BONUS_TRIGGER = 35;
 // amounts in books are in hundredths of the bet
 const BET = 100;
 
-// how often each symbol is drawn (scatters only in the base game; premiums in power spins with
-// Othala's power): in free spins mostly a few leaves, so clusters, and with them lit rune spots, come
-// often enough for runes to be collected
+// how often each symbol is drawn (premiums in power spins with Othala's power): mostly a few leaves,
+// so clusters come often enough for the bonus meter to fill now and then (about 1 base spin in 190)
+// and for runes to be collected in the free spins
 const WEIGHTS = {
-	basegame: { L4: 24, L3: 22, L2: 20, L1: 18, H4: 11, H3: 9, H2: 7, H1: 5, S: 1.2 },
+	basegame: { L4: 40, L3: 30, L2: 20, L1: 12, H4: 5, H3: 4, H2: 3, H1: 2 },
 	freegame: { L4: 40, L3: 30, L2: 20, L1: 12, H4: 5, H3: 4, H2: 3, H1: 2 },
 	premiums: { H4: 11, H3: 9, H2: 7, H1: 5 },
 };
@@ -93,43 +98,12 @@ const draw = (gameType) => {
 	const weights = WEIGHTS[gameType];
 	const total = Object.values(weights).reduce((a, b) => a + b, 0);
 	let roll = random() * total;
-	const name = Object.keys(weights).find((key) => (roll -= weights[key]) < 0) ?? 'L4';
-	return name === 'S' ? { name, scatter: true } : { name };
+	return { name: Object.keys(weights).find((key) => (roll -= weights[key]) < 0) ?? 'L4' };
 };
 
 // a board is reels of 7 symbols: one above the board, the 5 rows, one below (rows 1-5 show)
 const newBoard = (gameType) =>
 	Array.from({ length: REELS }, () => Array.from({ length: ROWS + 2 }, () => draw(gameType)));
-
-const scatterPositions = (board) =>
-	board.flatMap((reel, r) =>
-		reel.slice(1, ROWS + 1).flatMap((symbol, i) => (symbol.scatter ? [{ reel: r, row: i + 1 }] : [])),
-	);
-
-// puts `count` scatters on the board, in different places
-const forceScatters = (board, count) => {
-	const spots = Array.from({ length: REELS * ROWS }, (_, i) => i).sort(() => random() - 0.5);
-	let placed = scatterPositions(board).length;
-	for (const spot of spots) {
-		if (placed >= count) break;
-		const symbol = board[spot % REELS][1 + Math.floor(spot / REELS)];
-		if (!symbol.scatter) {
-			board[spot % REELS][1 + Math.floor(spot / REELS)] = { name: 'S', scatter: true };
-			placed++;
-		}
-	}
-};
-
-// reels after the third scatter (counting reel by reel) spin longer, 1, 2, 3 ...
-const anticipation = (board) => {
-	let seen = 0;
-	let next = 0;
-	return board.map((reel) => {
-		const value = seen >= SCATTERS_TO_TRIGGER - 1 ? ++next : 0;
-		seen += reel.slice(1, ROWS + 1).filter((symbol) => symbol.scatter).length;
-		return value;
-	});
-};
 
 // a wild is in the clusters of every symbol next to it, so each symbol has its own spots seen
 const findClusters = (board) => {
@@ -139,7 +113,7 @@ const findClusters = (board) => {
 		for (let row = 1; row <= ROWS; row++) {
 			const name = board[r][row].name;
 			const seen = (seenBy[name] ??= new Set());
-			if (seen.has(`${r}:${row}`) || name === 'S' || name === 'W') continue;
+			if (seen.has(`${r}:${row}`) || name === 'W') continue;
 			const positions = [];
 			const queue = [{ reel: r, row }];
 			seen.add(`${r}:${row}`);
@@ -237,8 +211,9 @@ const placeWilds = (board) => {
 	}
 };
 
-// One spin with its tumbles, pushing its events. In free spins `runes` holds the runes. New symbols
-// are drawn from `symbols` (WEIGHTS).
+// One spin with its tumbles, pushing its events; its win, and how many symbols its clusters had (all
+// its tumbles together; a base game spin counts them on the bonus meter as it goes). In free spins
+// `runes` holds the runes. New symbols are drawn from `symbols` (WEIGHTS).
 const playSpin = ({ events, board, gameType, symbols = gameType, globalMult, runes = null }) => {
 	const push = (event) => events.push({ index: events.length, ...event });
 	push({
@@ -246,10 +221,11 @@ const playSpin = ({ events, board, gameType, symbols = gameType, globalMult, run
 		board: structuredClone(board),
 		paddingPositions: board.map(() => randomInt(250)),
 		gameType,
-		anticipation: anticipation(board),
+		anticipation: board.map(() => 0),
 	});
 
 	let spinWin = 0;
+	let connected = 0;
 	for (;;) {
 		const clusters = findClusters(board);
 		if (!clusters.length) break;
@@ -273,6 +249,8 @@ const playSpin = ({ events, board, gameType, symbols = gameType, globalMult, run
 		const exploding = unique(clusters.flatMap((c) => c.positions)).sort(
 			(a, b) => a.reel - b.reel || b.row - a.row,
 		);
+		connected += exploding.length;
+		if (gameType === 'basegame') push({ type: 'updateBonusMeter', amount: connected });
 		if (runes) lightRune(push, runes, exploding);
 
 		// the new symbols drop in on top: the first becomes the one above the board, and the one that
@@ -286,7 +264,7 @@ const playSpin = ({ events, board, gameType, symbols = gameType, globalMult, run
 		});
 		push({ type: 'tumbleBoard', newSymbols: structuredClone(newSymbols), explodingSymbols: exploding });
 	}
-	return spinWin;
+	return { win: spinWin, connected };
 };
 
 // The power spins after the free spins, with the collected runes' powers. Returns their win.
@@ -303,7 +281,7 @@ const playPowerSpins = ({ events, push, collected, total }) => {
 		push({ type: 'updateGlobalMult', globalMult: mult });
 		const board = newBoard(symbols);
 		if (powers.includes('wilds')) placeWilds(board);
-		const spinWin = playSpin({ events, board, gameType: 'freegame', symbols, globalMult: mult });
+		const spinWin = playSpin({ events, board, gameType: 'freegame', symbols, globalMult: mult }).win;
 		win += spinWin;
 		if (spinWin > 0) push({ type: 'setWin', amount: spinWin, winLevel: winLevel(spinWin / BET) });
 		push({ type: 'setTotalWin', amount: total + win });
@@ -311,29 +289,33 @@ const playPowerSpins = ({ events, push, collected, total }) => {
 	return win;
 };
 
-// A whole round: the base spin and, with 4+ scatters, the free spins and the power spins.
-const playRound = ({ id, scatters = 0 }) => {
+// A whole round: the base spin and, with BONUS_TRIGGER symbols in its clusters (or bought, `bonus`),
+// the free spins and the power spins.
+const playRound = ({ id, bonus = false }) => {
 	const events = [];
 	const push = (event) => events.push({ index: events.length, ...event });
 
-	const board = newBoard('basegame');
-	if (scatters) forceScatters(board, scatters);
-	const baseWin = playSpin({ events, board, gameType: 'basegame', globalMult: 1 });
+	const { win: baseWin, connected } = playSpin({
+		events,
+		board: newBoard('basegame'),
+		gameType: 'basegame',
+		globalMult: 1,
+	});
 	if (baseWin > 0) push({ type: 'setWin', amount: baseWin, winLevel: winLevel(baseWin / BET) });
 	push({ type: 'setTotalWin', amount: baseWin });
 
 	let total = baseWin;
 	let freeWin = 0;
-	const triggers = scatterPositions(board);
-	if (triggers.length >= SCATTERS_TO_TRIGGER) {
-		push({ type: 'freeSpinTrigger', totalFs: FREE_SPINS, positions: triggers });
+	const triggered = bonus || connected >= BONUS_TRIGGER;
+	if (triggered) {
+		push({ type: 'freeSpinTrigger', totalFs: FREE_SPINS, positions: [] });
 		const runes = newRunes();
 		for (let spin = 1; spin <= FREE_SPINS; spin++) {
 			push({ type: 'updateFreeSpin', amount: spin, total: FREE_SPINS });
 			push({ type: 'updateGlobalMult', globalMult: spin });
 			// the first rune, or the next one after one was collected
 			if (!runes.current) showNextRune(push, runes);
-			const win = playSpin({
+			const { win } = playSpin({
 				events,
 				board: newBoard('freegame'),
 				gameType: 'freegame',
@@ -356,7 +338,7 @@ const playRound = ({ id, scatters = 0 }) => {
 		id,
 		payoutMultiplier: Math.round(total) / BET,
 		events,
-		criteria: freeWin > 0 || triggers.length >= SCATTERS_TO_TRIGGER ? 'freegame' : total > 0 ? 'basegame' : '0',
+		criteria: triggered ? 'freegame' : total > 0 ? 'basegame' : '0',
 		baseGameWins: baseWin / BET,
 		freeGameWins: freeWin / BET,
 	};
@@ -371,10 +353,16 @@ if (process.argv.includes('--stats')) {
 	const hits = natural.filter((b) => b.payoutMultiplier > 0).length;
 	const mean = natural.reduce((s, b) => s + b.payoutMultiplier, 0) / natural.length;
 	const triggers = pool.length - natural.length;
-	const bonus = Array.from({ length: 2000 }, (_, i) => playRound({ id: i, scatters: 4 }));
+	const bonus = Array.from({ length: 2000 }, (_, i) => playRound({ id: i, bonus: true }));
 	const bonusMean = bonus.reduce((s, b) => s + b.payoutMultiplier, 0) / bonus.length;
 	console.log(`base: hit rate ${((hits / natural.length) * 100).toFixed(1)}%, mean ${mean.toFixed(3)}x`);
 	console.log(`free spins triggered naturally: 1 in ${Math.round(pool.length / Math.max(1, triggers))}`);
+	// the bonus meter: how far base spins fill it
+	const meters = pool.map((b) =>
+		Math.max(0, ...b.events.filter((e) => e.type === 'updateBonusMeter').map((e) => e.amount)),
+	);
+	const atLeast = (n) => `${((meters.filter((m) => m >= n).length / meters.length) * 100).toFixed(2)}%`;
+	console.log(`bonus meter: 10+ ${atLeast(10)}, 20+ ${atLeast(20)}, 30+ ${atLeast(30)}, 35+ ${atLeast(35)}, max ${Math.max(...meters)}`);
 	console.log(`bonus rounds: mean ${bonusMean.toFixed(1)}x, max ${Math.max(...bonus.map((b) => b.payoutMultiplier))}x`);
 	// how many runes a bonus collects, and what the power spins win
 	const collected = bonus.map((b) => b.events.filter((e) => e.type === 'runeComplete').length);
@@ -404,13 +392,13 @@ const spread = (list, count) =>
 // those short of it made up from fewer
 const BONUS_MIX = [4, 8, 8, 6, 4];
 const runesCollected = (book) => book.events.filter((e) => e.type === 'runeComplete').length;
-const bonusPool = Array.from({ length: 8000 }, (_, i) => playRound({ id: i, scatters: 4 + (i % 3 === 0) })).filter(
+const bonusPool = Array.from({ length: 8000 }, (_, i) => playRound({ id: i, bonus: true })).filter(
 	(b) => b.payoutMultiplier <= config.betModes.bonus.max_win,
 );
 // all four is rarer than 1 in 10000: play on until there is one to show (up to MORE_BONUS more)
 const MORE_BONUS = 150000;
 for (let i = 0; i < MORE_BONUS && !bonusPool.some((b) => runesCollected(b) === 4); i++) {
-	const book = playRound({ id: i, scatters: 4 });
+	const book = playRound({ id: i, bonus: true });
 	if (runesCollected(book) === 4 && book.payoutMultiplier <= config.betModes.bonus.max_win) bonusPool.push(book);
 }
 const byRunes = BONUS_MIX.map((_, n) =>
@@ -435,7 +423,13 @@ const wins = natural.filter((b) => b.payoutMultiplier > 0).sort((a, b) => a.payo
 const baseBooks = shuffle([
 	...spread(losses, 24),
 	...spread(wins, 30),
-	...pickBonus([1, 2, 1, 1, 1]),
+	// bonus rounds the bar started, spread over their wins
+	...spread(
+		pool
+			.filter((b) => b.criteria === 'freegame' && b.payoutMultiplier <= config.betModes.base.max_win)
+			.sort((a, b) => a.payoutMultiplier - b.payoutMultiplier),
+		6,
+	),
 ]).map((book, i) => ({ ...book, id: i + 1 }));
 const bonusBooks = shuffle(pickBonus(BONUS_MIX)).map((book, i) => ({ ...book, id: i + 1 }));
 
@@ -462,6 +456,7 @@ const pickEvents = (books) => {
 		tumbleBoard: first('tumbleBoard'),
 		setWin: first('setWin'),
 		freeSpinTrigger: trigger,
+		updateBonusMeter: first('updateBonusMeter', (e) => e.amount >= 15),
 		updateFreeSpin: first('updateFreeSpin'),
 		updateGlobalMult: first('updateGlobalMult', (e) => e.globalMult > 1),
 		freeSpinEnd: first('freeSpinEnd'),

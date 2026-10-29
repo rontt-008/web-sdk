@@ -23,12 +23,10 @@
 		height: panelWidth / PANEL_RATIO_DESKTOP,
 	});
 	const scale = 1;
-	// right of the board frame (the runes' boxes are left of it), level with the top of the board
-	const position = $derived({
-		x: context.stateGameDerived.boardFrameLayout().visible.right + LAYOUT_UNIT * 0.2,
-		y:
-			context.stateGameDerived.boardLayout().y -
-			context.stateGameDerived.boardLayout().height * 0.5,
+	// in the bonus meter's place under the logo (the meter is hidden in the bonus), in its middle
+	const position = $derived.by(() => {
+		const meter = context.stateGameDerived.bonusMeterLayout();
+		return { x: meter.x + (meter.width - panelSizes.width) / 2, y: meter.y };
 	});
 
 	const fontSize = LAYOUT_UNIT * 0.275;

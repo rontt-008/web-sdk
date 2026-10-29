@@ -62,6 +62,33 @@ Originals of art that is processed before it goes into `static/assets` (not load
   text inside) and the script that rendered their win animations into sprite sheets; not used since
   the framed tiles replaced them. Don't run `symbol-sheets.py` for the tiles: it would also draw
   the old symbols' stills over the new ones.
+- `rune-box-frame.webp`: the frame of branches wound with vines round each rune box left of the board
+  (the user's 1376 x 768 PNG, see-through outside and in the middle; haze under alpha 16 cleared,
+  alpha 240+ made solid, cropped to the art with 4 px round it: 1298 x 723, lossless).
+  `wood-frames.py rune-box-frame` draws `static/assets/rune-box-frame.webp` from it in the board's
+  duller look (LOOK), webp:90, and prints the opening (96-1196 x 84-641). The game cuts it into nine
+  (`src/components/NineSliceSprite.svelte`; cuts and opening in RUNE_BOX_FRAME in
+  `src/components/RuneTablet.svelte`): the corners, with the posts' crossings and their vines, keep
+  their shape and the branches between them stretch, so it fits the boxes on any screen.
+- `bonus-meter-frame.webp`: the bonus meter, branches and maple leaves round a bar of planks, with a
+  wooden sign over it (the user's 1792 x 534 PNG, see-through outside; cleaned and cropped the same
+  way, which moved its pixels -8, 4: 1783 x 541, lossless). `wood-frames.py bonus-meter-frame` draws
+  `static/assets/bonus-meter-frame.webp` (85 KB) the same way, but in the art's own colours (VIVID: the
+  board's duller look turned its planks grey). It also writes `static/assets/bonus-meter-fill.webp`
+  (29 KB): the planks alone, green (their grain and seams kept), found by spreading from the middle of
+  the bar up to the branches' and leaves' dark outlines (PLANKS in the script); 1504 x 189, at
+  138, 259 in the meter's art. The game draws the meter as it is (it keeps its shape,
+  BONUS_METER_ART in `src/game/stateGame.svelte.ts`), the green planks over it, shown from the left
+  as far as it is full, and the count on the sign (its middle at 885, 146, measured by hand), in
+  `src/components/BonusMeter.svelte`.
+- `logo.webp`: the game's name, RuneFall, on a wooden sign with maple leaves and a rune stone (the
+  user's 1665 x 945 PNG, see-through round it; cleaned and cropped the same way: 1579 x 849,
+  lossless). `wood-frames.py logo` draws `static/assets/logo.webp` (192 KB) in its own colours. The
+  game draws it right of the board over the bonus meter (LOGO_ART and the layout in
+  `src/game/stateGame.svelte.ts`, `src/components/Logo.svelte`).
+- Run `wood-frames.py` from apps/my-cluster-game with the Python that comes with Blender, with the
+  frame's name and, for a new one, its PNG:
+  `"<Blender>/5.2/python/bin/python.exe" -I art-source/wood-frames.py <rune-box-frame|bonus-meter-frame|logo> [<new frame.png>]`.
 - `board-frame-plain.webp`: the frame of branches wound with vines and autumn leaves, without its
   outline (the user's 1254 x 1254 PNG, see-through in the middle, haze under alpha 16 cleared, alpha
   240+ made solid, lossless). `board-frame.py` draws `static/assets/board-frame.webp` from it: a

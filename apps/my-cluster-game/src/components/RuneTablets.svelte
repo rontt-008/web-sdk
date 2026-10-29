@@ -5,7 +5,7 @@
 	import { MainContainer } from 'components-layout';
 	import { FadeContainer } from 'components-pixi';
 
-	import RuneTablet from './RuneTablet.svelte';
+	import RuneTablet, { RUNE_BOX_FRAME, runeBoxFrameScale } from './RuneTablet.svelte';
 	import { getContext } from '../game/context';
 	import { LAYOUT_UNIT } from '../game/constants';
 	import {
@@ -19,16 +19,37 @@
 
 	const context = getContext();
 
-	// between the boxes and from them to the frame, from the screen's edge, and how wide they get
-	const GAP = LAYOUT_UNIT * 0.12;
-	const MARGIN = LAYOUT_UNIT * 0.15;
+	// from the boxes to the board's frame and to the screen's edge, and how wide they get
+	const GAP = LAYOUT_UNIT * 0.04;
+	const MARGIN = LAYOUT_UNIT * 0.04;
 	const MAX_WIDTH = LAYOUT_UNIT * 3.2;
+	// the column this much lower than from the top of the screen to the bottom of the board (its
+	// bottom still clears the UI's bar)
+	const DROP = LAYOUT_UNIT * 0.2;
 	// narrower than this left of the frame (phones held upright), they go in a row above it
 	const MIN_COLUMN = LAYOUT_UNIT * 0.9;
 	const ROW_HEIGHT = LAYOUT_UNIT * 1.25;
 
-	// The four boxes: a column left of the board's frame, from the top of the board to its bottom, or
-	// with no room there a row above the frame.
+	// how far neighbouring boxes overlap, so their frames' branches touch: by the see-through room
+	// beyond the branches, at the frame's size for that box (which needs the box's size: worked out
+	// a few times, it settles)
+	const { width: ART_WIDTH, height: ART_HEIGHT, outer } = RUNE_BOX_FRAME;
+	const OVERLAP = {
+		down: outer.top + (ART_HEIGHT - outer.bottom),
+		across: outer.left + (ART_WIDTH - outer.right),
+	};
+	const fitTouching = (room: number, other: number, overlap: number, upright: boolean) => {
+		let size = room / 4;
+		for (let i = 0; i < 4; i++) {
+			const scale = upright ? runeBoxFrameScale(other, size) : runeBoxFrameScale(size, other);
+			size = (room + 3 * overlap * scale) / 4;
+		}
+		const scale = upright ? runeBoxFrameScale(other, size) : runeBoxFrameScale(size, other);
+		return { size, step: size - overlap * scale };
+	};
+
+	// The four boxes, touching: a column left of the board's frame, from the top of the screen (or of
+	// the board's frame) to the bottom of the board, or with no room there a row above the frame.
 	const boxes = $derived.by(() => {
 		const main = context.stateLayoutDerived.mainLayout();
 		const board = context.stateGameDerived.boardLayout();
@@ -40,23 +61,25 @@
 		const right = frame.visible.left - GAP;
 		const left = Math.max(screenLeft + MARGIN, right - MAX_WIDTH);
 		if (right - left >= MIN_COLUMN) {
-			const top = board.y - board.height / 2;
-			const height = (board.height - GAP * 3) / 4;
-			return RUNE_NAMES.map((_, i) => ({
-				x: left,
-				y: top + i * (height + GAP),
-				width: right - left,
-				height,
-			}));
+			const top = Math.max(screenTop + MARGIN, frame.visible.top) + DROP;
+			const bottom = board.y + board.height / 2 + DROP;
+			const width = right - left;
+			const { size, step } = fitTouching(bottom - top, width, OVERLAP.down, true);
+			return RUNE_NAMES.map((_, i) => ({ x: left, y: top + i * step, width, height: size }));
 		}
 
-		const width = (frame.visible.right - frame.visible.left - GAP * 3) / 4;
 		const bottom = frame.visible.top - GAP;
 		const height = Math.min(ROW_HEIGHT, bottom - screenTop - MARGIN);
+		const { size, step } = fitTouching(
+			frame.visible.right - frame.visible.left,
+			height,
+			OVERLAP.across,
+			false,
+		);
 		return RUNE_NAMES.map((_, i) => ({
-			x: frame.visible.left + i * (width + GAP),
+			x: frame.visible.left + i * step,
 			y: bottom - height,
-			width,
+			width: size,
 			height,
 		}));
 	});
