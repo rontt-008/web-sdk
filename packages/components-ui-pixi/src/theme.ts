@@ -29,6 +29,10 @@ export type UiTheme = {
 		// defaults to `outline`
 		outline?: number;
 		scale: number;
+		// instead of the flat face: a `fill` disc, softly shaded, in a rim of this colour and width (a
+		// share of the diameter) with a sync icon that turns once each spin. It brightens on hover
+		// rather than using `fillHovered`, and keeps the sync icon while the reels spin.
+		rim?: { color: number; width: number };
 	};
 	label: {
 		panel: number;

@@ -90,6 +90,7 @@
 
 		untrack(async () => {
 			playing = motion;
+			if (motion === 'slam') context.stateGame.groundShake++;
 			await progress.set(0, { duration: 0 });
 			await progress.set(1, {
 				duration: MOTIONS[motion].duration / stateBetDerived.timeScale(),

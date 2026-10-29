@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { onMount } from 'svelte';
+
 
 	import type { LoadedAudio } from 'pixi-svelte';
 
@@ -8,7 +8,8 @@
 
 	const context = getContext();
 
-	onMount(() => {
+	$effect(() => {
+		if (!context.stateApp.loaded) return;
 		const loadedAudio = $state.snapshot(
 			context.stateApp.loadedAssets['sound'],
 		) as LoadedAudio<SoundName>;

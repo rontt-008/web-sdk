@@ -40,7 +40,8 @@
 		stroke: { color: 0x4a1c00, width: fontSize * 0.17, join: 'round' as const },
 	});
 
-	type Z = { id: number; born: number; big: boolean; tilt: number };
+	const Z_SLOTS = Math.ceil(ZZZ.life / ZZZ.every);
+	type Z = { born: number; tilt: number };
 
 	const context = getContext();
 	const styles = $derived({
@@ -49,7 +50,7 @@
 	});
 
 	let time = $state(0);
-	let zs = $state<Z[]>([]);
+	let zs = $state<(Z | undefined)[]>(Array.from({ length: Z_SLOTS }, () => undefined));
 	let nextZ = 0;
 	let made = 0;
 	$effect(() => {
@@ -59,10 +60,7 @@
 			time += ticker.deltaMS / 1000;
 			if (time < nextZ) return;
 			nextZ = time + ZZZ.every;
-			zs = [
-				...zs.filter((z) => time - z.born < ZZZ.life),
-				{ id: made, born: time, big: made % 2 === 0, tilt: _.random(-0.2, 0.2, true) },
-			];
+			zs[made % Z_SLOTS] = { born: time, tilt: _.random(-0.2, 0.2, true) };
 			made++;
 		};
 		ticker.add(tick);
@@ -75,9 +73,13 @@
 	});
 
 	// a Z part way through its life (0 to 1), about the logo's middle
-	const zLook = (z: Z) => {
+	const zLook = (z: Z | undefined) => {
+		if (!z || time - z.born >= ZZZ.life) {
+			return { visible: false, x: 0, y: 0, scale: 0, alpha: 0, rotation: 0 };
+		}
 		const age = Math.min(1, (time - z.born) / ZZZ.life);
 		return {
+			visible: true,
 			x:
 				(ZZZ.from.x - 0.5 + ZZZ.drift * age + ZZZ.wobble * Math.sin(3 * Math.PI * age)) *
 				props.width,
@@ -91,17 +93,19 @@
 
 <Container x={props.x} y={props.y + float.y} rotation={float.rotation}>
 	<Sprite key="gameLogo" anchor={0.5} width={props.width} height={props.height} />
-	{#each zs as z (z.id)}
+	{#each zs as z, index (index)}
+		{@const big = index % 2 === 0}
 		{@const look = zLook(z)}
 		<Text
-			text={z.big ? 'Z' : 'z'}
+			text={big ? 'Z' : 'z'}
 			anchor={0.5}
+			visible={look.visible}
 			x={look.x}
 			y={look.y}
 			scale={look.scale}
 			alpha={look.alpha}
 			rotation={look.rotation}
-			style={z.big ? styles.big : styles.small}
+			style={big ? styles.big : styles.small}
 		/>
 	{/each}
 </Container>

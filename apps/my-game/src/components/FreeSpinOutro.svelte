@@ -10,7 +10,9 @@
 <script lang="ts">
 	import _ from 'lodash';
 	import { Tween } from 'svelte/motion';
-	import { Container, Text } from 'pixi-svelte';
+	import * as PIXI from 'pixi.js';
+	import { cubicOut } from 'svelte/easing';
+	import { BaseSprite, Container, Text } from 'pixi-svelte';
 	import { FadeContainer, WinCountUpProvider } from 'components-pixi';
 	import { bookEventAmountToCurrencyString } from 'utils-shared/amount';
 	import { waitForResolve } from 'utils-shared/wait';
@@ -23,7 +25,6 @@
 	import type { BonusType } from '../game/types';
 	import { createBoardTextStyle, fitBoardFontSize } from '../game/textStyles';
 	import Burst from './Burst.svelte';
-	import Confetti from './Confetti.svelte';
 	import CountText from './CountText.svelte';
 	import PressToContinue from './PressToContinue.svelte';
 	import StandingArt from './StandingArt.svelte';
@@ -64,7 +65,6 @@
 	const BALL_ROCK_PERIOD = 1.6;
 	const widthAt = (key: SymbolImageKey, height: number) =>
 		(SYMBOL_IMAGES[key].image[0] * height) / SYMBOL_IMAGES[key].image[1];
-	const CONFETTI_COUNT = 60;
 
 	const context = getContext();
 	const layout = $derived(context.stateLayoutDerived.mainLayoutStandard());
@@ -90,11 +90,56 @@
 
 	// seconds since it was shown
 	let time = $state(0);
+
+	// The scene (board, logo, ...) fades away, leaving the background, and the leafy archway slides
+	// in from both sides around the total win. Its picture is split down the middle: the left half
+	// comes from the left, the right half from the right.
+	const ARCH_SLIDE_DURATION = 0.7;
+	const canvas = $derived(context.stateLayoutDerived.canvasSizes());
+	const archTexture = $derived(
+		context.stateApp.loadedAssets?.leafArchway as PIXI.Texture | undefined,
+	);
+	const archHalves = $derived.by(() => {
+		if (!archTexture) return undefined;
+		const { width, height } = archTexture;
+		return {
+			left: new PIXI.Texture({
+				source: archTexture.source,
+				frame: new PIXI.Rectangle(0, 0, width / 2, height),
+			}),
+			right: new PIXI.Texture({
+				source: archTexture.source,
+				frame: new PIXI.Rectangle(width / 2, 0, width / 2, height),
+			}),
+		};
+	});
+	// Scaled to cover the screen without stretching the art; on narrow screens (phones) each half is
+	// positioned so its leafy pillar and flower pots frame the side of the screen rather than being
+	// pushed off the edges by the wide empty gap in the middle of the image.
+	const archProgress = $derived(Math.min(1, time / ARCH_SLIDE_DURATION));
+	const arch = $derived.by(() => {
+		const imageWidth = archTexture?.width ?? 1;
+		const imageHeight = archTexture?.height ?? 1;
+		const scale = Math.max(canvas.width / imageWidth, canvas.height / imageHeight);
+		const width = imageWidth * scale;
+		const height = imageHeight * scale;
+		const halfWidth = width / 2;
+		const restLeftX = Math.max((canvas.width - width) / 2, -width * 0.1);
+		const restRightX = Math.min(canvas.width / 2, canvas.width - halfWidth + width * 0.1);
+		const progress = cubicOut(archProgress);
+		return {
+			scale,
+			y: (canvas.height - height) / 2,
+			leftX: -halfWidth + (restLeftX + halfWidth) * progress,
+			rightX: canvas.width - (canvas.width - restRightX) * progress,
+		};
+	});
 	$effect(() => {
+		if (!show) return;
 		const ticker = context.stateApp.pixiApplication?.ticker;
 		if (!ticker) return;
 		const tick = () => {
-			if (show) time += ticker.deltaMS / 1000;
+			time += ticker.deltaMS / 1000;
 		};
 		ticker.add(tick);
 		return () => ticker.remove(tick);
@@ -122,33 +167,40 @@
 		await finishScale.set(1, { duration: 380, easing: (t) => popOut(t, 3) });
 	};
 
+	const titleFontSize = $derived(
+		fitBoardFontSize({ text: TITLE, fontSize: TITLE_FONT_SIZE, maxWidth }),
+	);
 	const titleStyle = $derived(
 		createBoardTextStyle({
-			fontSize: fitBoardFontSize({ text: TITLE, fontSize: TITLE_FONT_SIZE, maxWidth }),
+			fontSize: titleFontSize,
 			top: 0xfff27a,
 			bottom: 0xffc21a,
 			outline: OUTLINE_COLOR,
 		}),
 	);
 	// sized for the final amount, the longest the count-up gets, so it keeps one size while counting
+	const amountFontSize = $derived(
+		fitBoardFontSize({
+			text: bookEventAmountToCurrencyString(amount),
+			fontSize: AMOUNT_FONT_SIZE,
+			maxWidth,
+		}),
+	);
 	const amountStyle = $derived(
 		createBoardTextStyle({
-			fontSize: fitBoardFontSize({
-				text: bookEventAmountToCurrencyString(amount),
-				fontSize: AMOUNT_FONT_SIZE,
-				maxWidth,
-			}),
+			fontSize: amountFontSize,
 			top: 0xffffff,
 			bottom: 0xfff2c2,
 			outline: OUTLINE_COLOR,
 		}),
 	);
 
-	// only touches the blur while shown, so it can't turn off another screen's blur
+	// the scene goes while shown, leaving only the background (see Game); the blur isn't used, as the
+	// background stays clear behind the archway
 	$effect(() => {
 		if (!show) return;
-		context.stateGame.blurScene = true;
-		return () => (context.stateGame.blurScene = false);
+		context.stateGame.hideScene = true;
+		return () => (context.stateGame.hideScene = false);
 	});
 
 	context.eventEmitter.subscribeOnMount({
@@ -168,6 +220,25 @@
 </script>
 
 <FadeContainer {show} duration={FADE_DURATION}>
+	<!-- a little darker, so the text reads on any part of the scene -->
+	<CanvasSizeRectangle backgroundColor={0x000000} backgroundAlpha={0.2} />
+
+	<!-- the leafy archway, closing in from both sides around the total win -->
+	{#if archHalves}
+		<BaseSprite
+			texture={archHalves.left}
+			x={arch.leftX}
+			y={arch.y}
+			scale={arch.scale}
+		/>
+		<BaseSprite
+			texture={archHalves.right}
+			x={arch.rightX}
+			y={arch.y}
+			scale={arch.scale}
+		/>
+	{/if}
+
 	{#if winLevelData}
 		<WinCountUpProvider
 			{amount}
@@ -181,13 +252,6 @@
 						kick();
 					}}
 				/>
-
-				<!-- a little darker, so the text reads on any part of the scene -->
-				<CanvasSizeRectangle backgroundColor={0x000000} backgroundAlpha={0.25} />
-
-				{#if winLevelData?.type === 'big'}
-					<Confetti active={show && !countUpCompleted} count={CONFETTI_COUNT} />
-				{/if}
 
 				<MainContainer standard>
 					<Container x={layout.width * 0.5} y={layout.height * 0.38}>
@@ -226,7 +290,6 @@
 								text={bookEventAmountToCurrencyString(countUpAmount, {
 									counting: !countUpCompleted,
 								})}
-								fitText={bookEventAmountToCurrencyString(amount)}
 								style={amountStyle}
 							/>
 						</Container>
@@ -254,7 +317,9 @@
 					</Container>
 				</MainContainer>
 
-				<PressToContinue onpress={() => (countUpCompleted ? oncomplete() : finishCountUp())} />
+				{#if show}
+					<PressToContinue onpress={() => (countUpCompleted ? oncomplete() : finishCountUp())} />
+				{/if}
 			{/snippet}
 		</WinCountUpProvider>
 	{/if}

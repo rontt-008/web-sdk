@@ -54,6 +54,14 @@
 		gameAlpha.target = context.stateLayout.showLoadingScreen ? 0 : 1;
 	});
 
+	// the board, logo and the rest of the scene fade away for the free spin outro, leaving the
+	// background
+	const SCENE_FADE_DURATION = 350;
+	const sceneAlpha = new Tween(1, { duration: SCENE_FADE_DURATION });
+	$effect(() => {
+		sceneAlpha.target = context.stateGame.hideScene ? 0 : 1;
+	});
+
 	setBetModeMeta();
 
 	onMount(() => (context.stateLayout.showLoadingScreen = true));
@@ -76,7 +84,10 @@
 		<Background />
 
 		{#if !context.stateLayout.showLoadingScreen}
-			<Container alpha={gameAlpha.current}>
+			<Container
+				alpha={gameAlpha.current * sceneAlpha.current}
+				visible={gameAlpha.current * sceneAlpha.current > 0}
+			>
 				<MainContainer>
 					<BoardFrame />
 					<BoardParticles />

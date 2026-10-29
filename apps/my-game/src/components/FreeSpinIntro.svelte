@@ -209,10 +209,11 @@
 	});
 
 	$effect(() => {
+		if (!show) return;
 		const ticker = context.stateApp.pixiApplication?.ticker;
 		if (!ticker) return;
 		const tick = () => {
-			if (show) time += ticker.deltaMS / 1000;
+			time += ticker.deltaMS / 1000;
 		};
 		ticker.add(tick);
 		return () => ticker.remove(tick);
@@ -238,7 +239,7 @@
 	});
 </script>
 
-<FadeContainer {show} duration={FADE_DURATION}>
+<FadeContainer persistent {show} duration={FADE_DURATION}>
 	<Graphics
 		draw={(graphics) => {
 			graphics.clear();
@@ -338,5 +339,7 @@
 		{/if}
 	</MainContainer>
 
-	<PressToContinue onpress={() => oncomplete()} />
+	{#if show}
+		<PressToContinue onpress={() => oncomplete()} />
+	{/if}
 </FadeContainer>

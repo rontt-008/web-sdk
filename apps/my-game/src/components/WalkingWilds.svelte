@@ -221,54 +221,56 @@
 	});
 </script>
 
-<!-- the big wilds, over the reels and clipped to the board like them -->
-<BoardContainer>
-	<BoardMask />
-	{#if wildsShown}
-		{#each walkers as walker, index (index)}
-			<Container
-				x={getX(walker)}
-				y={BOARD_SIZES.height / 2}
-				alpha={getAlpha(walker)}
-				scale={walker.doubled ? 1 + DOUBLE_SWELL * Math.sin(Math.PI * doubling.current) : 1}
-			>
-				<Symbol state="static" rawSymbol={walker.rawSymbol} />
-			</Container>
-		{/each}
-	{/if}
-</BoardContainer>
+{#if walkers.length > 0}
+	<!-- the big wilds, over the reels and clipped to the board like them -->
+	<BoardContainer>
+		<BoardMask />
+		{#if wildsShown}
+			{#each walkers as walker, index (index)}
+				<Container
+					x={getX(walker)}
+					y={BOARD_SIZES.height / 2}
+					alpha={getAlpha(walker)}
+					scale={walker.doubled ? 1 + DOUBLE_SWELL * Math.sin(Math.PI * doubling.current) : 1}
+				>
+					<Symbol state="static" rawSymbol={walker.rawSymbol} />
+				</Container>
+			{/each}
+		{/if}
+	</BoardContainer>
 
-<!-- the paws over them, their claws dug into the big wilds' sides, coming up from behind the
-	frame's bottom log: clipped at the bottom of the log, which is drawn again over them -->
-<BoardContainer>
-	<Rectangle
-		isMask
-		x={-SYMBOL_SIZE * 2}
-		y={-SYMBOL_SIZE}
-		width={context.stateGameDerived.boardLayout().width + SYMBOL_SIZE * 4}
-		height={log.y + log.opaqueHeight + SYMBOL_SIZE}
-	/>
-	{#if pawTextures}
-		{#each groups as group, index (index)}
-			<BaseSprite
-				texture={pawTextures.left}
-				anchor={PAW_ANCHORS.left}
-				{...PAW_SIZES}
-				x={getX(group.left) - CLAW_TIPS_FROM_MIDDLE - pawsOpen}
-				y={pawsY}
-				alpha={getAlpha(group.left)}
-			/>
-			<BaseSprite
-				texture={pawTextures.right}
-				anchor={PAW_ANCHORS.right}
-				{...PAW_SIZES}
-				x={getX(group.right) + CLAW_TIPS_FROM_MIDDLE + pawsOpen}
-				y={pawsY}
-				alpha={getAlpha(group.right)}
-			/>
-		{/each}
-	{/if}
-	{#if logTexture && walkers.length > 0}
-		<BaseSprite texture={logTexture} x={log.x} y={log.y} width={log.width} height={log.height} />
-	{/if}
-</BoardContainer>
+	<!-- the paws over them, their claws dug into the big wilds' sides, coming up from behind the
+		frame's bottom log: clipped at the bottom of the log, which is drawn again over them -->
+	<BoardContainer>
+		<Rectangle
+			isMask
+			x={-SYMBOL_SIZE * 2}
+			y={-SYMBOL_SIZE}
+			width={context.stateGameDerived.boardLayout().width + SYMBOL_SIZE * 4}
+			height={log.y + log.opaqueHeight + SYMBOL_SIZE}
+		/>
+		{#if pawTextures}
+			{#each groups as group, index (index)}
+				<BaseSprite
+					texture={pawTextures.left}
+					anchor={PAW_ANCHORS.left}
+					{...PAW_SIZES}
+					x={getX(group.left) - CLAW_TIPS_FROM_MIDDLE - pawsOpen}
+					y={pawsY}
+					alpha={getAlpha(group.left)}
+				/>
+				<BaseSprite
+					texture={pawTextures.right}
+					anchor={PAW_ANCHORS.right}
+					{...PAW_SIZES}
+					x={getX(group.right) + CLAW_TIPS_FROM_MIDDLE + pawsOpen}
+					y={pawsY}
+					alpha={getAlpha(group.right)}
+				/>
+			{/each}
+		{/if}
+		{#if logTexture}
+			<BaseSprite texture={logTexture} x={log.x} y={log.y} width={log.width} height={log.height} />
+		{/if}
+	</BoardContainer>
+{/if}
