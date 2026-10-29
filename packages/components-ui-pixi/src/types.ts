@@ -46,9 +46,10 @@ export type UiButtonOptions = Partial<Omit<ButtonProps, 'children'>> & {
 export type UiLabelOptions = {
 	stacked?: boolean;
 	// with a theme: without its own pill, for a label on a panel. The label sits over the value, both
-	// lined up on one side of a box this wide (they shrink to fit it); the label is drawn from that
-	// side, centred vertically.
-	plain?: { width: number; align: 'left' | 'right' };
+	// lined up on one side (or the middle) of a box this wide (they shrink to fit it); the label is
+	// drawn from there, centred vertically. `outline`: both outlined in the panel's colour, for a
+	// label on the game's art instead of a panel.
+	plain?: { width: number; align: 'left' | 'right' | 'center'; outline?: boolean };
 };
 
 export type LayoutUiProps = {

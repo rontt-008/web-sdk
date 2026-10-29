@@ -20,7 +20,6 @@
 	import LoadingScreen from './LoadingScreen.svelte';
 	import Fox from './Fox.svelte';
 	import BoardFrame from './BoardFrame.svelte';
-	import MultiplierGrid from './MultiplierGrid.svelte';
 	import Board from './Board.svelte';
 	import Anticipations from './Anticipations.svelte';
 	import ClusterWinAmounts from './ClusterWinAmounts.svelte';
@@ -32,6 +31,9 @@
 	import FreeSpinCounter from './FreeSpinCounter.svelte';
 	import FreeSpinOutro from './FreeSpinOutro.svelte';
 	import Transition from './Transition.svelte';
+	import RuneBoard from './RuneBoard.svelte';
+	import RuneTablets from './RuneTablets.svelte';
+	import PowerSpinsIntro from './PowerSpinsIntro.svelte';
 
 	const context = getContext();
 
@@ -72,7 +74,7 @@
 		</MainContainer>
 
 		<MainContainer>
-			<MultiplierGrid />
+			<RuneBoard />
 		</MainContainer>
 
 		<MainContainer>
@@ -87,6 +89,8 @@
 			<ClusterWinAmounts />
 		</MainContainer>
 
+		<RuneTablets />
+
 		<UI theme={uiTheme}>
 			{#snippet gameName()}
 				<UiGameName name="CLUSTER GAME" />
@@ -99,6 +103,7 @@
 		{#if ['desktop', 'landscape'].includes(context.stateLayoutDerived.layoutType())}
 			<FreeSpinCounter />
 		{/if}
+		<PowerSpinsIntro />
 		<FreeSpinOutro />
 		<Transition />
 	{/if}

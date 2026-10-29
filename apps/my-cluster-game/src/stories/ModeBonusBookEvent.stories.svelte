@@ -18,6 +18,11 @@
 	import { setContext } from '../game/context';
 	import { playBookEvent } from '../game/utils';
 	import events from './data/bonus_events';
+	import { RUNES, type RuneName, type RuneOffset } from '../game/runes';
+
+	// all of a rune's spots where it lies, as a book's positions (rows counted from 1)
+	const spotsOf = (rune: RuneName, offset: RuneOffset) =>
+		RUNES[rune].spots.map(([reel, row]) => ({ reel: reel + offset.reel, row: row + offset.row + 1 }));
 
 	setContext();
 </script>
@@ -126,16 +131,6 @@
 />
 
 <Story
-	name="updateGrid"
-	args={templateArgs({
-		skipLoadingScreen: true,
-		data: events.updateGrid,
-		action: async (data) => await playBookEvent(data, { bookEvents: [] }),
-	})}
-	{template}
-/>
-
-<Story
 	name="setWin"
 	args={templateArgs({
 		skipLoadingScreen: true,
@@ -160,6 +155,67 @@
 	args={templateArgs({
 		skipLoadingScreen: true,
 		data: events.finalWin,
+		action: async (data) => await playBookEvent(data, { bookEvents: [] }),
+	})}
+	{template}
+/>
+
+<Story
+	name="runeShow"
+	args={templateArgs({
+		skipLoadingScreen: true,
+		data: events.runeShow,
+		action: async (data) => await playBookEvent(data, { bookEvents: [] }),
+	})}
+	{template}
+/>
+
+<Story
+	name="runeLight"
+	args={templateArgs({
+		skipLoadingScreen: true,
+		data: { show: events.runeLightShow, light: events.runeLight },
+		action: async (data) => {
+			await playBookEvent(data.show, { bookEvents: [] });
+			await playBookEvent(data.light, { bookEvents: [] });
+		},
+	})}
+	{template}
+/>
+
+<Story
+	name="runeComplete"
+	args={templateArgs({
+		skipLoadingScreen: true,
+		data: { show: events.runeCompleteShow, complete: events.runeComplete },
+		action: async (data) => {
+			const { rune, offset } = data.show;
+			await playBookEvent(data.show, { bookEvents: [] });
+			await playBookEvent(
+				{ index: 0, type: 'runeLight', rune, positions: spotsOf(rune, offset) },
+				{ bookEvents: [] },
+			);
+			await playBookEvent(data.complete, { bookEvents: [] });
+		},
+	})}
+	{template}
+/>
+
+<Story
+	name="powerSpinsTrigger"
+	args={templateArgs({
+		skipLoadingScreen: true,
+		data: events.powerSpinsTrigger,
+		action: async (data) => await playBookEvent(data, { bookEvents: [] }),
+	})}
+	{template}
+/>
+
+<Story
+	name="updatePowerSpin"
+	args={templateArgs({
+		skipLoadingScreen: true,
+		data: events.updatePowerSpin,
 		action: async (data) => await playBookEvent(data, { bookEvents: [] }),
 	})}
 	{template}

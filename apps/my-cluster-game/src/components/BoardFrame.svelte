@@ -8,7 +8,8 @@
 	import { Rectangle, Sprite, SpineProvider, SpineTrack } from 'pixi-svelte';
 
 	import { getContext } from '../game/context';
-	import { SYMBOL_SIZE } from '../game/constants';
+	import { SYMBOL_SIZE, BOARD_SIZES, BOARD_DIMENSIONS } from '../game/constants';
+	import { lookColor } from '../game/look';
 
 	const context = getContext();
 	const SPINE_SCALE = { width: 0.6, height: 0.6 };
@@ -16,16 +17,32 @@
 
 	const frame = $derived(context.stateGameDerived.boardFrameLayout());
 
-	// the solid panel the symbols sit on, filling the frame's opening and reaching a little under the
-	// wood so its edges are hidden
-	const PANEL_COLOR = 0x2b170d;
-	const PANEL_OVERLAP = SYMBOL_SIZE * 0.15;
+	// the slightly see-through panel the symbols sit on, so they stand out from the background: it fills
+	// the frame's opening and reaches a little under the wood, so its edges are hidden; dark brown in
+	// the board's duller look (see look.ts), like the frame's art
+	const PANEL_COLOR = lookColor(0x24170e);
+	const PANEL_ALPHA = 0.9;
+	const PANEL_TUCK = SYMBOL_SIZE * 0.15;
 	const panel = $derived({
-		x: frame.opening.left - PANEL_OVERLAP,
-		y: frame.opening.top - PANEL_OVERLAP,
-		width: frame.opening.right - frame.opening.left + PANEL_OVERLAP * 2,
-		height: frame.opening.bottom - frame.opening.top + PANEL_OVERLAP * 2,
+		x: frame.opening.left - PANEL_TUCK,
+		y: frame.opening.top - PANEL_TUCK,
+		width: frame.opening.right - frame.opening.left + PANEL_TUCK * 2,
+		height: frame.opening.bottom - frame.opening.top + PANEL_TUCK * 2,
 	});
+
+	// thin lighter lines on the panel between the reels, so the columns are easier to follow: from the
+	// panel's top to its bottom, their ends under the wood
+	const LINE_COLOR = lookColor(0x8a6a4a);
+	const LINE_ALPHA = 0.35;
+	const LINE_WIDTH = SYMBOL_SIZE * 0.025;
+	const lines = $derived(
+		Array.from({ length: BOARD_DIMENSIONS.x - 1 }, (_, index) => ({
+			x: frame.x - BOARD_SIZES.width / 2 + SYMBOL_SIZE * (index + 1) - LINE_WIDTH / 2,
+			y: panel.y,
+			width: LINE_WIDTH,
+			height: panel.height,
+		})),
+	);
 
 	type AnimationName = 'reelhouse_glow_start' | 'reelhouse_glow_idle' | 'reelhouse_glow_exit';
 
@@ -75,7 +92,10 @@
 	</SpineProvider>
 {/if}
 
-<Rectangle {...panel} backgroundColor={PANEL_COLOR} />
+<Rectangle {...panel} backgroundColor={PANEL_COLOR} backgroundAlpha={PANEL_ALPHA} />
+{#each lines as line}
+	<Rectangle {...line} backgroundColor={LINE_COLOR} backgroundAlpha={LINE_ALPHA} />
+{/each}
 
 <!-- the wooden frame, its opening around the board (see boardFrameLayout) -->
 <Sprite

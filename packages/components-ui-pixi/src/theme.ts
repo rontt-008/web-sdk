@@ -28,6 +28,8 @@ export type UiTheme = {
 		icon: number;
 		// defaults to `outline`
 		outline?: number;
+		// defaults to 1.3 times `outlineWidth`
+		outlineWidth?: number;
 		scale: number;
 		// instead of the flat face: a `fill` disc, softly shaded, in a rim of this colour and width (a
 		// share of the diameter) with a sync icon that turns once each spin. It brightens on hover
@@ -49,8 +51,42 @@ export type UiTheme = {
 	outlineWidth: number;
 	outlineAlpha: number;
 	fontFamily: string;
+	// a chunky look: instead of the soft drop shadow, a hard one of this colour straight down under the
+	// round buttons and their icons, and the amounts' text; and a faint line of `highlight` along the
+	// top inside of the buttons
+	shadow?: { color: number; highlight?: { color: number; alpha: number } };
+	// the look of LayoutDesktopPanel's own parts (its panel is `label.panel`, outlined in `outline`)
+	panelBar?: {
+		// around the panel
+		outlineWidth: number;
+		// the line between the menu (and sound) buttons and the balance
+		divider: number;
+		// the recessed wells the win and the bet sit in
+		well: { fill: number; border: number };
+		betWell: number;
+		// the line under the bet: how far up the bet levels it is
+		betLevel: { track: number; fill: number };
+		// the win's amount while there is a win (otherwise `label.value`)
+		win?: number;
+	};
 	// replace the default layout for some screen types
 	layouts?: Partial<Record<UiLayoutType, Component<LayoutUiProps>>>;
+	// the proportions of the desktop bar (LayoutDesktopBar), for a more compact one
+	desktopBar?: {
+		// the whole bar's size on the screen types it is on (1.18 by default): the tablet's standard
+		// layout is square (1920 x 1920), so a bar that suits the desktop looks small there
+		scale?: Partial<Record<UiLayoutType, number>>;
+		// the boxes the balance, win and bet values shrink to fit (200, 170 and 180 by default)
+		labelWidth?: { balance: number; win: number; bet: number };
+		// between the panels (10 by default)
+		panelGap?: number;
+		// between the balance and the win (30 by default)
+		labelGap?: number;
+		// turbo as a round button of its own at the bar's left end, the menu (and the mute buttons) at
+		// the start of the balance's panel, and auto spin alone beside the spin button:
+		// TURBO (menu, mute music, mute sounds, balance   win) (bet ⌃⌄) (auto spin  SPIN) BUY BONUS
+		turboApart?: boolean;
+	};
 	// screen types where the game shows its own buy bonus controls instead of the UI's button
 	hideBuyBonusOn?: UiLayoutType[];
 	// the buy bonus button in its own colours, so it stands out from the other round buttons. It is
@@ -61,7 +97,7 @@ export type UiTheme = {
 		fillPressed: number;
 		// how see-through those fills are (1 = solid, the default)
 		fillAlpha?: number;
-		// false: no soft drop shadow under it
+		// false: no drop shadow under it
 		shadow?: boolean;
 		// the icon's (or the name's) colour
 		icon: number;

@@ -5,7 +5,7 @@
 	import { ResponsiveBitmapText } from 'components-pixi';
 	import { bookEventAmountToCurrencyString } from 'utils-shared/amount';
 
-	import { SYMBOL_SIZE } from '../game/constants';
+	import { LAYOUT_UNIT } from '../game/constants';
 
 	type Props = {
 		width: number;
@@ -50,7 +50,7 @@
 			anchor={0.5}
 			style={{
 				fontFamily: 'gold',
-				fontSize: 0.65 * SYMBOL_SIZE,
+				fontSize: 0.65 * LAYOUT_UNIT,
 			}}
 			text={bookEventAmountToCurrencyString(amount.current)}
 			maxWidth={props.width}
