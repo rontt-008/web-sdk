@@ -44,9 +44,38 @@ export const flutterPose = (t: number, direction: 1 | -1 = 1): SymbolPose => {
 	};
 };
 
-// each motion's curve and length in ms (as long as the gems' Spine wins were)
-export const SYMBOL_MOTIONS = {
+// Landing, as a symbol slows to a stop in its cell on a spin or a tumble: it sinks softly onto the
+// bottom of its cell (a little flatter and wider) and eases back up, once, with no hop or wobble,
+// its foot kept on the ground (the bottom of the art about `foot` below its middle).
+const LAND = {
+	squash: 0.04,
+	widen: 0.5,
+	sinkEnd: 0.3,
+	foot: SYMBOL_SIZE * 0.45,
+};
+
+export const landPose = (t: number): SymbolPose => {
+	// 0 to 1 and back, never past its rest shape: quickly into the squash, slowly out of it
+	const squash =
+		t < LAND.sinkEnd
+			? easeOut(t / LAND.sinkEnd)
+			: 1 - easeInOut((t - LAND.sinkEnd) / (1 - LAND.sinkEnd));
+	const scaleY = 1 - LAND.squash * squash;
+	return {
+		x: 0,
+		y: LAND.foot * (1 - scaleY),
+		scaleX: 1 + LAND.squash * LAND.widen * squash,
+		scaleY,
+		rotation: 0,
+	};
+};
+
+type Motion = { pose: (t: number, direction: 1 | -1) => SymbolPose; duration: number };
+
+// each motion's curve and length in ms (the flutter as long as the gems' Spine wins were)
+export const SYMBOL_MOTIONS: Record<'flutter' | 'land', Motion> = {
 	flutter: { pose: flutterPose, duration: 2000 },
+	land: { pose: landPose, duration: 300 },
 };
 
 export type SymbolMotion = keyof typeof SYMBOL_MOTIONS;

@@ -10,6 +10,8 @@ export type RawSymbol = {
 };
 export type BetMode = keyof typeof config.betModes;
 export type GameType = keyof typeof config.paddingReels;
+// which bonus the free spins are: the bonus (35+ symbols) or the super bonus (50+), its powers bigger
+export type BonusType = 'normal' | 'super';
 
 export const SYMBOL_STATES = [
 	'static',

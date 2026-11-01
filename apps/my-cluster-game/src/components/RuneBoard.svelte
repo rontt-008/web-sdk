@@ -112,6 +112,7 @@ where they tumble out -->
 			flash={flash.current}
 			spots={false}
 			{time}
+			idle
 		/>
 	{/if}
 </BoardContainer>

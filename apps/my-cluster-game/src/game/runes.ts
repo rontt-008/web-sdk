@@ -1,4 +1,4 @@
-import type { Position } from './types';
+import type { BonusType, Position } from './types';
 
 // The free spins' runes (see the rules in scripts/generate-5x5-books.mjs): one lies behind the
 // symbols at a time, anywhere on the board it fits, a spot of it lights up when a winning cluster
@@ -13,8 +13,8 @@ type Point = [x: number, y: number];
 
 type Rune = {
 	power: RunePower;
-	// what the power does, in a few words
-	powerText: string;
+	// what the power does, in a few words, in the bonus or the super bonus
+	powerText: (bonus: BonusType) => string;
 	// the spots that light up, [reel, row] with row 0 the top row (books count the rows from 1), as
 	// it lies with no offset (see RuneOffset)
 	spots: [reel: number, row: number][];
@@ -22,14 +22,26 @@ type Rune = {
 	strokes: Point[][];
 };
 
-// x3 on every win in the power spins: the same as POWER_MULT in the book generator
-export const POWER_MULT = 3;
+// what Fehu's and Hagall's powers give in the power spins of each bonus (the super bonus's, from 50+
+// symbols, bigger): the multiplier on every win, and the side of the block of wilds (drawn as one
+// big wild, BigWild); the same as BONUS_TYPES in the book generator
+export const BONUS_POWERS: Record<BonusType, { mult: number; wilds: number }> = {
+	normal: { mult: 3, wilds: 2 },
+	super: { mult: 5, wilds: 3 },
+};
 
 export const RUNES: Record<RuneName, Rune> = {
 	othala: {
 		power: 'premiums',
-		powerText: 'ONLY PREMIUMS',
-		spots: [[2, 0], [1, 1], [3, 1], [2, 2], [1, 3], [3, 3]],
+		powerText: () => 'ONLY PREMIUMS',
+		spots: [
+			[2, 0],
+			[1, 1],
+			[3, 1],
+			[2, 2],
+			[1, 3],
+			[3, 3],
+		],
 		strokes: [
 			[
 				[1.35, 3.65],
@@ -42,8 +54,16 @@ export const RUNES: Record<RuneName, Rune> = {
 	},
 	fehu: {
 		power: 'multiplier',
-		powerText: `${POWER_MULT}x MULTIPLIER`,
-		spots: [[2, 0], [3, 0], [2, 1], [3, 1], [2, 2], [2, 3], [2, 4]],
+		powerText: (bonus) => `${BONUS_POWERS[bonus].mult}x MULTIPLIER`,
+		spots: [
+			[2, 0],
+			[3, 0],
+			[2, 1],
+			[3, 1],
+			[2, 2],
+			[2, 3],
+			[2, 4],
+		],
 		strokes: [
 			[
 				[2.5, 0.25],
@@ -61,8 +81,16 @@ export const RUNES: Record<RuneName, Rune> = {
 	},
 	hagall: {
 		power: 'wilds',
-		powerText: '3x3 WILD',
-		spots: [[1, 1], [2, 1], [3, 1], [2, 2], [1, 3], [2, 3], [3, 3]],
+		powerText: (bonus) => `${BONUS_POWERS[bonus].wilds}x${BONUS_POWERS[bonus].wilds} WILD`,
+		spots: [
+			[1, 1],
+			[2, 1],
+			[3, 1],
+			[2, 2],
+			[1, 3],
+			[2, 3],
+			[3, 3],
+		],
 		strokes: [
 			[
 				[2.5, 1.25],
@@ -80,8 +108,17 @@ export const RUNES: Record<RuneName, Rune> = {
 	},
 	ingwaz: {
 		power: 'extraSpin',
-		powerText: '+1 SPIN',
-		spots: [[1, 0], [3, 0], [2, 1], [1, 2], [3, 2], [2, 3], [1, 4], [3, 4]],
+		powerText: () => '+1 SPIN',
+		spots: [
+			[1, 0],
+			[3, 0],
+			[2, 1],
+			[1, 2],
+			[3, 2],
+			[2, 3],
+			[1, 4],
+			[3, 4],
+		],
 		strokes: [
 			[
 				[1.3, 0.3],
@@ -100,6 +137,64 @@ export const RUNES: Record<RuneName, Rune> = {
 // the order of the boxes left of the board
 export const RUNE_NAMES: RuneName[] = ['othala', 'fehu', 'hagall', 'ingwaz'];
 
+// Each rune's colours, in the boxes' order green, red, blue and yellow (the user's choice), all
+// made alike (see RuneGlyph): unlit carved into the board, a groove tinted its colour (`groove`)
+// with a dim ember of it down the middle (`ember`); lit a vivid neon with a soft glow round it and a
+// near white core; its spots' squares, unlit and lit; and its box's panel once it is collected
+// (RuneTablet).
+export type RuneColours = {
+	groove: number;
+	ember: number;
+	neon: number;
+	glow: number;
+	core: number;
+	spot: number;
+	spotLit: number;
+	collected: number;
+};
+export const RUNE_COLOURS: Record<RuneName, RuneColours> = {
+	othala: {
+		groove: 0x0c1a11,
+		ember: 0x1f7a3c,
+		neon: 0x39ff6e,
+		glow: 0x1cff5a,
+		core: 0xeaffef,
+		spot: 0x34503f,
+		spotLit: 0x2f8f4e,
+		collected: 0x1c6a34,
+	},
+	fehu: {
+		groove: 0x1c0b0b,
+		ember: 0x8f2222,
+		neon: 0xff3d3d,
+		glow: 0xff1c24,
+		core: 0xffeceb,
+		spot: 0x503434,
+		spotLit: 0x8f2f2f,
+		collected: 0x6e1c1c,
+	},
+	hagall: {
+		groove: 0x0b1220,
+		ember: 0x225f99,
+		neon: 0x3aa6ff,
+		glow: 0x1c8cff,
+		core: 0xebf5ff,
+		spot: 0x343f50,
+		spotLit: 0x2f5c8f,
+		collected: 0x1c3f6e,
+	},
+	ingwaz: {
+		groove: 0x1c170a,
+		ember: 0x8f7414,
+		neon: 0xffdf3a,
+		glow: 0xffcc1c,
+		core: 0xfffbe8,
+		spot: 0x504a34,
+		spotLit: 0x8f7a2f,
+		collected: 0x6e5a14,
+	},
+};
+
 // how far a rune lies from where RUNES has it, in cells: right and down (anywhere all its spots are
 // on the board)
 export type RuneOffset = { reel: number; row: number };
@@ -109,10 +204,8 @@ export const NO_OFFSET: RuneOffset = { reel: 0, row: 0 };
 // or -1
 export const runeSpotIndex = (rune: RuneName, offset: RuneOffset, position: Position) =>
 	RUNES[rune].spots.findIndex(
-		([reel, row]) =>
-			reel + offset.reel === position.reel && row + offset.row === position.row - 1,
+		([reel, row]) => reel + offset.reel === position.reel && row + offset.row === position.row - 1,
 	);
-
 
 // --- the rune's lines as brush strokes ---------------------------------------------------------
 
@@ -128,11 +221,13 @@ export type BrushPoint = {
 	right: number;
 };
 
-// a stroke, or the part of one inside one spot (it lights up with that spot); `start` and `end`
-// are the stroke's own ends, drawn round, rather than where it crosses into the next spot, and
-// `before` and `after` the spots of its parts on either side (-1 at its own ends)
+// a stroke, or the part of one inside one spot (it lights up with that spot); `line` is which of
+// the rune's straight lines it is part of, `start` and `end` are the stroke's own ends, drawn round,
+// rather than where it crosses into the next spot, and `before` and `after` the spots of its parts
+// on either side (-1 at its own ends)
 export type BrushStroke = {
 	spot: number;
+	line: number;
 	points: BrushPoint[];
 	start: boolean;
 	end: boolean;
@@ -160,7 +255,8 @@ const waves = (random: () => number, perCell: number[]) => {
 		phase: random() * Math.PI * 2,
 	}));
 	return (s: number) =>
-		list.reduce((sum, w) => sum + Math.sin(s * w.frequency * Math.PI * 2 + w.phase), 0) / list.length;
+		list.reduce((sum, w) => sum + Math.sin(s * w.frequency * Math.PI * 2 + w.phase), 0) /
+		list.length;
 };
 
 // how far along a line (0 to 1) it is inside a cell, or undefined (Liang-Barsky)
@@ -200,7 +296,7 @@ const brushStrokes = (rune: RuneName): BrushStroke[] => {
 	const random = seeded([...rune].reduce((sum, c) => sum * 31 + c.charCodeAt(0), 7));
 	const lines = strokes.flatMap((points) => points.slice(1).map((end, i) => [points[i], end]));
 
-	return lines.flatMap(([from, to]) => {
+	return lines.flatMap(([from, to], line) => {
 		const length = Math.hypot(to[0] - from[0], to[1] - from[1]);
 		const [tx, ty] = [(to[0] - from[0]) / length, (to[1] - from[1]) / length];
 		const [nx, ny] = [-ty, tx];
@@ -240,6 +336,7 @@ const brushStrokes = (rune: RuneName): BrushStroke[] => {
 			);
 			return {
 				spot,
+				line,
 				points,
 				start: range[0] < 1e-6,
 				end: range[1] > 1 - 1e-6,
@@ -256,4 +353,35 @@ const brushCache = new Map<RuneName, BrushStroke[]>();
 export const runeBrushStrokes = (rune: RuneName) => {
 	if (!brushCache.has(rune)) brushCache.set(rune, brushStrokes(rune));
 	return brushCache.get(rune)!;
+};
+
+// Strokes (in runeBrushStrokes' order) joined into one wherever they are parts of one line that
+// meet and `together` says so, as `{ stroke, parts }` (`parts` their indexes): drawn in one piece,
+// a line has no seams where it crosses from spot to spot.
+export const joinBrushStrokes = (
+	strokes: BrushStroke[],
+	together: (a: BrushStroke, b: BrushStroke) => boolean = () => true,
+) => {
+	const runs: number[][] = [];
+	strokes.forEach((stroke, index) => {
+		const run = runs[runs.length - 1];
+		const previous = run && strokes[run[run.length - 1]];
+		const end = previous?.points[previous.points.length - 1];
+		const meets =
+			previous?.line === stroke.line &&
+			Math.hypot(stroke.points[0].x - end.x, stroke.points[0].y - end.y) < 1e-3;
+		if (meets && together(previous, stroke)) run.push(index);
+		else runs.push([index]);
+	});
+	return runs.map((parts) => {
+		const first = strokes[parts[0]];
+		const last = strokes[parts[parts.length - 1]];
+		const stroke: BrushStroke = {
+			...first,
+			points: parts.flatMap((part, i) => strokes[part].points.slice(i ? 1 : 0)),
+			end: last.end,
+			after: last.after,
+		};
+		return { stroke, parts };
+	});
 };

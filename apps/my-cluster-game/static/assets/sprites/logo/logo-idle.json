@@ -1,0 +1,193 @@
+{
+	"frames": {
+		"logo-sign": {
+			"frame": {
+				"x": 0,
+				"y": 0,
+				"w": 1579,
+				"h": 849
+			},
+			"rotated": false,
+			"trimmed": false,
+			"spriteSourceSize": {
+				"x": 0,
+				"y": 0,
+				"w": 1579,
+				"h": 849
+			},
+			"sourceSize": {
+				"w": 1579,
+				"h": 849
+			}
+		},
+		"logo-R": {
+			"frame": {
+				"x": 0,
+				"y": 865,
+				"w": 343,
+				"h": 444
+			},
+			"rotated": false,
+			"trimmed": false,
+			"spriteSourceSize": {
+				"x": 0,
+				"y": 0,
+				"w": 343,
+				"h": 444
+			},
+			"sourceSize": {
+				"w": 343,
+				"h": 444
+			}
+		},
+		"logo-u": {
+			"frame": {
+				"x": 359,
+				"y": 865,
+				"w": 186,
+				"h": 229
+			},
+			"rotated": false,
+			"trimmed": false,
+			"spriteSourceSize": {
+				"x": 0,
+				"y": 0,
+				"w": 186,
+				"h": 229
+			},
+			"sourceSize": {
+				"w": 186,
+				"h": 229
+			}
+		},
+		"logo-n": {
+			"frame": {
+				"x": 561,
+				"y": 865,
+				"w": 188,
+				"h": 230
+			},
+			"rotated": false,
+			"trimmed": false,
+			"spriteSourceSize": {
+				"x": 0,
+				"y": 0,
+				"w": 188,
+				"h": 230
+			},
+			"sourceSize": {
+				"w": 188,
+				"h": 230
+			}
+		},
+		"logo-e": {
+			"frame": {
+				"x": 765,
+				"y": 865,
+				"w": 187,
+				"h": 244
+			},
+			"rotated": false,
+			"trimmed": false,
+			"spriteSourceSize": {
+				"x": 0,
+				"y": 0,
+				"w": 187,
+				"h": 244
+			},
+			"sourceSize": {
+				"w": 187,
+				"h": 244
+			}
+		},
+		"logo-F": {
+			"frame": {
+				"x": 968,
+				"y": 865,
+				"w": 232,
+				"h": 389
+			},
+			"rotated": false,
+			"trimmed": false,
+			"spriteSourceSize": {
+				"x": 0,
+				"y": 0,
+				"w": 232,
+				"h": 389
+			},
+			"sourceSize": {
+				"w": 232,
+				"h": 389
+			}
+		},
+		"logo-a": {
+			"frame": {
+				"x": 1216,
+				"y": 865,
+				"w": 183,
+				"h": 235
+			},
+			"rotated": false,
+			"trimmed": false,
+			"spriteSourceSize": {
+				"x": 0,
+				"y": 0,
+				"w": 183,
+				"h": 235
+			},
+			"sourceSize": {
+				"w": 183,
+				"h": 235
+			}
+		},
+		"logo-l1": {
+			"frame": {
+				"x": 1415,
+				"y": 865,
+				"w": 134,
+				"h": 335
+			},
+			"rotated": false,
+			"trimmed": false,
+			"spriteSourceSize": {
+				"x": 0,
+				"y": 0,
+				"w": 134,
+				"h": 335
+			},
+			"sourceSize": {
+				"w": 134,
+				"h": 335
+			}
+		},
+		"logo-l2": {
+			"frame": {
+				"x": 0,
+				"y": 1325,
+				"w": 158,
+				"h": 341
+			},
+			"rotated": false,
+			"trimmed": false,
+			"spriteSourceSize": {
+				"x": 0,
+				"y": 0,
+				"w": 158,
+				"h": 341
+			},
+			"sourceSize": {
+				"w": 158,
+				"h": 341
+			}
+		}
+	},
+	"meta": {
+		"image": "logo-idle.webp",
+		"format": "RGBA8888",
+		"size": {
+			"w": 1579,
+			"h": 1666
+		},
+		"scale": "1"
+	}
+}

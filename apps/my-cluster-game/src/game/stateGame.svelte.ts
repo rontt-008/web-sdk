@@ -1,11 +1,12 @@
 import _ from 'lodash';
-import type { Tween } from 'svelte/motion';
+import { Tween } from 'svelte/motion';
+import { cubicInOut } from 'svelte/easing';
 
-import { stateBet } from 'state-shared';
+import { stateBet, stateBetDerived } from 'state-shared';
 import { createEnhanceBoard, createReelForCascading } from 'utils-slots';
 import { createGetWinLevelDataByWinLevelAlias } from 'utils-shared/winLevel';
 
-import type { GameType, RawSymbol, SymbolState } from './types';
+import type { BonusType, GameType, Position, RawSymbol, SymbolState } from './types';
 import { stateLayoutDerived } from './stateLayout';
 import { winLevelMap } from './winLevelMap';
 import { eventEmitter } from './eventEmitter';
@@ -68,6 +69,8 @@ export type TumbleSymbol = {
 	rawSymbol: RawSymbol;
 	symbolState: SymbolState;
 	oncomplete: () => void;
+	// already gone (its soul flew to the bonus meter): not drawn, and taken off without fading
+	gone?: boolean;
 };
 
 export type MultiplierSymbol = {
@@ -83,25 +86,56 @@ export type MultiplierSymbol = {
 export const stateGame = $state({
 	board,
 	gameType: 'basegame' as GameType,
+	// the free spins' bonus, from freeSpinTrigger (the super bonus's powers are bigger, see runes.ts)
+	bonusType: 'normal' as BonusType,
 	tumbleBoardAdding: [] as TumbleSymbol[][],
 	tumbleBoardBase: [] as TumbleSymbol[][],
 	multiplierBoard: [] as (MultiplierSymbol | undefined)[][],
 	scatterCounter: 0,
+	// the cells ("reel:row", the books' rows) whose symbols have flown to the bonus meter as souls:
+	// left empty until the tumble takes them off (see flownKey)
+	flown: [] as string[],
 });
+
+export const flownKey = ({ reel, row }: Position) => `${reel}:${row}`;
 
 // how far above the middle of the screen the board sits, so its frame clears the UI under it (on
 // wide screens its posts reach almost to the top of the screen, and their feet just behind the bar)
 const BOARD_RAISE = { desktop: 27, landscape: 55, tablet: 55, portrait: 40 };
-// how far right of the middle (left when negative): on wide screens a little left, sharing the room
-// between the rune ladder on its left and the logo, bonus meter and fox on its right (further left
-// makes those bigger and the ladder smaller); on phones held sideways, right to clear the menu, mute
-// and buy bonus buttons on the left
+// how far right of the middle (left when negative) in the bonus: on wide screens a little left,
+// sharing the room between the rune ladder on its left and the logo, bonus meter and fox on its
+// right (further left makes those bigger and the ladder smaller); on phones held sideways, right to
+// clear the menu, mute and buy bonus buttons on the left
 const BOARD_SHIFT = { desktop: -30, landscape: 100, tablet: 0, portrait: 0 };
+// In the base game it is up to this much further left, where the rune ladder isn't (it only shows
+// in the bonus), so the fox right of it has room to be bigger; never so far that its frame leaves
+// the screen (BOARD_SCREEN_MARGIN from the edge). Between the two it slides softly (slideBoard).
+const BASE_SLIDE = { desktop: LAYOUT_UNIT * 1.6, landscape: 0, tablet: 0, portrait: 0 };
+const BOARD_SCREEN_MARGIN = LAYOUT_UNIT * 0.04;
+const BOARD_SLIDE_DURATION = 1200;
+// where the board is: 0 in the base game's place, 1 in the bonus's
+const boardSlide = new Tween(0, { easing: cubicInOut });
+
+// slides the board to its place for the game type, done when it is there; `instant` puts it there
+// straight away (a round resumed in the bonus)
+const slideBoard = (gameType: GameType, { instant = false } = {}) =>
+	boardSlide.set(gameType === 'freegame' ? 1 : 0, {
+		duration: instant ? 0 : BOARD_SLIDE_DURATION / stateBetDerived.timeScale(),
+	});
+
+// the board's middle, left to right, at `slide` (0 its base game place, 1 its bonus place)
+const boardX = (slide: number) => {
+	const layoutType = stateLayoutDerived.layoutType();
+	const main = stateLayoutDerived.mainLayout();
+	const bonusX = main.width * 0.5 + BOARD_SHIFT[layoutType];
+	const screenLeft = main.width / 2 - main.x / main.scale;
+	const frameLeft = bonusX - boardFrameReach().left;
+	const room = Math.max(0, frameLeft - screenLeft - BOARD_SCREEN_MARGIN);
+	return bonusX - Math.min(BASE_SLIDE[layoutType], room) * (1 - slide);
+};
 
 const boardLayout = () => ({
-	x:
-		stateLayoutDerived.mainLayout().width * 0.5 +
-		BOARD_SHIFT[stateLayoutDerived.layoutType()],
+	x: boardX(boardSlide.current),
 	y:
 		stateLayoutDerived.mainLayout().height * 0.5 -
 		BOARD_RAISE[stateLayoutDerived.layoutType()],
@@ -109,6 +143,15 @@ const boardLayout = () => ({
 	pivot: { x: BOARD_SIZES.width / 2, y: BOARD_SIZES.height / 2 },
 	...BOARD_SIZES,
 });
+
+// the middle of a cell of the board in the main layout, for a book's position (rows counted from 1)
+const cellCentre = ({ reel, row }: Position) => {
+	const board = boardLayout();
+	return {
+		x: board.x - board.width / 2 + (reel + 0.5) * SYMBOL_SIZE,
+		y: board.y - board.height / 2 + (row - 0.5) * SYMBOL_SIZE,
+	};
+};
 
 // The board frame art (static/assets/board-frame.webp, made from art-source/board-frame-plain.webp
 // by art-source/board-frame.py): its size, the inner edges of its branches (the opening, which
@@ -123,17 +166,24 @@ const BOARD_FRAME_ART = {
 // between the outer symbols and the branches
 const BOARD_FRAME_MARGIN = LAYOUT_UNIT * 0.1;
 
+// the frame's size, wherever the board is: the board's units per pixel of the art (`scale`), the
+// same both ways so the art keeps its shape (the opening is a little wider than tall, so there is
+// more panel left and right of the board), and how far its art reaches left of the board's middle
+const boardFrameReach = () => {
+	const { opening, visible } = BOARD_FRAME_ART;
+	const scale = Math.max(
+		(BOARD_SIZES.width + BOARD_FRAME_MARGIN * 2) / (opening.right - opening.left),
+		(BOARD_SIZES.height + BOARD_FRAME_MARGIN * 2) / (opening.bottom - opening.top),
+	);
+	return { scale, left: ((opening.left + opening.right) / 2 - visible.left) * scale };
+};
+
 // the frame drawn so its opening fits the board plus a margin, centred on it; `opening` and
 // `visible` are where its opening and its art reach
 const boardFrameLayout = () => {
 	const board = boardLayout();
 	const { width, height, opening, visible } = BOARD_FRAME_ART;
-	// the board's units per pixel of the art, the same both ways so the art keeps its shape: the
-	// opening is a little wider than tall, so there is more panel left and right of the board
-	const scale = Math.max(
-		(board.width + BOARD_FRAME_MARGIN * 2) / (opening.right - opening.left),
-		(board.height + BOARD_FRAME_MARGIN * 2) / (opening.bottom - opening.top),
-	);
+	const { scale } = boardFrameReach();
 	const openingX = (opening.left + opening.right) / 2;
 	const openingY = (opening.top + opening.bottom) / 2;
 
@@ -160,11 +210,15 @@ const boardFrameLayout = () => {
 };
 
 // The logo (Logo) with the bonus meter (BonusMeter) under it, both keeping their shapes (their art
-// is LOGO_ART and BONUS_METER_ART, width x height) and as wide as each other: right of the board
-// frame, as big as fits between it (clear of it) and the screen's edge, from the top of the screen
-// down to no lower than the middle of the board (the fox stands below them; no wider than maxWidth
-// on very wide screens). With too little room there (phones held upright, almost square screens),
-// the meter over the middle of the frame's top as wide as it, and the logo over it as big as fits.
+// is LOGO_ART and BONUS_METER_ART, width x height): right of the board frame, the logo as big as
+// fits between it (clear of it) and the screen's edge in the bonus, from the top of the screen down
+// to no lower than the middle of the board with the meter under it as wide (the fox stands below
+// them; no wider than maxWidth on very wide screens). The meter only shows in the base game, where
+// the board is further left (see boardX): it is as wide as the room there, up to meterGrowth times
+// the logo, still no lower than the middle of the board; in the bonus the spin sign (`sign`) takes
+// its place, as wide as the logo. With too little room there (phones held upright, almost square
+// screens), the meter (and sign) over the middle of the frame's top as wide as it, and the logo over
+// it as big as fits.
 export const LOGO_ART = { width: 1579, height: 849 };
 export const BONUS_METER_ART = { width: 1783, height: 541 };
 const SIDE = {
@@ -174,6 +228,7 @@ const SIDE = {
 	margin: LAYOUT_UNIT * 0.04,
 	minWidth: LAYOUT_UNIT * 2.5,
 	maxWidth: LAYOUT_UNIT * 7,
+	meterGrowth: 1.4,
 };
 const LOGO_ASPECT = LOGO_ART.width / LOGO_ART.height;
 const BONUS_METER_ASPECT = BONUS_METER_ART.width / BONUS_METER_ART.height;
@@ -186,20 +241,30 @@ const sideLayout = () => {
 	const screenTop = main.height / 2 - main.y / main.scale;
 	const left = frame.upperRight + SIDE.gap;
 	const room = screenRight - SIDE.margin - left;
+	// sized for the room in the bonus wherever the board is (further left in the base game, see
+	// boardX), so only the fox under them grows and shrinks as the board slides
+	const bonusRoom = room - (boardX(1) - board.x);
 
-	if (room >= SIDE.minWidth) {
+	if (bonusRoom >= SIDE.minWidth) {
 		const top = screenTop + SIDE.margin;
 		const fits = (board.y - top - SIDE.between) / (1 / LOGO_ASPECT + 1 / BONUS_METER_ASPECT);
-		const width = Math.min(SIDE.maxWidth, room, fits);
+		const width = Math.min(SIDE.maxWidth, bonusRoom, fits);
 		const x = left + (room - width) / 2;
 		const logo = { x, y: top, width, height: width / LOGO_ASPECT };
+		const y = logo.y + logo.height + SIDE.between;
+		const meterWidth = Math.min(
+			SIDE.maxWidth,
+			room,
+			width * SIDE.meterGrowth,
+			(board.y - y) * BONUS_METER_ASPECT,
+		);
 		const meter = {
-			x,
-			y: logo.y + logo.height + SIDE.between,
-			width,
-			height: width / BONUS_METER_ASPECT,
+			x: left + (room - meterWidth) / 2,
+			y,
+			width: meterWidth,
+			height: meterWidth / BONUS_METER_ASPECT,
 		};
-		return { logo, meter };
+		return { logo, meter, sign: { x, y, width } };
 	}
 
 	const middle = (frame.left + frame.right) / 2;
@@ -221,11 +286,12 @@ const sideLayout = () => {
 		width: logoWidth,
 		height: logoHeight,
 	};
-	return { logo, meter };
+	return { logo, meter, sign: { x: meter.x, y: meter.y, width: meter.width } };
 };
 
 const logoLayout = () => sideLayout().logo;
 const bonusMeterLayout = () => sideLayout().meter;
+const spinSignLayout = () => sideLayout().sign;
 
 // The background picture (static/assets/background.webp): its size, and how far down it the dirt
 // path in front of the rocks on the right is, where the fox stands, in its pixels.
@@ -282,9 +348,12 @@ export const { getWinLevelDataByWinLevelAlias } = createGetWinLevelDataByWinLeve
 
 export const stateGameDerived = {
 	onSymbolLand,
+	slideBoard,
 	boardLayout,
+	cellCentre,
 	boardFrameLayout,
 	bonusMeterLayout,
+	spinSignLayout,
 	logoLayout,
 	backgroundLayout,
 	backgroundGround,

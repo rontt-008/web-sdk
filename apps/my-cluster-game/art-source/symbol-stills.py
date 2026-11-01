@@ -1,5 +1,5 @@
-"""Draws the high symbols' stills (H1 to H4) and the low symbols' leaves (L1 to L4) in
-static/assets/symbols for the game.
+"""Draws the high symbols' stills (H1 to H4), the wild's (W) and the low symbols' leaves (L1 to L4)
+in static/assets/symbols for the game.
 
 - art-source/<name>.webp: the user's PNG, given as a `<name>=<path>` argument, cleaned up (haze
   under alpha 16 cleared, alpha 240+ made solid, specks apart from the tile cleared; a PNG without
@@ -28,7 +28,9 @@ import OpenImageIO as oiio
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 OUT = os.path.join(HERE, '..', 'static', 'assets', 'symbols')
-NAMES = ['blueberries', 'runestone', 'mushroom', 'acorn']
+# the framed tiles: the high symbols, and the wild (a stone tile with glowing runes, its frame's
+# corners rocks), the one still the game draws as it is
+NAMES = ['blueberries', 'runestone', 'mushroom', 'acorn', 'wild']
 LEAVES = ['leaf-green', 'leaf-brown', 'leaf-red', 'leaf-yellow']
 
 HAZE = 16 / 255
@@ -234,15 +236,17 @@ def leaf(pixels, saturation=1):
     return out
 
 
-sources = dict(argument.split('=', 1) for argument in sys.argv[1:])
-assert set(sources) <= set(NAMES), f'names are {NAMES}'
-for name in NAMES:
-    source = os.path.join(HERE, f'{name}.webp')
-    if name in sources:
-        write(clean(read(sources[name])), source)
-    write(still(read(source)), os.path.join(OUT, f'{name}.webp'))
-    print(f'{name}: done')
-for name in LEAVES:
-    pixels = read(os.path.join(HERE, f'{name}.webp'))
-    write(leaf(pixels, LEAF_SATURATION.get(name, 1)), os.path.join(OUT, f'{name}.webp'))
-    print(f'{name}: done')
+# (leaf-hits.py uses the functions above for the leaves' hits, without running this)
+if __name__ == '__main__':
+    sources = dict(argument.split('=', 1) for argument in sys.argv[1:])
+    assert set(sources) <= set(NAMES), f'names are {NAMES}'
+    for name in NAMES:
+        source = os.path.join(HERE, f'{name}.webp')
+        if name in sources:
+            write(clean(read(sources[name])), source)
+        write(still(read(source)), os.path.join(OUT, f'{name}.webp'))
+        print(f'{name}: done')
+    for name in LEAVES:
+        pixels = read(os.path.join(HERE, f'{name}.webp'))
+        write(leaf(pixels, LEAF_SATURATION.get(name, 1)), os.path.join(OUT, f'{name}.webp'))
+        print(f'{name}: done')

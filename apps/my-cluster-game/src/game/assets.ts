@@ -1,20 +1,15 @@
 export default {
-	loader: {
-		type: 'spine',
-		src: {
-			atlas: new URL('../../assets/spines/loader/loader.atlas', import.meta.url).href,
-			skeleton: new URL('../../assets/spines/loader/loader.json', import.meta.url).href,
-			scale: 2,
-		},
-		preload: true,
-	},
-	pressToContinueText: {
+	// the game's name on a wooden sign: the sign and its letters, each its own frame, as the letters
+	// move on their own (see LogoArt, art-source/logo-idle.py); loaded first, as the start screen
+	// shows it while the rest loads
+	logoIdle: {
 		type: 'sprites',
-		src: new URL('../../assets/sprites/pressToContinueText/MM_pressanywhere.json', import.meta.url).href,
+		src: new URL('../../assets/sprites/logo/logo-idle.json', import.meta.url).href,
 		preload: true,
 	},
 	// the high symbols (see SYMBOL_INFO_MAP): their idle loops, 120 frames of 256 x 256 at 30 a
-	// second, played in every state (see art-source/symbol-idles.py)
+	// second, played in every state, and their hits, 60 frames at 60 a second played once on a win
+	// (see art-source/symbol-animations.py)
 	blueberriesIdle: {
 		type: 'spriteSheet',
 		src: new URL('../../assets/sprites/symbolIdles/blueberries-idle.json', import.meta.url).href,
@@ -30,6 +25,31 @@ export default {
 	acornIdle: {
 		type: 'spriteSheet',
 		src: new URL('../../assets/sprites/symbolIdles/acorn-idle.json', import.meta.url).href,
+	},
+	// and the wild's (W), its letters and runes moving
+	wildIdle: {
+		type: 'spriteSheet',
+		src: new URL('../../assets/sprites/symbolIdles/wild-idle.json', import.meta.url).href,
+	},
+	blueberriesHit: {
+		type: 'spriteSheet',
+		src: new URL('../../assets/sprites/symbolHits/blueberries-hit.json', import.meta.url).href,
+	},
+	runestoneHit: {
+		type: 'spriteSheet',
+		src: new URL('../../assets/sprites/symbolHits/runestone-hit.json', import.meta.url).href,
+	},
+	mushroomHit: {
+		type: 'spriteSheet',
+		src: new URL('../../assets/sprites/symbolHits/mushroom-hit.json', import.meta.url).href,
+	},
+	acornHit: {
+		type: 'spriteSheet',
+		src: new URL('../../assets/sprites/symbolHits/acorn-hit.json', import.meta.url).href,
+	},
+	wildHit: {
+		type: 'spriteSheet',
+		src: new URL('../../assets/sprites/symbolHits/wild-hit.json', import.meta.url).href,
 	},
 	// the sample's fifth high symbol, not in this game's config
 	H5: {
@@ -57,6 +77,24 @@ export default {
 		type: 'sprite',
 		src: new URL('../../assets/symbols/leaf-yellow.webp', import.meta.url).href,
 	},
+	// and their hits, 90 frames of 320 x 320 at 60 a second played once on a win (see
+	// art-source/leaf-hits.py)
+	leafGreenHit: {
+		type: 'spriteSheet',
+		src: new URL('../../assets/sprites/symbolHits/leaf-green-hit.json', import.meta.url).href,
+	},
+	leafBrownHit: {
+		type: 'spriteSheet',
+		src: new URL('../../assets/sprites/symbolHits/leaf-brown-hit.json', import.meta.url).href,
+	},
+	leafRedHit: {
+		type: 'spriteSheet',
+		src: new URL('../../assets/sprites/symbolHits/leaf-red-hit.json', import.meta.url).href,
+	},
+	leafYellowHit: {
+		type: 'spriteSheet',
+		src: new URL('../../assets/sprites/symbolHits/leaf-yellow-hit.json', import.meta.url).href,
+	},
 	M: {
 		type: 'spine',
 		src: {
@@ -73,22 +111,6 @@ export default {
 			scale: 2,
 		},
 	},
-	explosion: {
-		type: 'spine',
-		src: {
-			atlas: new URL('../../assets/spines/symbols3/symbols3.atlas', import.meta.url).href,
-			skeleton: new URL('../../assets/spines/symbols3/explosion.json', import.meta.url).href,
-			scale: 2,
-		},
-	},
-	W: {
-		type: 'spine',
-		src: {
-			atlas: new URL('../../assets/spines/symbols3/symbols3.atlas', import.meta.url).href,
-			skeleton: new URL('../../assets/spines/symbols3/W.json', import.meta.url).href,
-			scale: 2,
-		},
-	},
 	reelsFrame: {
 		type: 'sprites',
 		src: new URL('../../assets/sprites/reelsFrame/reels_frame.json', import.meta.url).href,
@@ -97,14 +119,6 @@ export default {
 		type: 'sprite',
 		src: new URL('../../assets/sprites/payFrame/payFrame.png', import.meta.url).href,
 	},
-	anticipation: {
-		type: 'spine',
-		src: {
-			atlas: new URL('../../assets/spines/anticipation/anticipation.atlas', import.meta.url).href,
-			skeleton: new URL('../../assets/spines/anticipation/anticipation.json', import.meta.url).href,
-			scale: 2,
-		},
-	},
 	// Germania One (OFL, Google Fonts), chunky carved letters like the logo's, for the bonus meter's
 	// count; registered as "Germania One" from its file's name, loaded before the game shows
 	germaniaOne: {
@@ -112,35 +126,11 @@ export default {
 		src: new URL('../../assets/fonts/germaniaOne/germania-one.ttf', import.meta.url).href,
 		preload: true,
 	},
-	goldFont: {
-		type: 'font',
-		src: new URL('../../assets/fonts/goldFont/mm_gold.xml', import.meta.url).href,
-	},
-	goldBlur: {
-		type: 'font',
-		src: new URL('../../assets/fonts/goldBlur/miningfont_gold_blur.xml', import.meta.url).href,
-	},
-	silverFont: {
-		type: 'font',
-		src: new URL('../../assets/fonts/silverFont/mm_silver.xml', import.meta.url).href,
-	},
-	purpleFont: {
-		type: 'font',
-		src: new URL('../../assets/fonts/purpleFont/mm_purple.xml', import.meta.url).href,
-	},
 	bigwin: {
 		type: 'spine',
 		src: {
 			atlas: new URL('../../assets/spines/bigwin/big_wins.atlas', import.meta.url).href,
 			skeleton: new URL('../../assets/spines/bigwin/mm_bigwin.json', import.meta.url).href,
-			scale: 2,
-		},
-	},
-	globalMultiplier: {
-		type: 'spine',
-		src: {
-			atlas: new URL('../../assets/spines/globalMultiplier/multiframe.atlas', import.meta.url).href,
-			skeleton: new URL('../../assets/spines/globalMultiplier/multiframe.json', import.meta.url).href,
 			scale: 2,
 		},
 	},
@@ -197,20 +187,43 @@ export default {
 		type: 'sprite',
 		src: new URL('../../assets/buy-bonus-logo-outline.png', import.meta.url).href,
 	},
-	// the game's name on a wooden sign, over the bonus meter (see Logo, art-source/wood-frames.py)
-	logo: {
-		type: 'sprite',
-		src: new URL('../../assets/logo.webp', import.meta.url).href,
-	},
 	// the frame round the bonus meter, with the sign for its count (see BonusMeter,
 	// art-source/wood-frames.py)
 	bonusMeterFrame: {
 		type: 'sprite',
 		src: new URL('../../assets/bonus-meter-frame.webp', import.meta.url).href,
-	},	// its planks green alone, revealed from the left as it fills
+	},
+	// its planks green alone, revealed in the bonus's zone as it fills, and orange, in the super
+	// bonus's
 	bonusMeterFill: {
 		type: 'sprite',
 		src: new URL('../../assets/bonus-meter-fill.webp', import.meta.url).href,
+	},
+	bonusMeterFillSuper: {
+		type: 'sprite',
+		src: new URL('../../assets/bonus-meter-fill-super.webp', import.meta.url).href,
+	},
+	// and yellow, on the way to the bonus
+	bonusMeterFillProgress: {
+		type: 'sprite',
+		src: new URL('../../assets/bonus-meter-fill-progress.webp', import.meta.url).href,
+	},
+	// the sign for the free and power spins' count, in the meter's place in the bonus (see
+	// FreeSpinCounter, art-source/wood-frames.py)
+	spinSign: {
+		type: 'sprite',
+		src: new URL('../../assets/spin-sign.webp', import.meta.url).href,
+	},
+	// the cards on the start screen, for the game's info (see InfoCard, art-source/wood-frames.py)
+	infoCard: {
+		type: 'sprite',
+		src: new URL('../../assets/info-card.webp', import.meta.url).href,
+	},
+	// the panel of the free spins' intro and end screens (see FreeSpinAnimation,
+	// art-source/wood-frames.py)
+	screenPanel: {
+		type: 'sprite',
+		src: new URL('../../assets/screen-panel.webp', import.meta.url).href,
 	},
 
 	// the ladder of branches the rune boxes sit in, left of the board (see RuneTablets,
@@ -252,27 +265,6 @@ export default {
 			scale: 2,
 		},
 	},
-	reelhouse: {
-		type: 'spine',
-		src: {
-			atlas: new URL('../../assets/spines/reelhouse/reelhouse_glow.atlas', import.meta.url).href,
-			skeleton: new URL('../../assets/spines/reelhouse/reelhouse_glow.json', import.meta.url).href,
-			scale: 2,
-		},
-	},
-	progressBar: {
-		type: 'sprites',
-		src: new URL('../../assets/sprites/progressBar/progressBar.json', import.meta.url).href,
-		preload: true,
-	},
-	freeSpins: {
-		type: 'sprites',
-		src: new URL('../../assets/sprites/freeSpins/freeSpins.json', import.meta.url).href,
-	},
-	winSmall: {
-		type: 'sprites',
-		src: new URL('../../assets/sprites/winSmall/MM_Localisation_winsmall.json', import.meta.url).href,
-	},
 	clusterWin: {
 		type: 'spine',
 		src: {
@@ -281,21 +273,9 @@ export default {
 			scale: 2,
 		},
 	},
-	transition: {
-		type: 'spine',
-		src: {
-			atlas: new URL('../../assets/spines/transition/transition.atlas', import.meta.url).href,
-			skeleton: new URL('../../assets/spines/transition/transition.json', import.meta.url).href,
-			scale: 2,
-		},
-	},
 	symbolsStatic: {
 		type: 'sprites',
 		src: new URL('../../assets/sprites/symbolsStatic/symbolsStatic.json', import.meta.url).href,
-	},
-	coins: {
-		type: 'spriteSheet',
-		src: new URL('../../assets/sprites/coin/SD2_Coin.json', import.meta.url).href,
 	},
 	sound: {
 		type: 'audio',

@@ -7,14 +7,15 @@
 
 <script lang="ts">
 	import { CanvasSizeRectangle } from 'components-layout';
-	import { stateUrlDerived } from 'state-shared';
 	import { FadeContainer } from 'components-pixi';
 	import { waitForResolve } from 'utils-shared/wait';
-	import { BitmapText, SpineProvider, SpineSlot, SpineTrack, Sprite } from 'pixi-svelte';
+	import { SpineProvider, SpineSlot, SpineTrack, Text } from 'pixi-svelte';
 
 	import { getContext } from '../game/context';
+	import { signTextStyle } from '../game/signText';
 	import PressToContinue from './PressToContinue.svelte';
-	import FreeSpinAnimation from './FreeSpinAnimation.svelte';
+	import FreeSpinAnimation, { FREE_SPIN_WORDS } from './FreeSpinAnimation.svelte';
+	import SpineHideSlots from './SpineHideSlots.svelte';
 
 	type AnimationName = 'intro' | 'idle';
 
@@ -44,14 +45,13 @@
 
 	<FreeSpinAnimation>
 		{#snippet children({ sizes })}
-			<Sprite
-				anchor={{ x: 0.5, y: 1.2 }}
-				width={500 * 2.2}
-				height={156 * 2.2}
-				key="freespins_{stateUrlDerived.lang()}.png"
-			/>
+			<Text {...FREE_SPIN_WORDS.congratulations} />
+			<Text {...FREE_SPIN_WORDS.youWon} />
 
 			<SpineProvider key="fsIntroNumber" width={sizes.width * 0.4}>
+				<!-- the number on the planks without the sample's silver-rimmed box round it, as on the end
+				screen -->
+				<SpineHideSlots slots={['Frame_FSCounter', 'Frame_FSCounter2']} />
 				<SpineTrack
 					trackIndex={0}
 					{animationName}
@@ -61,19 +61,15 @@
 					}}
 				/>
 				<SpineSlot slotName="slot_number">
-					<BitmapText
-						anchor={{ x: 0.5, y: 0.5 }}
-						text={freeSpinsFromEvent}
-						style={{
-							fontFamily: 'gold',
-							fontSize: sizes.width * 0.15,
-							fontWeight: 'bold',
-						}}
-					/>
+					<Text anchor={0.5} text={freeSpinsFromEvent} style={signTextStyle(sizes.width * 0.15)} />
 				</SpineSlot>
 			</SpineProvider>
 
-			<Sprite anchor={{ x: 0.5, y: -3 }} width={183 * 2.2} height={42 * 2.2} key="freespins.png" />
+			<Text
+				{...context.stateGame.bonusType === 'super'
+					? FREE_SPIN_WORDS.superFreeSpins
+					: FREE_SPIN_WORDS.freeSpins}
+			/>
 		{/snippet}
 	</FreeSpinAnimation>
 

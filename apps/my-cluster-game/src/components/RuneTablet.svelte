@@ -2,8 +2,11 @@
 	import { Container, Graphics, Text } from 'pixi-svelte';
 
 	import RuneGlyph from './RuneGlyph.svelte';
-	import { RUNES, type RuneName, type RuneOffset } from '../game/runes';
+	import { RUNES, RUNE_COLOURS, type RuneName, type RuneOffset } from '../game/runes';
 	import { signTextStyle } from '../game/signText';
+	import { getContext } from '../game/context';
+
+	const context = getContext();
 
 	// One rune's box: in one of the ladder's compartments (see RuneTablets), the ladder drawn over it.
 	type Props = {
@@ -33,18 +36,20 @@
 	// in the content's height: its padding, the picture (in a narrow box, with the power below it) and
 	// the power's size
 	const PAD = 0.06;
-	const NARROW_GLYPH = 0.68;
-	const POWER_SIZE = 0.2;
-	const NARROW_POWER_SIZE = 0.15;
+	const NARROW_GLYPH = 0.6;
+	const POWER_SIZE = 0.26;
+	const NARROW_POWER_SIZE = 0.21;
 	// wider than tall by this, the text beside the picture
 	const WIDE = 1.6;
-	// the longest word's width in its font size (MULTIPLIER, 4.43 in Germania One bold), with its
-	// outline and a little to spare
+	// the longest word's and the longest power's widths in their font size (MULTIPLIER 4.43, ONLY
+	// PREMIUMS 6.26 in Germania One bold), with the outline and a little to spare, and the lines'
+	// height
 	const LONGEST_WORD = 4.8;
+	const LONGEST_LINE = 6.5;
+	const LINE_HEIGHT = 1.1;
 
-	// the panel: dark while the rune is locked, a deep green once collected
+	// the panel: dark while the rune is locked, a deep shade of the rune's colour once collected
 	const LOCKED = 0x121115;
-	const COLLECTED = 0x1c6a34;
 
 	// the content's size, and where it starts in the box (its middle in the box's middle)
 	const width = $derived(props.content.width);
@@ -59,9 +64,20 @@
 	);
 	const textLeft = $derived(left + pad * 2 + glyph);
 	const textWidth = $derived(wide ? left + width - pad - textLeft : width - pad * 2);
-	const powerSize = $derived(
-		Math.min(height * (wide ? POWER_SIZE : NARROW_POWER_SIZE), textWidth / LONGEST_WORD),
-	);
+	// beside the picture, as big as fits, on more lines if need be; under it, on one line as big as
+	// fits (not wrapped: sized to fit, the text measures a hair wider when wrapping), or on two where
+	// that is bigger (narrow boxes, lying down on phones)
+	const power = $derived.by(() => {
+		if (wide) return { size: Math.min(height * POWER_SIZE, textWidth / LONGEST_WORD), wrap: true };
+		const room = height - pad * 2 - glyph;
+		const oneLine = Math.min(room / LINE_HEIGHT, textWidth / LONGEST_LINE);
+		const twoLines = Math.min(room / (LINE_HEIGHT * 2), textWidth / LONGEST_WORD);
+		return {
+			size: Math.min(height * NARROW_POWER_SIZE, Math.max(oneLine, twoLines)),
+			wrap: twoLines > oneLine,
+		};
+	});
+	const powerSize = $derived(power.size);
 	const dim = $derived(props.state === 'waiting' ? 0.6 : 1);
 </script>
 
@@ -71,13 +87,14 @@
 	pivot={{ x: props.width / 2, y: props.height / 2 }}
 	scale={props.scale}
 >
-	<!-- the panel, reaching under the branches: dark while the rune is locked, green once collected -->
+	<!-- the panel, reaching under the branches: dark while the rune is locked, its colour once collected -->
 	<Graphics
 		draw={(graphics) => {
 			const tuck = props.tuck;
+			const collected = RUNE_COLOURS[props.rune].collected;
 			graphics
 				.rect(-tuck, -tuck, props.width + tuck * 2, props.height + tuck * 2)
-				.fill({ color: props.state === 'collected' ? COLLECTED : LOCKED, alpha: 0.92 });
+				.fill({ color: props.state === 'collected' ? collected : LOCKED, alpha: 0.92 });
 		}}
 	/>
 
@@ -99,12 +116,12 @@
 			y={top + height / 2}
 			anchor={{ x: 0, y: 0.5 }}
 			alpha={dim}
-			text={RUNES[props.rune].powerText}
+			text={RUNES[props.rune].powerText(context.stateGame.bonusType)}
 			style={{
 				...signTextStyle(powerSize),
 				wordWrap: true,
 				wordWrapWidth: textWidth,
-				lineHeight: powerSize * 1.1,
+				lineHeight: powerSize * LINE_HEIGHT,
 			}}
 		/>
 	{:else}
@@ -113,13 +130,13 @@
 			y={top + (pad + glyph + height) / 2}
 			anchor={{ x: 0.5, y: 0.5 }}
 			alpha={dim}
-			text={RUNES[props.rune].powerText}
+			text={RUNES[props.rune].powerText(context.stateGame.bonusType)}
 			style={{
 				...signTextStyle(powerSize),
 				align: 'center',
-				wordWrap: true,
+				wordWrap: power.wrap,
 				wordWrapWidth: textWidth,
-				lineHeight: powerSize * 1.1,
+				lineHeight: powerSize * LINE_HEIGHT,
 			}}
 		/>
 	{/if}

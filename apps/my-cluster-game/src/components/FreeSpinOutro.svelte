@@ -8,18 +8,17 @@
 </script>
 
 <script lang="ts">
-	import { Sprite, SpineProvider, SpineTrack, SpineSlot } from 'pixi-svelte';
-	import { FadeContainer, WinCountUpProvider, ResponsiveBitmapText } from 'components-pixi';
+	import { SpineProvider, SpineTrack, SpineSlot, Text } from 'pixi-svelte';
+	import { FadeContainer, WinCountUpProvider, ResponsiveText } from 'components-pixi';
 	import { bookEventAmountToCurrencyString } from 'utils-shared/amount';
 	import { waitForResolve } from 'utils-shared/wait';
 	import { CanvasSizeRectangle } from 'components-layout';
 	import { OnMount } from 'components-shared';
-	import { stateUrlDerived } from 'state-shared';
 
 	import { getContext } from '../game/context';
-	import FreeSpinAnimation from './FreeSpinAnimation.svelte';
+	import { signTextStyle } from '../game/signText';
+	import FreeSpinAnimation, { FREE_SPIN_WORDS } from './FreeSpinAnimation.svelte';
 	import PressToContinue from './PressToContinue.svelte';
-	import WinCoins from './WinCoins.svelte';
 
 	type AnimationName = 'intro' | 'idle';
 
@@ -56,19 +55,10 @@
 				<FreeSpinAnimation>
 					{#snippet children({ sizes })}
 						{#if isBigWin}
-							<Sprite
-								anchor={{ x: 0.5, y: 1.2 }}
-								width={500 * 2.2}
-								height={156 * 2.2}
-								key="freespins_{stateUrlDerived.lang()}.png"
-							/>
+							<Text {...FREE_SPIN_WORDS.congratulations} />
+							<Text {...FREE_SPIN_WORDS.youWon} />
 						{:else}
-							<Sprite
-								anchor={{ x: 0.5, y: 1.2 }}
-								width={500 * 4.5}
-								height={80 * 4.5}
-								key="winsmall_{stateUrlDerived.lang()}.png"
-							/>
+							<Text {...FREE_SPIN_WORDS.youWonSmall} />
 						{/if}
 
 						<SpineProvider key="fsOutroNumber" width={sizes.width * 0.4}>
@@ -81,29 +71,20 @@
 								}}
 							/>
 							<SpineSlot slotName="slot_number">
-								<ResponsiveBitmapText
-									anchor={{ x: 0.5, y: 0.5 }}
-									style={{
-										fontFamily: 'gold',
-										fontSize: sizes.width * 0.15,
-									}}
-									text={bookEventAmountToCurrencyString(countUpAmount)}
+								<ResponsiveText
+									anchor={0.5}
+									style={signTextStyle(sizes.width * 0.15)}
+									text={bookEventAmountToCurrencyString(countUpAmount, {
+										counting: !countUpCompleted,
+									})}
 									maxWidth={sizes.width}
 								/>
 							</SpineSlot>
 						</SpineProvider>
 
-						<Sprite
-							y={0}
-							anchor={{ x: 0.5, y: isBigWin ? -3.2 : -2 }}
-							width={177 * (isBigWin ? 2.2 : 3)}
-							height={42 * (isBigWin ? 2.2 : 3)}
-							key="totalwin.png"
-						/>
+						<Text {...isBigWin ? FREE_SPIN_WORDS.totalWin : FREE_SPIN_WORDS.totalWinSmall} />
 					{/snippet}
 				</FreeSpinAnimation>
-
-				<WinCoins emit={!countUpCompleted} levelAlias={winLevelData?.alias} />
 
 				<PressToContinue onpress={() => (countUpCompleted ? oncomplete() : finishCountUp())} />
 			{/snippet}

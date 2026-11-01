@@ -69,3 +69,46 @@ export const getSymbolInfo = ({
 	const symbolKey = getSymbolKey({ rawSymbol });
 	return SYMBOL_INFO_MAP[symbolKey][state];
 };
+
+// A board's square blocks of wilds (Hagall's power in the power spins: 2x2 in the bonus, 3x3 in the
+// super bonus), each drawn as one big wild (BigWild): 3x3 ones first, then 2x2 ones of the wilds
+// left, each found from the left and the top, so no cell is in two. Each with its side, its cells,
+// where its middle is across the board, and the cell it moves with as it falls (`lead`: in its
+// middle reel, or the left of its middle two, the cell at or just under its middle) with how far
+// above that its middle is; in `reels`, whose reels start with the padding row above the board, as
+// the boards' do.
+export const WILD_BLOCK_SIZES = [3, 2];
+
+export const findWildBlocks = <Cell>(reels: Cell[][], isWild: (cell: Cell) => boolean) => {
+	const taken = new Set<Cell>();
+	const blocks: {
+		size: number;
+		cells: Cell[];
+		x: number;
+		leadReel: number;
+		lead: Cell;
+		leadOffset: number;
+	}[] = [];
+	for (const size of WILD_BLOCK_SIZES) {
+		for (let reel = 0; reel + size <= reels.length; reel++) {
+			for (let index = 1; index + size <= BOARD_DIMENSIONS.y + 1; index++) {
+				const cells = _.range(reel, reel + size).flatMap((r) =>
+					_.range(index, index + size).map((i) => reels[r]?.[i]),
+				);
+				if (!cells.every((cell) => cell !== undefined && isWild(cell) && !taken.has(cell)))
+					continue;
+				cells.forEach((cell) => taken.add(cell));
+				const leadReel = reel + Math.floor((size - 1) / 2);
+				blocks.push({
+					size,
+					cells,
+					x: getSymbolX(reel) + ((size - 1) / 2) * SYMBOL_SIZE,
+					leadReel,
+					lead: reels[leadReel][index + Math.floor(size / 2)],
+					leadOffset: ((size - 1) / 2 - Math.floor(size / 2)) * SYMBOL_SIZE,
+				});
+			}
+		}
+	}
+	return blocks;
+};

@@ -111,7 +111,10 @@ export function createReelForCascading<TRawSymbol extends object, TSymbolState e
 
 			await waitForTimeout(delay);
 			reelSymbol.symbolState = 'spin' as TSymbolState;
-			await reelSymbol.symbolY.set(newSymbolY, { duration });
+			await reelSymbol.symbolY.set(newSymbolY, {
+				duration,
+				easing: reelState.spinOptions().symbolFallOutEasing,
+			});
 		});
 
 		reelState.motion = 'hanging';
@@ -160,6 +163,7 @@ export function createReelForCascading<TRawSymbol extends object, TSymbolState e
 			await reelSymbol.symbolY.set(newSymbolY - bounceDistance, {
 				duration: landDuration,
 				delay,
+				easing: reelState.spinOptions().symbolFallInEasing,
 			});
 			reelSymbol.symbolState = 'land' as TSymbolState;
 			reelOptions.onSymbolLand({

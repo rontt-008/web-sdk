@@ -16,9 +16,10 @@
 
 	import Game from '../components/Game.svelte';
 	import { setContext } from '../game/context';
-	import { playBookEvent } from '../game/utils';
+	import { playBookEvent, playBookEvents } from '../game/utils';
 	import events from './data/bonus_events';
 	import { RUNES, type RuneName, type RuneOffset } from '../game/runes';
+	import { stateGame } from '../game/stateGame.svelte';
 
 	// all of a rune's spots where it lies, as a book's positions (rows counted from 1)
 	const spotsOf = (rune: RuneName, offset: RuneOffset) =>
@@ -43,7 +44,7 @@
 <Story
 	name="reveal"
 	args={templateArgs({
-		skipLoadingScreen: true,
+		skipLoadingScreen: false,
 		data: events.reveal,
 		action: async (data) => await playBookEvent(data, { bookEvents: [] }),
 	})}
@@ -53,7 +54,7 @@
 <Story
 	name="setTotalWin"
 	args={templateArgs({
-		skipLoadingScreen: true,
+		skipLoadingScreen: false,
 		data: events.setTotalWin,
 		action: async (data) => await playBookEvent(data, { bookEvents: [] }),
 	})}
@@ -63,7 +64,7 @@
 <Story
 	name="freeSpinTrigger"
 	args={templateArgs({
-		skipLoadingScreen: true,
+		skipLoadingScreen: false,
 		data: events.freeSpinTrigger,
 		action: async (data) => await playBookEvent(data, { bookEvents: [] }),
 	})}
@@ -73,7 +74,7 @@
 <Story
 	name="freeSpinRetrigger"
 	args={templateArgs({
-		skipLoadingScreen: true,
+		skipLoadingScreen: false,
 		data: events.freeSpinRetrigger,
 		action: async (data) => await playBookEvent(data, { bookEvents: [] }),
 	})}
@@ -83,7 +84,7 @@
 <Story
 	name="updateFreeSpin"
 	args={templateArgs({
-		skipLoadingScreen: true,
+		skipLoadingScreen: false,
 		data: events.updateFreeSpin,
 		action: async (data) => await playBookEvent(data, { bookEvents: [] }),
 	})}
@@ -93,7 +94,7 @@
 <Story
 	name="winInfo"
 	args={templateArgs({
-		skipLoadingScreen: true,
+		skipLoadingScreen: false,
 		data: events.winInfo,
 		action: async (data) => await playBookEvent(data, { bookEvents: [] }),
 	})}
@@ -103,7 +104,7 @@
 <Story
 	name="updateTumbleWin"
 	args={templateArgs({
-		skipLoadingScreen: true,
+		skipLoadingScreen: false,
 		data: events.updateTumbleWin,
 		action: async (data) => await playBookEvent(data, { bookEvents: [] }),
 	})}
@@ -113,7 +114,7 @@
 <Story
 	name="tumbleBoard"
 	args={templateArgs({
-		skipLoadingScreen: true,
+		skipLoadingScreen: false,
 		data: events.tumbleBoard,
 		action: async (data) => await playBookEvent(data, { bookEvents: [] }),
 	})}
@@ -123,7 +124,7 @@
 <Story
 	name="updateGlobalMult"
 	args={templateArgs({
-		skipLoadingScreen: true,
+		skipLoadingScreen: false,
 		data: events.updateGlobalMult,
 		action: async (data) => await playBookEvent(data, { bookEvents: [] }),
 	})}
@@ -133,8 +134,18 @@
 <Story
 	name="setWin"
 	args={templateArgs({
-		skipLoadingScreen: true,
+		skipLoadingScreen: false,
 		data: events.setWin,
+		action: async (data) => await playBookEvent(data, { bookEvents: [] }),
+	})}
+	{template}
+/>
+
+<Story
+	name="setWinMega"
+	args={templateArgs({
+		skipLoadingScreen: false,
+		data: events.setWinMega,
 		action: async (data) => await playBookEvent(data, { bookEvents: [] }),
 	})}
 	{template}
@@ -143,7 +154,7 @@
 <Story
 	name="freeSpinEnd"
 	args={templateArgs({
-		skipLoadingScreen: true,
+		skipLoadingScreen: false,
 		data: events.freeSpinEnd,
 		action: async (data) => await playBookEvent(data, { bookEvents: [] }),
 	})}
@@ -153,7 +164,7 @@
 <Story
 	name="finalWin"
 	args={templateArgs({
-		skipLoadingScreen: true,
+		skipLoadingScreen: false,
 		data: events.finalWin,
 		action: async (data) => await playBookEvent(data, { bookEvents: [] }),
 	})}
@@ -163,7 +174,7 @@
 <Story
 	name="runeShow"
 	args={templateArgs({
-		skipLoadingScreen: true,
+		skipLoadingScreen: false,
 		data: events.runeShow,
 		action: async (data) => await playBookEvent(data, { bookEvents: [] }),
 	})}
@@ -173,7 +184,7 @@
 <Story
 	name="runeLight"
 	args={templateArgs({
-		skipLoadingScreen: true,
+		skipLoadingScreen: false,
 		data: { show: events.runeLightShow, light: events.runeLight },
 		action: async (data) => {
 			await playBookEvent(data.show, { bookEvents: [] });
@@ -186,7 +197,7 @@
 <Story
 	name="runeComplete"
 	args={templateArgs({
-		skipLoadingScreen: true,
+		skipLoadingScreen: false,
 		data: { show: events.runeCompleteShow, complete: events.runeComplete },
 		action: async (data) => {
 			const { rune, offset } = data.show;
@@ -204,7 +215,7 @@
 <Story
 	name="powerSpinsTrigger"
 	args={templateArgs({
-		skipLoadingScreen: true,
+		skipLoadingScreen: false,
 		data: events.powerSpinsTrigger,
 		action: async (data) => await playBookEvent(data, { bookEvents: [] }),
 	})}
@@ -214,9 +225,80 @@
 <Story
 	name="updatePowerSpin"
 	args={templateArgs({
-		skipLoadingScreen: true,
+		skipLoadingScreen: false,
 		data: events.updatePowerSpin,
 		action: async (data) => await playBookEvent(data, { bookEvents: [] }),
+	})}
+	{template}
+/>
+
+<!-- a power spin with Hagall's block of wilds, 2x2 in the bonus, drawn as one big wild: it lands,
+wins and goes -->
+<Story
+	name="wildBlock"
+	args={templateArgs({
+		skipLoadingScreen: false,
+		data: events.wildBlock,
+		action: async (data) => await playBookEvents(data),
+	})}
+	{template}
+/>
+
+<!-- a free spin with a gust of wind: wilds blow in onto the landed board, then it wins (lighting
+the rune's spots) and tumbles -->
+<Story
+	name="windWilds"
+	args={templateArgs({
+		skipLoadingScreen: false,
+		data: events.windWilds,
+		action: async (data) => await playBookEvents(data),
+	})}
+	{template}
+/>
+
+<!-- a free spin with a stronger gust taking every symbol of one kind off the board: they shiver
+and are carried off, the board tumbles to fill their cells, then it wins -->
+<Story
+	name="windSweep"
+	args={templateArgs({
+		skipLoadingScreen: false,
+		data: events.windSweep,
+		action: async (data) => await playBookEvents(data),
+	})}
+	{template}
+/>
+
+<!-- the super bonus (50+ connected symbols): its start, its power spins with its bigger powers, and
+its 3x3 block of wilds -->
+<Story
+	name="superFreeSpinTrigger"
+	args={templateArgs({
+		skipLoadingScreen: false,
+		data: events.superFreeSpinTrigger,
+		action: async (data) => await playBookEvent(data, { bookEvents: [] }),
+	})}
+	{template}
+/>
+
+<Story
+	name="superPowerSpinsTrigger"
+	args={templateArgs({
+		skipLoadingScreen: false,
+		data: events.superPowerSpinsTrigger,
+		action: async (data) => {
+			stateGame.bonusType = 'super';
+			await playBookEvent(data, { bookEvents: [] });
+		},
+	})}
+	{template}
+/>
+
+<Story
+	name="superWildBlock"
+	args={templateArgs({
+		skipLoadingScreen: false,
+		data: events.superWildBlock,
+		action: async (data) => await playBookEvents(data),
 	})}
 	{template}
 />

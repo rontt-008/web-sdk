@@ -39,7 +39,7 @@
 <Story
 	name="random"
 	args={templateArgs({
-		skipLoadingScreen: true,
+		skipLoadingScreen: false,
 		data: {},
 		action: async () => {
 			const index = randomInteger({ min: 0, max: books.length - 1 });

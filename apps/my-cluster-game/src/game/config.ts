@@ -11,14 +11,22 @@ export default {
 			feature: true,
 			buyBonus: false,
 			rtp: 0.97,
-			max_win: 5000.0,
+			max_win: 25000.0,
 		},
 		bonus: {
 			cost: 500,
 			feature: true,
 			buyBonus: false,
 			rtp: 0.97,
-			max_win: 5000.0,
+			max_win: 25000.0,
+		},
+		// the super bonus (see SUPER_TRIGGER), bought; its price the user's
+		super: {
+			cost: 300,
+			feature: true,
+			buyBonus: false,
+			rtp: 0.97,
+			max_win: 25000.0,
 		},
 	},
 	symbols: {

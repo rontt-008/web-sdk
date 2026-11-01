@@ -16,7 +16,7 @@
 
 	import Game from '../components/Game.svelte';
 	import { setContext } from '../game/context';
-	import { playBookEvent } from '../game/utils';
+	import { playBookEvent, playBookEvents } from '../game/utils';
 	import events from './data/base_events';
 
 	setContext();
@@ -38,9 +38,33 @@
 <Story
 	name="reveal"
 	args={templateArgs({
-		skipLoadingScreen: true,
+		skipLoadingScreen: false,
 		data: events.reveal,
 		action: async (data) => await playBookEvent(data, { bookEvents: [] }),
+	})}
+	{template}
+/>
+
+<!-- a base game spin with a gust of wind: wilds blow in onto the landed board, then it wins and
+tumbles -->
+<Story
+	name="windWilds"
+	args={templateArgs({
+		skipLoadingScreen: false,
+		data: events.windWilds,
+		action: async (data) => await playBookEvents(data),
+	})}
+	{template}
+/>
+
+<!-- a base game spin with a stronger gust taking every symbol of one kind off the board: they
+shiver and are carried off, the board tumbles to fill their cells, then it wins -->
+<Story
+	name="windSweep"
+	args={templateArgs({
+		skipLoadingScreen: false,
+		data: events.windSweep,
+		action: async (data) => await playBookEvents(data),
 	})}
 	{template}
 />
@@ -48,7 +72,7 @@
 <Story
 	name="setTotalWin"
 	args={templateArgs({
-		skipLoadingScreen: true,
+		skipLoadingScreen: false,
 		data: events.setTotalWin,
 		action: async (data) => await playBookEvent(data, { bookEvents: [] }),
 	})}
@@ -58,8 +82,19 @@
 <Story
 	name="updateBonusMeter"
 	args={templateArgs({
-		skipLoadingScreen: true,
+		skipLoadingScreen: false,
 		data: events.updateBonusMeter,
+		action: async (data) => await playBookEvent(data, { bookEvents: [] }),
+	})}
+	{template}
+/>
+
+<!-- the meter past the bonus's 35, filling orange on toward the super bonus's 50 -->
+<Story
+	name="updateBonusMeterSuper"
+	args={templateArgs({
+		skipLoadingScreen: false,
+		data: events.updateBonusMeterSuper,
 		action: async (data) => await playBookEvent(data, { bookEvents: [] }),
 	})}
 	{template}
@@ -68,7 +103,7 @@
 <Story
 	name="freeSpinTrigger"
 	args={templateArgs({
-		skipLoadingScreen: true,
+		skipLoadingScreen: false,
 		data: events.freeSpinTrigger,
 		action: async (data) => await playBookEvent(data, { bookEvents: [] }),
 	})}
@@ -78,7 +113,7 @@
 <Story
 	name="freeSpinRetrigger"
 	args={templateArgs({
-		skipLoadingScreen: true,
+		skipLoadingScreen: false,
 		data: events.freeSpinRetrigger,
 		action: async (data) => await playBookEvent(data, { bookEvents: [] }),
 	})}
@@ -88,7 +123,7 @@
 <Story
 	name="updateFreeSpin"
 	args={templateArgs({
-		skipLoadingScreen: true,
+		skipLoadingScreen: false,
 		data: events.updateFreeSpin,
 		action: async (data) => await playBookEvent(data, { bookEvents: [] }),
 	})}
@@ -98,7 +133,7 @@
 <Story
 	name="winInfo"
 	args={templateArgs({
-		skipLoadingScreen: true,
+		skipLoadingScreen: false,
 		data: events.winInfo,
 		action: async (data) => await playBookEvent(data, { bookEvents: [] }),
 	})}
@@ -108,7 +143,7 @@
 <Story
 	name="updateTumbleWin"
 	args={templateArgs({
-		skipLoadingScreen: true,
+		skipLoadingScreen: false,
 		data: events.updateTumbleWin,
 		action: async (data) => await playBookEvent(data, { bookEvents: [] }),
 	})}
@@ -118,7 +153,7 @@
 <Story
 	name="tumbleBoard"
 	args={templateArgs({
-		skipLoadingScreen: true,
+		skipLoadingScreen: false,
 		data: events.tumbleBoard,
 		action: async (data) => await playBookEvent(data, { bookEvents: [] }),
 	})}
@@ -128,7 +163,7 @@
 <Story
 	name="updateGlobalMult"
 	args={templateArgs({
-		skipLoadingScreen: true,
+		skipLoadingScreen: false,
 		data: events.updateGlobalMult,
 		action: async (data) => await playBookEvent(data, { bookEvents: [] }),
 	})}
@@ -138,7 +173,7 @@
 <Story
 	name="setWin"
 	args={templateArgs({
-		skipLoadingScreen: true,
+		skipLoadingScreen: false,
 		data: events.setWin,
 		action: async (data) => await playBookEvent(data, { bookEvents: [] }),
 	})}
@@ -148,7 +183,7 @@
 <Story
 	name="freeSpinEnd"
 	args={templateArgs({
-		skipLoadingScreen: true,
+		skipLoadingScreen: false,
 		data: events.freeSpinEnd,
 		action: async (data) => await playBookEvent(data, { bookEvents: [] }),
 	})}
@@ -158,7 +193,7 @@
 <Story
 	name="finalWin"
 	args={templateArgs({
-		skipLoadingScreen: true,
+		skipLoadingScreen: false,
 		data: events.finalWin,
 		action: async (data) => await playBookEvent(data, { bookEvents: [] }),
 	})}

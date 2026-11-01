@@ -44,7 +44,7 @@
 <Story
 	name="preSpin"
 	args={templateArgs({
-		skipLoadingScreen: true,
+		skipLoadingScreen: false,
 		data: {},
 		action: async () => {
 			await stateGameDerived.enhancedBoard.preSpin({});
@@ -56,7 +56,7 @@
 <Story
 	name="emitterEvent: boardHide"
 	args={templateArgs({
-		skipLoadingScreen: true,
+		skipLoadingScreen: false,
 		data: {},
 		action: async () => {
 			eventEmitter.broadcast({ type: 'boardHide' });

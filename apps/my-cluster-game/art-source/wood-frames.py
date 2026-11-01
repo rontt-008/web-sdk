@@ -4,10 +4,16 @@
   drawn as it is, it keeps its shape; lying down above the board on phones held upright)
 - rune-box-frame: round each rune box (not used now: the ladder replaced it)
 - bonus-meter-frame: the bonus meter, branches round a bar of planks, with a sign over it for the
-  count (BonusMeter.svelte; drawn as it is, the meter keeps its shape), and its planks green alone
+  count (BonusMeter.svelte; drawn as it is, the meter keeps its shape), and its planks green and orange alone
   (PLANKS), which the game reveals from the left as the meter fills
-- logo: the game's name, RuneFall, on a wooden sign with maple leaves (Logo.svelte, over the bonus
-  meter)
+- spin-sign: a sign of dark planks in a frame of branches with maple leaves, for the free and power
+  spins' count (FreeSpinCounter.svelte; drawn as it is, in the meter's place in the bonus)
+- info-card: a dark slate panel in a frame of logs with maple leaves, three of them on the start
+  screen (LoadingScreen.svelte; drawn as it is), for the game's info
+- screen-panel: a board of planks in a frame of branches with maple leaves, for the free spins'
+  intro and end screens (FreeSpinAnimation.svelte; drawn as it is, in the sample's panel's place)
+(The logo was drawn here too, as one picture; now its letters move, it comes from the user's Blender
+animation of it, see logo-idle.py.)
 
 For each:
 - art-source/<name>.webp: the user's PNG, given as an argument, cleaned up (haze under alpha 16
@@ -38,21 +44,28 @@ FRAMES = {
     'rune-ladder': [(0.5, 0.17), (0.5, 0.41), (0.5, 0.645), (0.5, 0.865)],
     'rune-box-frame': [(0.5, 0.5)],
     'bonus-meter-frame': [],
-    'logo': [],
+    'spin-sign': [],
+    'info-card': [],
+    'screen-panel': [],
 }
 # kept in their own colours, without the board's duller look (the meter's planks went grey in it)
-VIVID = {'rune-ladder', 'bonus-meter-frame', 'logo'}
-# The meter's planks again, green (static/assets/<out>, the game reveals them as it fills): found
+VIVID = {'rune-ladder', 'bonus-meter-frame', 'spin-sign', 'info-card', 'screen-panel'}
+# The meter's planks again, coloured (static/assets/<fill>, the game reveals them as it fills): found
 # by spreading from the middle of the bar within `within` (left, top, right, bottom) through pixels
 # lighter than `dark`, so it stops at the branches' and leaves' outlines, then `edge` px over their
-# soft edges; `green` is the planks' average shade, lighter and darker as the wood is, with `shine`.
+# soft edges; each of `fills` the planks in its colour, their average shade, lighter and darker as
+# the wood is, with `shine`: yellow on the way to the bonus, green in the bonus's zone and orange in the
+# super bonus's (see BonusMeter.svelte).
 PLANKS = {
     'bonus-meter-frame': {
-        'out': 'bonus-meter-fill.webp',
         'within': (140, 250, 1640, 460),
         'dark': 0.09,
         'edge': 2,
-        'green': (0.15, 0.72, 0.29),
+        'fills': {
+            'bonus-meter-fill.webp': (0.15, 0.72, 0.29),
+            'bonus-meter-fill-super.webp': (0.96, 0.5, 0.1),
+            'bonus-meter-fill-progress.webp': (0.98, 0.78, 0.2),
+        },
         # this much brighter at the top and deeper at the bottom, and a white band (this much white,
         # centred this far down, this wide) for a little shine
         'shine': {'light': 0.12, 'white': 0.4, 'band': 0.2, 'band_width': 0.09},
@@ -114,8 +127,8 @@ def grow4(mask):
     return grown
 
 
-def green_planks(frame):
-    """The planks green, alone, cropped to them, and where they are in the frame."""
+def coloured_planks(frame, colour):
+    """The planks in a colour, alone, cropped to them, and where they are in the frame."""
     plank = PLANKS[name]
     luminance = frame[..., :3] @ LUMINANCE
     left, top, right, bottom = plank['within']
@@ -138,7 +151,7 @@ def green_planks(frame):
 
     layer = np.zeros_like(frame)
     shade = (luminance / luminance[region].mean())[..., None]
-    rgb = np.array(plank['green'], np.float32) * shade
+    rgb = np.array(colour, np.float32) * shade
 
     # a little shine, by how far down the planks each pixel is in its column (0 at their top, 1 at
     # their bottom: it follows the branches' wobble): brighter above and deeper below, and a soft white
@@ -169,17 +182,16 @@ if len(sys.argv) > 2:
 frame = read(plain)
 if name not in VIVID:
     frame[..., :3] = look(frame[..., :3])
-filled = green_planks(frame) if name in PLANKS else None
+fills = {fill: coloured_planks(frame, colour) for fill, colour in PLANKS[name]['fills'].items()} if name in PLANKS else {}
 frame[frame[..., 3] == 0, :3] = EDGE_COLOUR
 write(frame, os.path.join(HERE, '..', 'static', 'assets', f'{name}.webp'), 'webp:90')
 
 solid = frame[..., 3] > 0.5
 height, width = solid.shape
 print(f'{name}: size {width} x {height}')
-if filled is not None:
-    layer, (left, top) = filled
-    write(layer, os.path.join(HERE, '..', 'static', 'assets', PLANKS[name]['out']), 'webp:90')
-    print(f'{PLANKS[name]["out"]}: {layer.shape[1]} x {layer.shape[0]} at {left}, {top}')
+for fill, (layer, (left, top)) in fills.items():
+    write(layer, os.path.join(HERE, '..', 'static', 'assets', fill), 'webp:90')
+    print(f'{fill}: {layer.shape[1]} x {layer.shape[0]} at {left}, {top}')
 
 
 def first(line):

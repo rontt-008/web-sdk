@@ -44,6 +44,8 @@ export type SoundEffectName =
 	| 'sfx_superfreespin'
 	| 'sfx_symbols_landing'
 	| 'sfx_wild_explode'
+	| 'sfx_wind_gust'
+	| 'sfx_wind_sweep'
 	| 'sfx_winlevel_end'
 	| 'sfx_winlevel_nice'
 	| 'sfx_winlevel_small'

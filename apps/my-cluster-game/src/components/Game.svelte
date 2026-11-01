@@ -11,6 +11,7 @@
 	import { GameVersion, Modals } from 'components-ui-html';
 
 	import { getContext } from '../game/context';
+	import { setBetModeMeta } from '../game/betModes';
 	import { SMOOTH_TEXTURE_KEYS, smoothTexture } from '../game/smoothTextures';
 	import { uiTheme, uiHtmlTheme } from '../game/uiTheme';
 	import EnableSound from './EnableSound.svelte';
@@ -22,23 +23,24 @@
 	import Fox from './Fox.svelte';
 	import BoardFrame from './BoardFrame.svelte';
 	import Board from './Board.svelte';
-	import Anticipations from './Anticipations.svelte';
 	import ClusterWinAmounts from './ClusterWinAmounts.svelte';
 	import TumbleBoard from './TumbleBoard.svelte';
-	import TumbleWinAmount from './TumbleWinAmount.svelte';
-	import GlobalMultiplier from './GlobalMultiplier.svelte';
+	import Wind from './Wind.svelte';
 	import Win from './Win.svelte';
 	import FreeSpinIntro from './FreeSpinIntro.svelte';
 	import FreeSpinCounter from './FreeSpinCounter.svelte';
 	import FreeSpinOutro from './FreeSpinOutro.svelte';
-	import Transition from './Transition.svelte';
 	import RuneBoard from './RuneBoard.svelte';
 	import RuneTablets from './RuneTablets.svelte';
 	import BonusMeter from './BonusMeter.svelte';
 	import Logo from './Logo.svelte';
 	import PowerSpinsIntro from './PowerSpinsIntro.svelte';
+	import GameInfo from './GameInfo.svelte';
 
 	const context = getContext();
+
+	// the buy menu's bonus and super bonus, at this game's prices
+	setBetModeMeta();
 
 	onMount(() => (context.stateLayout.showLoadingScreen = true));
 
@@ -90,13 +92,19 @@
 
 		<MainContainer>
 			<Board />
-			<Anticipations />
-			<TumbleWinAmount />
-			<GlobalMultiplier />
 		</MainContainer>
 
 		<MainContainer>
 			<TumbleBoard />
+		</MainContainer>
+
+		<MainContainer>
+			<Wind />
+		</MainContainer>
+
+		<!-- in their own container, over the tumble board: in its container they went under it, as
+		its symbols, drawn only while it tumbles, are added after them -->
+		<MainContainer>
 			<ClusterWinAmounts />
 		</MainContainer>
 
@@ -106,7 +114,7 @@
 
 		<UI theme={uiTheme}>
 			{#snippet gameName()}
-				<UiGameName name="CLUSTER GAME" />
+				<UiGameName name="RUNEFALL" />
 			{/snippet}
 			<!-- no logo in the corner, as in Cat Hunt -->
 			{#snippet logo()}{/snippet}
@@ -118,12 +126,15 @@
 		{/if}
 		<PowerSpinsIntro />
 		<FreeSpinOutro />
-		<Transition />
 	{/if}
 </App>
 
 <Modals theme={uiHtmlTheme}>
 	{#snippet version()}
 		<GameVersion version="0.0.0" />
+	{/snippet}
+	<!-- no pay table: the rules hold the symbol wins too (see uiTheme's hidePayTable) -->
+	{#snippet gameRules()}
+		<GameInfo />
 	{/snippet}
 </Modals>

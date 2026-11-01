@@ -37,7 +37,19 @@ Originals of art that is processed before it goes into `static/assets` (not load
   outline); the red one keeps 75% of its saturation (LEAF_SATURATION); cropped, scaled (Lanczos, premultiplied) so the longer side, line included, is 86% of
   256 px and centred on a 256 x 256 transparent square, lossless; the game stretches the square to
   fill a cell, so the margin is the gap between symbols.
-  They have no Spine: their win is drawn in code (`src/game/motion.ts`).
+  They have no Spine: their win is the user's hit, below.
+- The leaves' hits: the user's animations, made in Blender, `Downloads/blender stuff/leaf_<colour>_hit.blend`
+  (its frames, scripts and README in `blender stuff/folders/leaf_<colour>_hit`): 90 frames of
+  1600 x 1600 at 60 fps (1.5 s), the leaf at its art's 1254 px in the middle, coming up toward you
+  about 22% and settling back, first and last frames at rest. `leaf-hits.py` makes each frame as the
+  leaf's still is (`symbol-stills.py`'s own functions: the green one mirrored, the thick outline cut
+  away, as much deeper as the leaf has grown, and drawn again thin, the red one less saturated) and
+  moves and scales them all as the still's art (from the first frame) onto a 320 px square, 1.25
+  times the still's, so the leaf has room to grow: `static/assets/sprites/symbolHits/leaf-<colour>-hit.{webp,json}`
+  (2 px between frames, webp:90, about 1 MB each). Its first frame lies on the still (the game
+  draws the square 1.25 times a cell, centred on it, and plays it at 90 fps, 1 s, as the user asked
+  for it faster: LEAF_HIT_FRAME_RATE in `src/game/constants.ts`). Run it again after changing an animation or a
+  still (about 8 minutes): `"<Blender>/5.2/python/bin/python.exe" -I art-source/leaf-hits.py ["<blender stuff folder>"]`.
 - `blueberries.webp`, `runestone.webp`, `mushroom.webp`, `acorn.webp`: the high symbols (H1 to H4),
   framed tiles: the user's PNGs (1254 x 1254, the rune stone 1024 x 1024; the acorn and mushroom
   came on black without alpha, so the black joined to their edges is made see-through first) with
@@ -47,16 +59,38 @@ Originals of art that is processed before it goes into `static/assets` (not load
   fill the 256 x 256 square. Run it from apps/my-cluster-game with the Python that comes with Blender:
   `"<Blender>/5.2/python/bin/python.exe" -I art-source/symbol-stills.py [blueberries=<new.png> ...]`.
   The game no longer draws these stills: they set where the idle loops' frames go.
-- The high symbols' idle loops: the user's 2D cut-out animations, made in Blender in
-  `Downloads/blender stuff/<name>_idle` (blueberry, runestone, mushroom, acorn: the .blend, layers,
-  scripts and `export/<name>_idle_sheet.png`, 120 frames of 256 x 256 at 30 fps that loop).
-  `symbol-idles.py` draws the game's `static/assets/sprites/symbolIdles/<still>-idle.{webp,json}`
-  from those sheets: every frame scaled (about 5%) and moved so the tile's wooden frame is where the
-  still's is, so the game draws them at the same size (TILE_SIZE in `src/game/constants.ts`, almost
-  as big as a cell); 2 px between frames, WebP (webp:90, about 1.9 MB each). The game plays them in
-  every state, a win too, all from one clock (`src/game/idleClock.svelte.ts`), each reel 8 frames
-  on from the one left of it. Run it again after changing an animation or a still:
-  `"<Blender>/5.2/python/bin/python.exe" -I art-source/symbol-idles.py ["<blender stuff folder>"]`.
+- `wild.webp`: the wild (W), a stone tile with glowing runes and WILD on it in a frame with rocks on
+  its corners (the user's 1237 x 1271 PNG, see-through round it), cleaned and drawn by
+  `symbol-stills.py` like the tiles (`wild=<new.png>`), into `static/assets/symbols/wild.webp`,
+  which sets where its idle's frames go. Its idle is the user's Blender animation of the whole
+  symbol, its letters bobbing and rocking and its runes floating with their glow breathing
+  (`Downloads/blender stuff/IDLE/wild_symbol_idle.blend`, its frames, scripts and README in
+  `blender stuff/folders/wild_symbol_idle`; `wild_idle` there is the same with only the letters and
+  runes): 120 frames of 256 x 263 at 30 fps that loop. Its hit is `blender stuff/wild_hit.blend`
+  (`folders/wild_hit`; named without "symbol", HITS in the script): 60 frames at 60 fps, the whole
+  symbol bouncing once with its letters in a wave, rendered with the idle's camera, starting and
+  ending at rest. `symbol-animations.py` draws them into `static/assets/sprites/symbolIdles/wild-idle`
+  and `symbolHits/wild-hit` `.{webp,json}` like the tiles', but on 288 px squares (16 px of room round
+  the still's 256, ROOM in the script, as the hit swells past it; 2.4 and 1.5 MB). The game plays the
+  idle in every state but a win and the hit on a win, drawn 1.08 cells for the still's square
+  (WILD_SIZE and WILD_SHEET in `src/game/constants.ts`, so its frame matches the tiles'), settling as
+  it lands.
+- The high symbols' idle loops and hits: the user's 2D cut-out animations, made in Blender in
+  `Downloads/blender stuff/folders/<name>_idle` and `<name>_hit` (blueberry, runestone, mushroom,
+  acorn: layers, scripts and `export/<name>_<kind>_sheet.png`; the idles are 120 frames of 256 x 256
+  at 30 fps that loop, the hits 60 frames at 60 fps played once, starting and ending on the tile at
+  rest; the hits' .blend files are at the top of `blender stuff`, the idles' in `blender stuff/IDLE`).
+  `symbol-animations.py` draws the game's `static/assets/sprites/symbolIdles/<still>-idle.{webp,json}`
+  and `symbolHits/<still>-hit.{webp,json}` from those sheets: every frame scaled (about 5%) and moved
+  so the tile's wooden frame is where the still's is (the hit is rendered with the idle's camera, so
+  both get the same fit), so the game draws them at the same size (TILE_SIZE in
+  `src/game/constants.ts`, almost as big as a cell); 2 px between frames, WebP (webp:90, about 1.9 MB
+  an idle, 1 MB a hit). The game plays the idles in every state but a win, all from one clock
+  (`src/game/idleClock.svelte.ts`), each reel 8 frames on from the one left of it; a win plays the
+  hit once (`SymbolHit.svelte`), fading in over the idle in its first 0.1 s and back out to it in its
+  last, so it doesn't jump from wherever the loop is. Run it again after changing an animation or a
+  still (it also looks for the folders straight in `blender stuff`):
+  `"<Blender>/5.2/python/bin/python.exe" -I art-source/symbol-animations.py ["<blender stuff folder>"]`.
 - `blueberry_slot.blend`, `stump_slot.blend`, `mushroom_slot.blend`, `acorn_slot.blend` and
   `symbol-sheets.py`: the user's 2D cut-out rigs of the previous high symbols (each has a README
   text inside) and the script that rendered their win animations into sprite sheets; not used since
@@ -72,6 +106,12 @@ Originals of art that is processed before it goes into `static/assets` (not load
   each compartment under it.
 - `rune-box-frame.webp`: the frame that was round each rune box before the ladder (the user's
   1376 x 768 PNG, cleaned the same way: 1298 x 723); not used now.
+- `screen-panel.webp`: the panel of the free spins' intro and end screens, a board of planks in a
+  frame of branches with maple leaves (the user's 1536 x 1024 PNG, see-through round it; cleaned and
+  cropped the same way: 1415 x 932, the planks about 116-1290 x 128-815, lossless).
+  `wood-frames.py screen-panel` draws `static/assets/screen-panel.webp` (148 KB) in its own colours.
+  `src/components/FreeSpinAnimation.svelte` draws it in place of the sample's purple panel, on the
+  panel's Spine bone, with the words and number scaled to sit on its planks.
 - `bonus-meter-frame.webp`: the bonus meter, branches and maple leaves round a bar of planks, with a
   wooden sign over it (the user's 1792 x 534 PNG, see-through outside; cleaned and cropped the same
   way, which moved its pixels -8, 4: 1783 x 541, lossless). `wood-frames.py bonus-meter-frame` draws
@@ -79,18 +119,31 @@ Originals of art that is processed before it goes into `static/assets` (not load
   board's duller look turned its planks grey). It also writes `static/assets/bonus-meter-fill.webp`
   (29 KB): the planks alone, green (their grain and seams kept), found by spreading from the middle of
   the bar up to the branches' and leaves' dark outlines (PLANKS in the script); 1504 x 189, at
-  138, 259 in the meter's art. The game draws the meter as it is (it keeps its shape,
-  BONUS_METER_ART in `src/game/stateGame.svelte.ts`), the green planks over it, shown from the left
-  as far as it is full, and the count on the sign (its middle at 885, 146, measured by hand), in
+  138, 259 in the meter's art; and `bonus-meter-fill-super.webp` (30 KB), the same planks orange.
+  The game draws the meter as it is (it keeps its shape, BONUS_METER_ART in
+  `src/game/stateGame.svelte.ts`), its bar running from 0 to the super bonus's 50: the green planks
+  over it from the left as far as it is full, up to a mark at the bonus's 35 (70% of the bar), and
+  after the mark the super bonus's zone, the orange planks faint with SUPER on them, filling orange
+  on to 50; and the count on the sign (its middle at 885, 146, measured by hand), in
   `src/components/BonusMeter.svelte`.
 - `logo.webp`: the game's name, RuneFall, on a wooden sign with maple leaves and a rune stone (the
   user's 1665 x 945 PNG, see-through round it; cleaned and cropped the same way: 1579 x 849,
-  lossless). `wood-frames.py logo` draws `static/assets/logo.webp` (192 KB) in its own colours. The
-  game draws it right of the board over the bonus meter (LOGO_ART and the layout in
-  `src/game/stateGame.svelte.ts`, `src/components/Logo.svelte`).
+  lossless), as one picture; the game no longer draws it, as its letters move now (below).
+- The logo's idle: the user's Blender animation of it, `Downloads/blender stuff/runefall_idle.blend`
+  (its layers, layout.json and scripts in `blender stuff/folders/runefall_idle`): the sign with the
+  letters painted out, and its 8 letters, each bobbing 9 px, rocking 2 degrees and swelling 2.5% on
+  its own timing, a 4 s loop (120 frames at 30 fps). `logo-idle.py`, run in Blender with that .blend
+  open, cuts the sign (cropped like `logo.webp`, so still 1579 x 849: LOGO_ART in
+  `src/game/stateGame.svelte.ts`) and the letters (each cropped to itself) into
+  `static/assets/sprites/logo/logo-idle.{webp,json}` (16 px apart, as the game mipmaps it; 222 KB),
+  and samples each letter's pose in every frame from the .blend into `src/game/logoIdle.ts`.
+  `src/components/Logo.svelte` draws the sign and moves the letters on it from those numbers (in
+  between frames too), so they stay sharp at any size, right of the board over the bonus meter.
+  Run it again after changing the animation:
+  `"<Blender>/blender.exe" -b --disable-autoexec "<blender stuff>/runefall_idle.blend" --python-exit-code 1 --python art-source/logo-idle.py`.
 - Run `wood-frames.py` from apps/my-cluster-game with the Python that comes with Blender, with the
   frame's name and, for a new one, its PNG:
-  `"<Blender>/5.2/python/bin/python.exe" -I art-source/wood-frames.py <rune-ladder|bonus-meter-frame|logo> [<new frame.png>]`.
+  `"<Blender>/5.2/python/bin/python.exe" -I art-source/wood-frames.py <rune-ladder|bonus-meter-frame> [<new frame.png>]`.
 - `board-frame-plain.webp`: the frame of branches wound with vines and autumn leaves, without its
   outline (the user's 1254 x 1254 PNG, see-through in the middle, haze under alpha 16 cleared, alpha
   240+ made solid, lossless). `board-frame.py` draws `static/assets/board-frame.webp` from it: a

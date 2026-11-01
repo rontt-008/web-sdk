@@ -1,6 +1,6 @@
 import type { BetType } from 'rgs-requests';
 
-import type { SymbolName, RawSymbol, GameType, Position } from './types';
+import type { SymbolName, RawSymbol, GameType, Position, BonusType } from './types';
 import type { RuneName, RuneOffset } from './runes';
 
 type BookEventReveal = {
@@ -46,6 +46,8 @@ type BookEventFreeSpinTrigger = {
 	type: 'freeSpinTrigger';
 	totalFs: number;
 	positions: Position[];
+	// the bonus or the super bonus (none: the bonus)
+	bonusType?: BonusType;
 };
 
 type BookEventUpdateFreeSpin = {
@@ -141,6 +143,23 @@ type BookEventUpdatePowerSpin = {
 	total: number;
 };
 
+// now and then (any spin) a gust of wind blows wilds onto these cells as the board lands, before its
+// wins
+type BookEventWindWilds = {
+	index: number;
+	type: 'windWilds';
+	positions: Position[];
+};
+
+// more rarely, instead a gust takes every symbol of one kind (`symbol`) off the board, at
+// `positions`; the tumbleBoard after it fills their cells
+type BookEventWindSweep = {
+	index: number;
+	type: 'windSweep';
+	symbol: SymbolName;
+	positions: Position[];
+};
+
 // customised
 type BookEventCreateBonusSnapshot = {
 	index: number;
@@ -169,6 +188,8 @@ export type BookEvent =
 	| BookEventUpdateBonusMeter
 	| BookEventPowerSpinsTrigger
 	| BookEventUpdatePowerSpin
+	| BookEventWindWilds
+	| BookEventWindSweep
 	// customised
 	| BookEventCreateBonusSnapshot;
 

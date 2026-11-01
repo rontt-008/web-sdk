@@ -9,16 +9,16 @@
 
 <script lang="ts">
 	import { Container } from 'pixi-svelte';
-	import { FadeContainer, WinCountUpProvider, ResponsiveBitmapText } from 'components-pixi';
+	import { FadeContainer, WinCountUpProvider, ResponsiveText } from 'components-pixi';
 	import { waitForResolve, waitForTimeout } from 'utils-shared/wait';
 	import { bookEventAmountToCurrencyString } from 'utils-shared/amount';
 	import { CanvasSizeRectangle, MainContainer } from 'components-layout';
 	import { OnMount } from 'components-shared';
 
-	import WinCoins from './WinCoins.svelte';
 	import WinAnimation from './WinAnimation.svelte';
 	import PressToContinue from './PressToContinue.svelte';
 	import { LAYOUT_UNIT } from '../game/constants';
+	import { signTextStyle } from '../game/signText';
 	import { getContext } from '../game/context';
 
 	const context = getContext();
@@ -65,40 +65,35 @@
 					>
 						{#if winLevelData?.animation}
 							<WinAnimation animationMap={winLevelData.animation}>
-								<ResponsiveBitmapText
+								<ResponsiveText
 									anchor={0.5}
 									maxWidth={2130}
-									text={bookEventAmountToCurrencyString(countUpAmount)}
-									style={{
-										fontFamily: 'gold',
-										fontSize: LAYOUT_UNIT * 3.6,
-										align: 'center',
-										fontWeight: 'bold',
-										letterSpacing: 0,
-									}}
+									text={bookEventAmountToCurrencyString(countUpAmount, {
+										counting: !countUpCompleted,
+									})}
+									style={{ ...signTextStyle(LAYOUT_UNIT * 3.6), align: 'center' }}
 								/>
 							</WinAnimation>
 						{:else}
-							<ResponsiveBitmapText
+							<ResponsiveText
 								anchor={0.5}
 								maxWidth={context.stateLayoutDerived.canvasSizes().width /
 									context.stateLayoutDerived.mainLayout().scale}
-								text={bookEventAmountToCurrencyString(countUpAmount)}
-								style={{
-									fontFamily: 'gold',
-									fontSize: LAYOUT_UNIT,
-									align: 'center',
-									fontWeight: 'bold',
-									letterSpacing: 0,
-								}}
+								text={bookEventAmountToCurrencyString(countUpAmount, {
+									counting: !countUpCompleted,
+								})}
+								style={{ ...signTextStyle(LAYOUT_UNIT), align: 'center' }}
 							/>
 						{/if}
 					</Container>
 				</MainContainer>
 
-				<WinCoins emit={!countUpCompleted} levelAlias={winLevelData?.alias} />
-
-				<PressToContinue onpress={() => (countUpCompleted ? oncomplete() : finishCountUp())} />
+				<!-- "press anywhere to continue" only on a big win; a small one goes on by itself, a press
+				still hurries it -->
+				<PressToContinue
+					hideText={!isBigWin}
+					onpress={() => (countUpCompleted ? oncomplete() : finishCountUp())}
+				/>
 			{/snippet}
 		</WinCountUpProvider>
 	{/if}

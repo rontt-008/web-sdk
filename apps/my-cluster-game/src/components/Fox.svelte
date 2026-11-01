@@ -42,13 +42,23 @@
 
 	let gusting = $state(false);
 	let lastGust = performance.now();
+	// a gust of wind over the board (Wind: blowing wilds onto it or sweeping symbols off it) swings
+	// its tail too, as soon as its idle has finished its loop, about as the wind reaches it
+	let windBlowing = false;
 
 	const onIdleLoop = () => {
-		if (performance.now() - lastGust < GUST_EVERY) return;
+		if (!windBlowing && performance.now() - lastGust < GUST_EVERY) return;
+		windBlowing = false;
 		lastGust = performance.now();
 		gusting = true;
 	};
 	const onGustComplete = () => (gusting = false);
+
+	const onWind = () => {
+		if (!gusting) windBlowing = true;
+	};
+	context.eventEmitter.subscribeOnMount({ windGust: onWind, windSweep: onWind });
+
 	// sizes are of the whole art, shadow included
 	const FOX = {
 		maxHeight: LAYOUT_UNIT * 3.7,
@@ -57,28 +67,36 @@
 		// at least this from its nose to the board frame, and from the tip of its tail to the screen's edge
 		gapToBoard: LAYOUT_UNIT * 0.15,
 		screenMargin: LAYOUT_UNIT * 0.15,
+		// and from its ears to the bonus meter above it
+		gapToMeter: LAYOUT_UNIT * 0.1,
 		// right of the middle of the room, as far as the room allows
 		nudgeRight: LAYOUT_UNIT * 0.3,
 		// below the ground (or the frame's bottom), so it stands further forward on the path
 		nudgeDown: LAYOUT_UNIT * 0.55,
 	};
 
-	// about the middle of the room right of the board frame, as big as the room allows, standing on the
-	// background's ground (the dirt path in front of the rocks); on very wide screens, where the ground
-	// is low behind the buttons, no lower than the frame's bottom
+	// about the middle of the room right of the board frame, as big as the room allows, its ears under
+	// the bonus meter (the meter is widest in the base game), standing on the background's ground (the
+	// dirt path in front of the rocks); on very wide screens, where the ground is low behind the
+	// buttons, no lower than the frame's bottom
 	const layout = $derived.by(() => {
 		const frame = context.stateGameDerived.boardFrameLayout().visible;
+		const meter = context.stateGameDerived.bonusMeterLayout();
 		const main = context.stateLayoutDerived.mainLayout();
 		const canvas = context.stateLayoutDerived.canvasSizes();
 		// the room, in the board's coordinates
 		const left = frame.right + FOX.gapToBoard;
 		const right = main.width / 2 + canvas.width / 2 / main.scale - FOX.screenMargin;
-		const height = Math.min(FOX.maxHeight, (right - left) / FOX_RATIO);
+		const y = Math.min(context.stateGameDerived.backgroundGround(), frame.bottom) + FOX.nudgeDown;
+		// its paws are where it stands, its ears this much of its height above them
+		const underMeter =
+			(y - meter.y - meter.height - FOX.gapToMeter) / (FOX_ART.paws / FOX_ART.height);
+		const height = Math.min(FOX.maxHeight, (right - left) / FOX_RATIO, underMeter);
 		const width = height * FOX_RATIO;
 
 		return {
 			x: Math.min((left + right) / 2 + FOX.nudgeRight, right - width / 2),
-			y: Math.min(context.stateGameDerived.backgroundGround(), frame.bottom) + FOX.nudgeDown,
+			y,
 			width,
 			height,
 		};

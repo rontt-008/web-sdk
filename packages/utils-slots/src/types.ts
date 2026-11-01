@@ -52,6 +52,11 @@ export type CascadingReelSpinOptions = {
 	reelPaddingMultiplierNormal: number;
 	reelPaddingMultiplierAnticipated: number;
 	reelFallOutDelay: number;
+	// How symbols move as they fall out of the board and into it (to their bounce, before it), over
+	// the same time their speed gives: e.g. quadIn, dropping from rest and speeding up as if under
+	// gravity. Without them they move at their speed all the way.
+	symbolFallOutEasing?: (t: number) => number;
+	symbolFallInEasing?: (t: number) => number;
 };
 
 type ReelCreateOptions<TRawSymbol extends object, TSymbolState extends string> = {

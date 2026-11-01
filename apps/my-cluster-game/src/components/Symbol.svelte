@@ -3,6 +3,8 @@
 	import SymbolSprite from './SymbolSprite.svelte';
 	import SymbolSpriteSheet from './SymbolSpriteSheet.svelte';
 	import SymbolIdle from './SymbolIdle.svelte';
+	import SymbolHit from './SymbolHit.svelte';
+	import SymbolVanish from './SymbolVanish.svelte';
 	import type { SymbolState, RawSymbol } from '../game/types';
 	import { getSymbolInfo } from '../game/utils';
 	import { getContext } from '../game/context';
@@ -30,6 +32,22 @@
 	<SymbolSpriteSheet {symbolInfo} x={props.x} y={props.y} oncomplete={props.oncomplete} />
 {:else if symbolInfo.type === 'idle'}
 	<SymbolIdle
+		{symbolInfo}
+		x={props.x}
+		y={props.y}
+		phase={props.phase}
+		oncomplete={props.oncomplete}
+	/>
+{:else if symbolInfo.type === 'vanish'}
+	<SymbolVanish
+		rawSymbol={props.rawSymbol}
+		x={props.x}
+		y={props.y}
+		phase={props.phase}
+		oncomplete={props.oncomplete}
+	/>
+{:else if symbolInfo.type === 'hit'}
+	<SymbolHit
 		{symbolInfo}
 		x={props.x}
 		y={props.y}

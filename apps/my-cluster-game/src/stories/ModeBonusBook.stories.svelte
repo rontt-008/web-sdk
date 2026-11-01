@@ -19,6 +19,7 @@
 	import { setContext } from '../game/context';
 	import { playBet } from '../game/utils';
 	import books from './data/bonus_books';
+	import superBooks from './data/super_books';
 
 	setContext();
 </script>
@@ -39,12 +40,28 @@
 <Story
 	name="random"
 	args={templateArgs({
-		skipLoadingScreen: true,
+		skipLoadingScreen: false,
 		data: {},
 		action: async () => {
 			const index = randomInteger({ min: 0, max: books.length - 1 });
 			const data = books[index];
 			console.log('Running a book at index', index);
+			await playBet({ ...data, state: data.events });
+		},
+	})}
+	{template}
+/>
+
+<!-- a bought super bonus (50+ connected symbols): its powers bigger, a 3x3 big wild and x5 -->
+<Story
+	name="super random"
+	args={templateArgs({
+		skipLoadingScreen: false,
+		data: {},
+		action: async () => {
+			const index = randomInteger({ min: 0, max: superBooks.length - 1 });
+			const data = superBooks[index];
+			console.log('Running a super book at index', index);
 			await playBet({ ...data, state: data.events });
 		},
 	})}

@@ -8,6 +8,7 @@ import { API_AMOUNT_MULTIPLIER } from 'constants-shared/bet';
 import config from '../game/config';
 import baseBooks from './data/base_books';
 import bonusBooks from './data/bonus_books';
+import superBooks from './data/super_books';
 import { pickByWeight } from './pickByWeight';
 
 type BetModeName = keyof typeof config.betModes;
@@ -16,6 +17,7 @@ type Book = { weight?: number; payoutMultiplier: number; events: unknown[] };
 const BOOKS: Record<BetModeName, Book[]> = {
 	base: baseBooks,
 	bonus: bonusBooks,
+	super: superBooks,
 };
 
 // bet sizes offered, in dollars (the bet menu shows a handful of them)

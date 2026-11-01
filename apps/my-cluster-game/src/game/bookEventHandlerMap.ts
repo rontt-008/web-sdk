@@ -1,13 +1,16 @@
 import _ from 'lodash';
 
 import { recordBookEvent, checkIsMultipleRevealEvents, type BookEventHandlerMap } from 'utils-book';
-import { stateBet } from 'state-shared';
+import { stateBet, stateBetDerived } from 'state-shared';
 import { BOOK_AMOUNT_MULTIPLIER } from 'constants-shared/bet';
+import { waitForTimeout } from 'utils-shared/wait';
 
 import { eventEmitter } from './eventEmitter';
-import { playBookEvent } from './utils';
+import { SYMBOL_MOTIONS } from './motion';
+import { findWildBlocks, playBookEvent } from './utils';
 import { winLevelMap, type WinLevel, type WinLevelData } from './winLevelMap';
-import { stateGame, stateGameDerived } from './stateGame.svelte';
+import { stateGame, stateGameDerived, flownKey } from './stateGame.svelte';
+import { LOW_SYMBOLS } from './constants';
 import type { BookEvent, BookEventOfType, BookEventContext } from './typesBookEvent';
 import type { Position } from './types';
 import type { RuneName, RuneOffset } from './runes';
@@ -69,7 +72,6 @@ const animateSymbols = async ({ positions }: { positions: Position[] }) => {
 
 export const bookEventHandlerMap: BookEventHandlerMap<BookEvent, BookEventContext> = {
 	reveal: async (bookEvent: BookEventOfType<'reveal'>, { bookEvents }: BookEventContext) => {
-		eventEmitter.broadcast({ type: 'tumbleWinAmountReset' });
 		const isBonusGame = checkIsMultipleRevealEvents({ bookEvents });
 		if (isBonusGame) {
 			eventEmitter.broadcast({ type: 'stopButtonEnable' });
@@ -77,66 +79,136 @@ export const bookEventHandlerMap: BookEventHandlerMap<BookEvent, BookEventContex
 		}
 
 		stateGame.gameType = bookEvent.gameType;
+		stateGame.flown = [];
+		// the board already in its place for the game type, unless a round is resumed in the bonus
+		stateGameDerived.slideBoard(bookEvent.gameType, { instant: true });
 		// each base game spin counts its connected symbols from nothing
 		if (bookEvent.gameType === 'basegame') eventEmitter.broadcast({ type: 'bonusMeterReset' });
 		await stateGameDerived.enhancedBoard.spin({ revealEvent: bookEvent });
+		// done when the last symbols to fall in (the top row) have landed, so their squash isn't cut
+		// short by a win or the next spin
+		await waitForTimeout(SYMBOL_MOTIONS.land.duration / stateBetDerived.timeScale());
 		eventEmitter.broadcast({ type: 'soundScatterCounterClear' });
 	},
+	// now and then a gust of wind blows wilds onto the landed board before its wins (Wind; the fox
+	// gusts too): each cell turns wild as its wild lands on it, settling in; done when the last has
+	// settled, so the wins count them (and the tumbles keep them, from the board's symbols)
+	windWilds: async (bookEvent: BookEventOfType<'windWilds'>) => {
+		const turnWild = ({ reel, row }: Position) => {
+			const reelSymbol = stateGame.board[reel].reelState.symbols[row];
+			if (reelSymbol.rawSymbol.name === 'W') return;
+			reelSymbol.rawSymbol = { name: 'W', wild: true };
+			reelSymbol.symbolState = 'land';
+			eventEmitter.broadcast({ type: 'soundOnce', name: 'sfx_multiplier_landing' });
+		};
+		await eventEmitter.broadcastAsync({
+			type: 'windGust',
+			positions: bookEvent.positions,
+			onland: turnWild,
+		});
+		// any the gust didn't get to (no board to blow them over)
+		bookEvent.positions.forEach(turnWild);
+		await waitForTimeout(SYMBOL_MOTIONS.land.duration / stateBetDerived.timeScale());
+	},
+	// more rarely a gust takes every symbol of one kind off the board (Wind; the fox gusts too): each
+	// is lifted off its cell as the gust reaches it, the cell left empty (as for the leaves whose
+	// souls flew to the bonus meter, stateGame.flown) for the tumble after it to fill (tumbleBoard)
+	windSweep: async (bookEvent: BookEventOfType<'windSweep'>) => {
+		await eventEmitter.broadcastAsync({
+			type: 'windSweep',
+			positions: bookEvent.positions,
+			onleave: (position) => stateGame.flown.push(flownKey(position)),
+		});
+	},
 	winInfo: async (bookEvent: BookEventOfType<'winInfo'>) => {
-		const promise1 = async () => {
-			eventEmitter.broadcast({ type: 'soundOnce', name: 'sfx_winlevel_small' });
-			// a wild in two clusters once: a symbol animated twice would wait forever for its first win
-			await animateSymbols({
-				positions: _.uniqBy(
-					_.flatten(bookEvent.wins.map((win) => win.positions)),
-					(position) => `${position.reel}:${position.row}`,
-				),
-			});
-		};
+		// a wild in two clusters once: a symbol animated twice would wait forever for its first win
+		const positions = _.uniqBy(
+			_.flatten(bookEvent.wins.map((win) => win.positions)),
+			(position) => `${position.reel}:${position.row}`,
+		);
 
-		const promise2 = async () => {
-			await eventEmitter.broadcastAsync({
-				type: 'showClusterWinAmounts',
-				// winWithoutMult is in bets, the book's amounts in hundredths of the bet: the cluster's
-				// win before its multipliers, "X" the spots' and the free spin's multipliers, then its win
-				wins: bookEvent.wins.map((win) => {
-					return {
-						win: win.meta.winWithoutMult * BOOK_AMOUNT_MULTIPLIER,
-						mult: win.meta.clusterMult * win.meta.globalMult,
-						result: win.win,
-						reel: win.meta.overlay.reel,
-						row: win.meta.overlay.row,
-					};
-				}),
-			});
-		};
+		// clusters through a big wild (a 2x2 or 3x3 block of wilds, see findWildBlocks) show their wins
+		// one at a time, and the board waits for the last to come up before it tumbles
+		const bigWildCells = new Set(
+			findWildBlocks(
+				stateGame.board.map((reel) => reel.reelState.symbols),
+				(reelSymbol) => reelSymbol.rawSymbol.name === 'W',
+			).flatMap((block) => block.cells),
+		);
+		const oneByOne = positions.some((position) =>
+			bigWildCells.has(stateGame.board[position.reel]?.reelState.symbols[position.row]),
+		);
+		let onshown = () => {};
+		const allShown = new Promise<void>((resolve) => (onshown = resolve));
 
-		await Promise.all([promise1(), promise2()]);
-	},
-	updateTumbleWin: async (bookEvent: BookEventOfType<'updateTumbleWin'>) => {
-		if (bookEvent.amount > 0) {
-			eventEmitter.broadcast({ type: 'tumbleWinAmountShow' });
+		// each cluster's win floats up from it; not waited for, it floats on as the board tumbles
+		eventEmitter.broadcast({
+			type: 'showClusterWinAmounts',
+			oneByOne,
+			onshown,
+			// winWithoutMult is in bets, the book's amounts in hundredths of the bet: the cluster's
+			// win before its multipliers, "X" its multipliers (the free spins have none: only Fehu's
+			// in the power spins), then its win
+			wins: bookEvent.wins.map((win) => {
+				return {
+					win: win.meta.winWithoutMult * BOOK_AMOUNT_MULTIPLIER,
+					mult: win.meta.clusterMult * win.meta.globalMult,
+					result: win.win,
+					reel: win.meta.overlay.reel,
+					row: win.meta.overlay.row,
+					positions: win.positions,
+				};
+			}),
+		});
+
+		// the symbols' hits, then in the base game each winning leaf bursts into a soul that flies into
+		// the bonus meter (MeterSouls): done when the last has set off, so the board tumbles while
+		// they fly (the meter fills when they land, see BonusMeter)
+		eventEmitter.broadcast({ type: 'soundOnce', name: 'sfx_winlevel_small' });
+		await Promise.all([animateSymbols({ positions }), oneByOne ? allShown : undefined]);
+		if (stateGame.gameType !== 'basegame') return;
+		const leaves = positions.filter((position) => {
+			const symbol =
+				stateGame.board[position.reel]?.reelState.symbols[position.row]?.rawSymbol.name;
+			return symbol && LOW_SYMBOLS.includes(symbol);
+		});
+		if (!leaves.length) return;
+		await new Promise<void>((resolve) => {
+			let left = 0;
 			eventEmitter.broadcast({
-				type: 'tumbleWinAmountUpdate',
-				amount: bookEvent.amount,
-				animate: false,
+				type: 'bonusMeterSouls',
+				souls: leaves.map((position) => ({
+					...stateGameDerived.cellCentre(position),
+					symbol: stateGame.board[position.reel].reelState.symbols[position.row].rawSymbol.name,
+					// the leaf goes as its soul sets off, as if it flew to the meter itself
+					onleave: () => {
+						stateGame.flown.push(flownKey(position));
+						if (++left === leaves.length) resolve();
+					},
+				})),
 			});
-		}
+		});
 	},
+	// the spin's win so far isn't shown in a box by the board (the user removed the sample's tumble win
+	// panel); the clusters' own amounts show on the board and the total in the UI bar
+	updateTumbleWin: async () => {},
 	setTotalWin: async (bookEvent: BookEventOfType<'setTotalWin'>) => {
 		stateBet.winBookEventAmount = bookEvent.amount;
 	},
+	// the meter fills when the souls flying to it have landed (BonusMeter), not waited for here, so
+	// the board tumbles meanwhile
 	updateBonusMeter: async (bookEvent: BookEventOfType<'updateBonusMeter'>) => {
-		await eventEmitter.broadcastAsync({ type: 'bonusMeterUpdate', amount: bookEvent.amount });
+		eventEmitter.broadcast({ type: 'bonusMeterUpdate', amount: bookEvent.amount });
 	},
 	freeSpinTrigger: async (bookEvent: BookEventOfType<'freeSpinTrigger'>) => {
+		// the bonus or the super bonus: the intro, the spins' sign and the runes' powers say which
+		stateGame.bonusType = bookEvent.bonusType ?? 'normal';
 		// the bonus meter full (a bought bonus may not have filled it); it goes for the free spins
 		eventEmitter.broadcast({ type: 'soundOnce', name: 'sfx_scatter_win_v2' });
 		await eventEmitter.broadcastAsync({ type: 'bonusMeterFull' });
 		// show free spin intro
 		eventEmitter.broadcast({ type: 'soundOnce', name: 'sfx_superfreespin' });
 		await eventEmitter.broadcastAsync({ type: 'uiHide' });
-		await eventEmitter.broadcastAsync({ type: 'transition' });
 		eventEmitter.broadcast({ type: 'freeSpinIntroShow' });
 		eventEmitter.broadcast({ type: 'soundOnce', name: 'jng_intro_fs' });
 		eventEmitter.broadcast({ type: 'soundMusic', name: 'bgm_freespin' });
@@ -147,19 +219,16 @@ export const bookEventHandlerMap: BookEventHandlerMap<BookEvent, BookEventContex
 		stateGame.gameType = 'freegame';
 		eventEmitter.broadcast({ type: 'freeSpinIntroHide' });
 		eventEmitter.broadcast({ type: 'bonusMeterHide' });
-		eventEmitter.broadcast({ type: 'boardFrameGlowShow' });
-		eventEmitter.broadcast({ type: 'globalMultiplierShow' });
-		await eventEmitter.broadcastAsync({
-			type: 'globalMultiplierUpdate',
-			multiplier: 1, // resets when multiplier === 1
-		});
+		// the board slides softly back right, where the rune ladder has room, the fox shrinking
+		const slide = stateGameDerived.slideBoard('freegame');
 		eventEmitter.broadcast({ type: 'freeSpinCounterShow' });
 		eventEmitter.broadcast({
 			type: 'freeSpinCounterUpdate',
 			current: undefined,
 			total: bookEvent.totalFs,
-			title: 'FREE SPIN',
+			title: stateGame.bonusType === 'super' ? 'SUPER SPIN' : 'FREE SPIN',
 		});
+		await slide;
 		await eventEmitter.broadcastAsync({ type: 'uiShow' });
 		await eventEmitter.broadcastAsync({ type: 'drawerButtonShow' });
 		eventEmitter.broadcast({ type: 'drawerFold' });
@@ -171,7 +240,6 @@ export const bookEventHandlerMap: BookEventHandlerMap<BookEvent, BookEventContex
 		// show free spin intro
 		eventEmitter.broadcast({ type: 'soundOnce', name: 'sfx_superfreespin' });
 		await eventEmitter.broadcastAsync({ type: 'uiHide' });
-		await eventEmitter.broadcastAsync({ type: 'transition' });
 		eventEmitter.broadcast({ type: 'freeSpinIntroShow' });
 		eventEmitter.broadcast({ type: 'soundOnce', name: 'jng_intro_fs' });
 		eventEmitter.broadcast({ type: 'soundMusic', name: 'bgm_freespin' });
@@ -181,12 +249,6 @@ export const bookEventHandlerMap: BookEventHandlerMap<BookEvent, BookEventContex
 		});
 		stateGame.gameType = 'freegame';
 		eventEmitter.broadcast({ type: 'freeSpinIntroHide' });
-		eventEmitter.broadcast({ type: 'boardFrameGlowShow' });
-		eventEmitter.broadcast({ type: 'globalMultiplierShow' });
-		await eventEmitter.broadcastAsync({
-			type: 'globalMultiplierUpdate',
-			multiplier: 1, // resets when multiplier === 1
-		});
 		eventEmitter.broadcast({ type: 'freeSpinCounterShow' });
 		eventEmitter.broadcast({
 			type: 'freeSpinCounterUpdate',
@@ -203,23 +265,15 @@ export const bookEventHandlerMap: BookEventHandlerMap<BookEvent, BookEventContex
 			total: bookEvent.total,
 		});
 	},
-	updateGlobalMult: async (bookEvent: BookEventOfType<'updateGlobalMult'>) => {
-		eventEmitter.broadcast({ type: 'globalMultiplierShow' });
-		if (bookEvent.globalMult === 1) {
-			eventEmitter.broadcast({ type: 'tumbleWinAmountReset' });
-		}
-		await eventEmitter.broadcastAsync({
-			type: 'globalMultiplierUpdate',
-			multiplier: bookEvent.globalMult, // resets when multiplier === 1
-		});
-	},
+	// the global multiplier, only Fehu's x3 in the power spins (the user removed the free spins' one,
+	// the spin's number), isn't shown on its own (nor the sample's multiplier box); the cluster wins
+	// show it
+	updateGlobalMult: async () => {},
 	freeSpinEnd: async (bookEvent: BookEventOfType<'freeSpinEnd'>) => {
 		const winLevelData = winLevelMap[bookEvent.winLevel as WinLevel];
 
 		await eventEmitter.broadcastAsync({ type: 'uiHide' });
 		stateGame.gameType = 'basegame';
-		eventEmitter.broadcast({ type: 'boardFrameGlowHide' });
-		eventEmitter.broadcast({ type: 'globalMultiplierHide' });
 		eventEmitter.broadcast({ type: 'freeSpinOutroShow' });
 		eventEmitter.broadcast({ type: 'soundOnce', name: 'sfx_youwon_panel' });
 		winLevelSoundsPlay({ winLevelData });
@@ -231,12 +285,12 @@ export const bookEventHandlerMap: BookEventHandlerMap<BookEvent, BookEventContex
 		winLevelSoundsStop();
 		eventEmitter.broadcast({ type: 'freeSpinOutroHide' });
 		eventEmitter.broadcast({ type: 'freeSpinCounterHide' });
-		eventEmitter.broadcast({ type: 'globalMultiplierHide' });
-		eventEmitter.broadcast({ type: 'tumbleWinAmountHide' });
+		stateGame.bonusType = 'normal';
 		eventEmitter.broadcast({ type: 'runesReset' });
 		eventEmitter.broadcast({ type: 'bonusMeterReset' });
 		eventEmitter.broadcast({ type: 'bonusMeterShow' });
-		await eventEmitter.broadcastAsync({ type: 'transition' });
+		// back to the base game's place further left, the fox growing again
+		await stateGameDerived.slideBoard('basegame');
 		await eventEmitter.broadcastAsync({ type: 'uiShow' });
 		await eventEmitter.broadcastAsync({ type: 'drawerUnfold' });
 		eventEmitter.broadcast({ type: 'drawerButtonHide' });
@@ -245,7 +299,6 @@ export const bookEventHandlerMap: BookEventHandlerMap<BookEvent, BookEventContex
 		eventEmitter.broadcast({ type: 'boardHide' });
 		eventEmitter.broadcast({ type: 'tumbleBoardShow' });
 		eventEmitter.broadcast({ type: 'tumbleBoardInit', addingBoard: bookEvent.newSymbols });
-		eventEmitter.broadcast({ type: 'soundOnce', name: 'sfx_multiplier_explosion_b' });
 		await eventEmitter.broadcastAsync({
 			type: 'tumbleBoardExplode',
 			explodingPositions: bookEvent.explodingSymbols,
@@ -294,7 +347,6 @@ export const bookEventHandlerMap: BookEventHandlerMap<BookEvent, BookEventContex
 		// the free spins are over: their rune goes, and the power spins start
 		await eventEmitter.broadcastAsync({ type: 'runesHide' });
 		eventEmitter.broadcast({ type: 'freeSpinCounterHide' });
-		eventEmitter.broadcast({ type: 'tumbleWinAmountHide' });
 		await eventEmitter.broadcastAsync({ type: 'uiHide' });
 		eventEmitter.broadcast({ type: 'soundOnce', name: 'sfx_superfreespin' });
 		eventEmitter.broadcast({ type: 'soundOnce', name: 'jng_intro_fs' });
@@ -303,8 +355,6 @@ export const bookEventHandlerMap: BookEventHandlerMap<BookEvent, BookEventContex
 			totalSpins: bookEvent.totalSpins,
 			runes: bookEvent.runes,
 		});
-		// back to x1 from the last free spin's, so the power spins' x3 (Fehu) counts up from it
-		await eventEmitter.broadcastAsync({ type: 'globalMultiplierUpdate', multiplier: 1 });
 		await eventEmitter.broadcastAsync({ type: 'uiShow' });
 	},
 	updatePowerSpin: async (bookEvent: BookEventOfType<'updatePowerSpin'>) => {
@@ -316,10 +366,7 @@ export const bookEventHandlerMap: BookEventHandlerMap<BookEvent, BookEventContex
 			title: 'POWER SPIN',
 		});
 	},
-	finalWin: async (bookEvent: BookEventOfType<'finalWin'>) => {
-		eventEmitter.broadcast({ type: 'globalMultiplierHide' });
-		eventEmitter.broadcast({ type: 'tumbleWinAmountHide' });
-	},
+	finalWin: async () => {},
 	// customised
 	createBonusSnapshot: async (bookEvent: BookEventOfType<'createBonusSnapshot'>) => {
 		const { bookEvents } = bookEvent;

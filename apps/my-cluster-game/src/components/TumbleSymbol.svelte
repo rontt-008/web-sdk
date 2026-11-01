@@ -19,15 +19,18 @@
 	);
 </script>
 
-<SymbolWrap
-	x={getSymbolX(props.reelIndex)}
-	y={props.tumbleSymbol.symbolY.current}
-	animating={symbolInfo.type === 'spine'}
->
-	<Symbol
-		state={props.tumbleSymbol.symbolState}
-		rawSymbol={props.tumbleSymbol.rawSymbol}
-		phase={props.reelIndex * IDLE_REEL_PHASE}
-		oncomplete={props.tumbleSymbol.oncomplete}
-	/>
-</SymbolWrap>
+<!-- not one that has flown to the bonus meter as a soul -->
+{#if !props.tumbleSymbol.gone}
+	<SymbolWrap
+		x={getSymbolX(props.reelIndex)}
+		y={props.tumbleSymbol.symbolY.current}
+		animating={symbolInfo.type === 'spine' || 'motion' in symbolInfo}
+	>
+		<Symbol
+			state={props.tumbleSymbol.symbolState}
+			rawSymbol={props.tumbleSymbol.rawSymbol}
+			phase={props.reelIndex * IDLE_REEL_PHASE}
+			oncomplete={props.tumbleSymbol.oncomplete}
+		/>
+	</SymbolWrap>
+{/if}
