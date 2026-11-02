@@ -33,10 +33,11 @@ const featureMultipliers = `${Math.min(...FEATURE_SPIN_WILD_MULTIPLIERS)}x to ${
 export const setBetModeMeta = () => {
 	// typed the way the SDK uses them for stateMeta.betModeMeta
 	const samples = DEFAULT_BET_MODE_META as BetModeMeta;
-	// social mode (social=true) can't say bet or buy
-	const social = stateUrlDerived.social();
+	// no bet, buy or cost: this game uses social mode's words in every mode (see context.ts)
+	const social = stateUrlDerived.socialWords();
 	const yourBet = social ? 'your play amount' : 'your bet';
 	const buyButton = social ? 'PLAY' : 'BUY';
+	const costs = social ? 'is played for' : 'costs';
 
 	stateMeta.betModeMeta = {
 		BASE: samples.BASE,
@@ -47,7 +48,7 @@ export const setBetModeMeta = () => {
 			text: {
 				...samples.ANTE.text,
 				title: 'BOOSTER',
-				dialog: `Increases your chance of triggering FREE SPINS. Each spin costs ${BOOSTER_COST}x ${yourBet} while the BOOSTER is on. It stays on until you turn it off.`,
+				dialog: `Increases your chance of triggering FREE SPINS. Each spin ${costs} ${BOOSTER_COST}x ${yourBet} while the BOOSTER is on. It stays on until you turn it off.`,
 				description: 'Increases your chance of triggering FREE SPINS.',
 				betAmountLabel: 'BOOSTER',
 				tickerIdle: 'BOOSTER IS ON',
@@ -62,7 +63,7 @@ export const setBetModeMeta = () => {
 			text: {
 				...samples.ANTE.text,
 				title: 'FEATURE SPIN',
-				dialog: `Every spin has a guaranteed BIG WILD with a ${featureMultipliers} multiplier that shoots out 1 to 3 extra wilds. Each spin costs ${FEATURE_COST}x ${yourBet} while FEATURE SPIN is on. It stays on until you turn it off.`,
+				dialog: `Every spin has a guaranteed BIG WILD with a ${featureMultipliers} multiplier that shoots out 1 to 3 extra wilds. Each spin ${costs} ${FEATURE_COST}x ${yourBet} while FEATURE SPIN is on. It stays on until you turn it off.`,
 				description: 'Every spin has a BIG WILD with a multiplier that shoots out wilds.',
 				betAmountLabel: 'FEATURE SPIN',
 				tickerIdle: 'FEATURE SPIN IS ON',

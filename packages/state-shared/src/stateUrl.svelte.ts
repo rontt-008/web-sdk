@@ -33,6 +33,9 @@ const rgsUrl = () => getUrlSearchParam('rgs_url') || '';
 // social casino (Stake.US): social=true in the url, or socialCasino in the game server's config
 const social = () =>
 	getUrlSearchParam('social')?.toLowerCase() === 'true' || !!stateConfig.jurisdiction?.socialCasino;
+// social mode's words (play instead of bet, buy, cost, pay, ...): in social mode, or in every mode
+// for a game that sets stateConfig.socialWordsEverywhere
+const socialWords = () => social() || stateConfig.socialWordsEverywhere;
 const currency = () => getUrlSearchParam('currency') || '';
 
 // params for replay
@@ -49,6 +52,7 @@ export const stateUrlDerived = {
 	sessionID,
 	rgsUrl,
 	social,
+	socialWords,
 	currency,
 	// states for replay
 	replay,

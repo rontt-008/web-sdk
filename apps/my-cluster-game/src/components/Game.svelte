@@ -129,7 +129,8 @@
 	{/if}
 </App>
 
-<Modals theme={uiHtmlTheme}>
+<!-- a replay's card waits for the loading screen to be pressed -->
+<Modals theme={uiHtmlTheme} hideReplayCard={context.stateLayout.showLoadingScreen}>
 	{#snippet version()}
 		<GameVersion version="0.0.0" />
 	{/snippet}

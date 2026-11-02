@@ -99,7 +99,7 @@
 				</BaseScrollable>
 				<div class="price">
 					<HeadingText fill="var(--ui-price, white)">
-						{numberToCurrencyString(stateBet.betAmount * betModeData.costMultiplier)}
+						{numberToCurrencyString(stateBet.betAmount * betModeData.costMultiplier, { fixed: true })}
 					</HeadingText>
 				</div>
 				{#snippet confirmButton(join?: 'right')}

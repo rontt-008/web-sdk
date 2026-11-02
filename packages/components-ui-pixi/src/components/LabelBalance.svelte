@@ -11,11 +11,8 @@
 	const props: UiLabelOptions = $props();
 	const balanceTween = new Tween(stateBet.balanceAmount);
 	const label = $derived(i18nDerived.balance());
-	const value = $derived(
-		numberToCurrencyString(balanceTween.current, {
-			counting: balanceTween.current !== balanceTween.target,
-		}),
-	);
+	// always two decimals, also while it counts
+	const value = $derived(numberToCurrencyString(balanceTween.current, { fixed: true }));
 
 	$effect(() => {
 		balanceTween.set(stateBet.balanceAmount);

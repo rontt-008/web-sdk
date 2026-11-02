@@ -107,6 +107,8 @@ export type UiHtmlTheme = {
 	};
 	// prices in dialogs; a colour or a gradient
 	price: string;
+	// wins in dialogs, like the replay's payout multiplier and total win
+	win: string;
 	danger: string;
 };
 
@@ -193,6 +195,7 @@ export const UI_HTML_THEME_CLEAN: UiHtmlTheme = {
 		borderImage: 'none',
 	},
 	price: WHITE,
+	win: '#3ddc84',
 	danger: '#ff5c5c',
 };
 
@@ -255,6 +258,7 @@ export const uiHtmlThemeStyle = (theme: UiHtmlTheme) =>
 		'--ui-activate-text': theme.activate.text,
 		'--ui-activate-border-image': theme.activate.borderImage,
 		'--ui-price': theme.price,
+		'--ui-win': theme.win,
 		'--ui-danger': theme.danger,
 	})
 		// an optional one left out falls back to what the styles give it

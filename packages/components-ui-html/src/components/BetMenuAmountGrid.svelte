@@ -31,7 +31,7 @@
 >
 	{#snippet option({ option })}
 		<ButtonFace variant="control" height="2.25rem" selected={option === stateBet.betAmount}>
-			{isMaxValue(option) ? i18nDerived.max() : numberToShortCurrencyString(option)}
+			{isMaxValue(option) ? i18nDerived.max() : numberToShortCurrencyString(option, { fixed: true })}
 		</ButtonFace>
 	{/snippet}
 </OptionsGrid>

@@ -1,7 +1,8 @@
 import { stateI18nDerived, stateUrlDerived } from 'state-shared';
 
 // social mode (social=true) can't use words like bet, buy or funds
-const social = () => stateUrlDerived.social();
+// (nor can a game that never does, see stateUrlDerived.socialWords)
+const social = () => stateUrlDerived.socialWords();
 
 export const i18nDerived = {
 	bet: () => (social() ? 'PLAY AMOUNT' : stateI18nDerived.translate('BET')),
@@ -32,7 +33,7 @@ export const i18nDerived = {
 	singleWinLimitReached: () => stateI18nDerived.translate('SINGLE WIN LIMIT REACHED'),
 	settings: () => stateI18nDerived.translate('SETTINGS'),
 	balance: () => stateI18nDerived.translate('BALANCE'),
-	buyBonus: () => (social() ? 'PLAY BONUS' : stateI18nDerived.translate('BUY BONUS')),
+	buyBonus: () => (social() ? 'GET BONUS' :stateI18nDerived.translate('BUY BONUS')),
 	volatility: () => stateI18nDerived.translate('VOLATILITY'),
 	notEnoughBalance: () => stateI18nDerived.translate('NOT ENOUGH BALANCE'),
 	disable: () => stateI18nDerived.translate('DISABLE'),

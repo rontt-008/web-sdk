@@ -6,9 +6,23 @@
 
 	import UiVolumeSlider from './UiVolumeSlider.svelte';
 	import { getContext } from '../context';
-	import { getMenuButtons, getUiTheme, type UiLayoutType } from '../theme';
+	import { getMenuButtons, getUiTheme } from '../theme';
 	import { UI_BASE_SIZE } from '../constants';
 	import { strokeTopInside } from '../draw';
+	import {
+		BALANCE_WIDTH,
+		BET_BUTTON,
+		BET_WELL,
+		BUTTON,
+		COLUMN_BUTTON,
+		DIVIDER,
+		GAP,
+		HEIGHT,
+		ROW,
+		SPIN,
+		WIN_WELL,
+		getDesktopPanel,
+	} from '../desktopPanel';
 	import type { LayoutUiProps } from '../types';
 
 	const props: LayoutUiProps = $props();
@@ -22,34 +36,11 @@
 	//                                                                                  turbo
 	// the buy bonus button a disc as tall as the panel at its left, the win in a recessed well in the
 	// middle, the bet in a recessed well at the right end, under the spin disc, which hangs over the
-	// panel's end, and auto spin over turbo beside it. Sizes are before the whole bar is scaled by
-	// SCALE (the tablet's standard layout is square, 1920 x 1920, so it is bigger there).
-	const SCALE: Partial<Record<UiLayoutType, number>> = { desktop: 1.05, tablet: 1.3 };
-	// from the bottom of the screen to the bar
-	const BOTTOM = 14;
-	// the panel, and the buy bonus disc
-	const HEIGHT = 124;
+	// panel's end, and auto spin over turbo beside it. Where everything goes is measured in
+	// desktopPanel.ts, so games can place things on or around the bar.
 	const SHADOW_DROP = 5;
 	const RADIUS = 26;
-	// between the disc, the panel and the column of auto spin and turbo, which keeps clear of the spin
-	// disc hanging over the panel's end
-	const GAP = 12;
-	const COLUMN_GAP = 28;
-	// from the panel's edge to its first button
-	const PADDING = 20;
-	const BUTTON = 56;
-	const COLUMN_BUTTON = 52;
-	const BET_BUTTON = 54;
-	const SPIN = 156;
-	// the spin disc reaches this far past the panel's end
-	const SPIN_OVERHANG = 30;
-	const DIVIDER = { width: 3, height: 62, before: 16, after: 14 };
 	const HIGHLIGHT = { width: 3, alpha: 0.08 };
-	// the balance's text box, the win's well (with this much room either side of it) and the bet's
-	// well (with the room the spin disc covers: it covers 122, the rest is the gap before it)
-	const BALANCE_WIDTH = 185;
-	const WIN_WELL = { width: 204, height: 72, border: 3, ring: 3, gap: 20 };
-	const BET_WELL = { margin: 6, padding: 12, middle: 190, spin: 146, radius: 44 };
 	const BET_LEVEL = { width: 160, height: 5 };
 	// the amounts' text: how big (the value is 42.75 at scale 1), and how far up to centre it
 	const TEXT = { balance: 0.7, win: 0.7, bet: 0.8 };
@@ -58,7 +49,7 @@
 	const MENU_ITEM_SPACING = 72;
 	const MENU_ITEM_LIFT = 44;
 
-	const row = -(BOTTOM + HEIGHT * 0.5);
+	const row = ROW;
 	const buttonFace = UI_BASE_SIZE * (theme?.button.scale ?? 1);
 	const spinFace = UI_BASE_SIZE * (theme?.spin.scale ?? 1);
 	const outline = theme?.outline ?? 0x000000;
@@ -68,59 +59,14 @@
 
 	const layoutType = $derived(context.stateLayoutDerived.layoutType());
 	const standard = $derived(context.stateLayoutDerived.mainLayoutStandard());
-	const scale = $derived(SCALE[layoutType] ?? SCALE.desktop!);
-	const showBuyBonus = $derived(!theme?.hideBuyBonusOn?.includes(layoutType));
-	const showMuteButtons = !!theme?.muteButtons;
+	const panel = $derived(getDesktopPanel({ theme, layoutType, standard }));
+	const scale = $derived(panel.scale);
+	const showBuyBonus = $derived(panel.showBuyBonus);
+	const showMuteButtons = $derived(panel.showMuteButtons);
 
 	// where everything goes, from the bar's left end, and where that is (`left`): the bar centred in the
 	// standard layout
-	const x = $derived.by(() => {
-		const border = bar?.outlineWidth ?? 0;
-		const buyBonus = HEIGHT * 0.5;
-		const panelLeft = showBuyBonus ? HEIGHT + GAP : 0;
-
-		const menu = panelLeft + border + PADDING + BUTTON * 0.5;
-		const muteMusic = menu + BUTTON + GAP;
-		const muteSounds = muteMusic + BUTTON + GAP;
-		const lastButton = showMuteButtons ? muteSounds : menu;
-		const divider = lastButton + BUTTON * 0.5 + DIVIDER.before;
-		const balance = divider + DIVIDER.width + DIVIDER.after;
-
-		const winWellWidth = WIN_WELL.width + WIN_WELL.ring * 2;
-		const win = balance + BALANCE_WIDTH + WIN_WELL.gap + winWellWidth * 0.5;
-
-		const betWellWidth = BET_WELL.padding + BET_BUTTON * 2 + BET_WELL.middle + BET_WELL.spin;
-		const betWellLeft = win + winWellWidth * 0.5 + WIN_WELL.gap;
-		const decrease = betWellLeft + BET_WELL.padding + BET_BUTTON * 0.5;
-		const bet = decrease + BET_BUTTON * 0.5 + BET_WELL.middle * 0.5;
-		const increase = bet + BET_WELL.middle * 0.5 + BET_BUTTON * 0.5;
-
-		const panelRight = betWellLeft + betWellWidth + border;
-		const spin = panelRight + SPIN_OVERHANG - SPIN * 0.5;
-		const column = panelRight + GAP + COLUMN_GAP + COLUMN_BUTTON * 0.5;
-
-		const width = column + COLUMN_BUTTON * 0.5;
-
-		return {
-			left: (standard.width - width * scale) * 0.5,
-			buyBonus,
-			panelLeft,
-			panelRight,
-			column,
-			menu,
-			muteMusic,
-			muteSounds,
-			divider,
-			balance,
-			win,
-			betWellLeft,
-			betWellWidth,
-			decrease,
-			bet,
-			increase,
-			spin,
-		};
-	});
+	const x = $derived(panel.x);
 
 	// how far up the bet levels the bet is, 0 to 1
 	const betLevel = $derived.by(() => {

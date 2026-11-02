@@ -1,30 +1,30 @@
 <script lang="ts">
-	import { stateBet, stateBetDerived, stateReplay } from 'state-shared';
+	import { stateBet, stateReplayDerived } from 'state-shared';
 	import { numberToCurrencyString } from 'utils-shared/amount';
 
 	import UiLabel from './UiLabel.svelte';
-	import { i18nDerived } from '../i18n/i18nDerived';
 
-	// The replayed bet, e.g. "BONUS $1.00", or with `realCost` what a mode costing more than 1x really
-	// cost, e.g. "REAL COST · 100x $100.00" (nothing for a 1x mode). Not pressable: a replay has no bet menu.
+	// The replayed bet, e.g. "BASE BET $1.00" (with the mode for one costing more than 1x, e.g.
+	// "BONUS · BASE BET"), or with `realCost` what such a mode really cost, e.g.
+	// "TOTAL BET COST · 100x $100.00" (nothing for a 1x mode). Social mode says BASE PLAY and TOTAL
+	// PLAY WORTH (see stateReplayDerived.words). Not pressable: a replay has no bet menu.
 	type Props = {
 		realCost?: boolean;
 		stacked?: boolean;
 	};
 
 	const props: Props = $props();
-	// from the replay's response, or the mode's own cost when the response doesn't say
-	const multiplier = $derived(
-		stateReplay.costMultiplier > 1
-			? stateReplay.costMultiplier
-			: (stateBetDerived.activeBetMode()?.costMultiplier ?? 1),
-	);
-	const modeTitle = $derived(multiplier > 1 ? stateBetDerived.activeBetMode()?.text?.title : undefined);
+	const words = $derived(stateReplayDerived.words());
+	const multiplier = $derived(stateReplayDerived.costMultiplier());
 	const label = $derived(
-		props.realCost ? `REAL COST · ${multiplier}x` : modeTitle || i18nDerived.bet(),
+		props.realCost
+			? `${words.totalCost.toUpperCase()} · ${multiplier}x`
+			: [multiplier > 1 ? stateReplayDerived.modeName() : '', words.baseBet.toUpperCase()]
+					.filter(Boolean)
+					.join(' · '),
 	);
 	const value = $derived(
-		numberToCurrencyString(stateBet.betAmount * (props.realCost ? multiplier : 1)),
+		numberToCurrencyString(stateBet.betAmount * (props.realCost ? multiplier : 1), { fixed: true }),
 	);
 </script>
 

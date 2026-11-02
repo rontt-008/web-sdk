@@ -14,4 +14,7 @@ export const stateConfig = $state({
 		minimumRoundDuration: 0,
 	},
 	betAmountOptions: [1, 5, 25, 50, 75, 100, 200, 500, 800, 1000],
+	// a game that never says bet, buy, cost, pay, ... sets this: social mode's words in every mode
+	// (see stateUrlDerived.socialWords)
+	socialWordsEverywhere: false,
 });

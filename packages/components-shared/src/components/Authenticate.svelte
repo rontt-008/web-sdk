@@ -77,7 +77,7 @@
 				}
 				// a bet the RGS hasn't allowed is never shown or sent
 				if (levels.length === 0) {
-					throw { error: 'ERR_AUTHENTICATE', message: 'No bet levels from the game server.' };
+					throw { error: 'ERR_AUTHENTICATE', message: 'No play levels from the game server.' };
 				}
 				stateConfig.betAmountOptions = levels.map((level) => level / API_AMOUNT_MULTIPLIER);
 
@@ -140,8 +140,11 @@
 	};
 
 	const handleReplay = async () => {
-		stateBet.betAmount = (stateUrlDerived.amount() / API_AMOUNT_MULTIPLIER) || 0;
-		stateBet.wageredBetAmount = (stateUrlDerived.amount() / API_AMOUNT_MULTIPLIER) || 0;
+		// the replayed bet; without a valid amount in the url, 1.00, so the replay's amounts still read
+		// as multiples of the bet
+		const replayAmount = stateUrlDerived.amount() / API_AMOUNT_MULTIPLIER;
+		stateBet.betAmount = replayAmount > 0 ? replayAmount : 1;
+		stateBet.wageredBetAmount = stateBet.betAmount;
 		stateBet.activeBetModeKey = stateUrlDerived.mode();
 		// a replay has no session to get the currency from: it comes in the url. Without a valid one, a
 		// social replay shows SC (never "$"), others the default.
@@ -172,6 +175,8 @@
 			};
 			// @ts-ignore TODO: update the schema.ts
 			stateReplay.costMultiplier = Number(data.costMultiplier) || 1;
+			// @ts-ignore TODO: update the schema.ts
+			stateReplay.payoutMultiplier = Number(data.payoutMultiplier) || 0;
 			stateBet.betToResume = { ...stateReplay.bet! };
 		} catch (error) {
 			console.error(error);

@@ -10,6 +10,7 @@
 </script>
 
 <script lang="ts">
+	import { page } from '$app/state';
 	import { Authenticate } from 'components-shared';
 	import { StoryLocale } from 'components-storybook';
 
@@ -19,6 +20,9 @@
 	import type { MockRounds } from './mockRgs';
 
 	setContext();
+	// Storybook's stand-in for SvelteKit's page has no query, so the url's own parameters are passed
+	// on: add e.g. &social=true, or a replay's (see mockRgs), to the story's iframe url
+	page.url = new URL(window.location.href);
 </script>
 
 <!-- the game as it runs on Stake Engine, against a mock RGS; changing the balance restarts it -->
