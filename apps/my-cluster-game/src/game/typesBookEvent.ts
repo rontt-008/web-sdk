@@ -1,7 +1,7 @@
 import type { BetType } from 'rgs-requests';
 
 import type { SymbolName, RawSymbol, GameType, Position, BonusType } from './types';
-import type { RuneName, RuneOffset } from './runes';
+import type { BoardRuneName, RuneName, RuneOffset } from './runes';
 
 type BookEventReveal = {
 	index: number;
@@ -46,8 +46,11 @@ type BookEventFreeSpinTrigger = {
 	type: 'freeSpinTrigger';
 	totalFs: number;
 	positions: Position[];
-	// the bonus or the super bonus (none: the bonus)
+	// the bonus, the super bonus or the mythic bonus (none: the bonus)
 	bonusType?: BonusType;
+	// the mythic bonus's two runes collected from the start (a random two); the free spins show the
+	// other two, and the power spins have all that are collected
+	collected?: RuneName[];
 };
 
 type BookEventUpdateFreeSpin = {
@@ -99,7 +102,10 @@ type BookEventFreeSpinRetrigger = {
 };
 
 // the runes (see runes.ts): a rune shows behind the symbols, `offset` from where RUNES has it, its
-// spots under winning clusters light up, and with all lit it is collected (and the next one shows)
+// spots under winning clusters light up, and with all lit it is collected (and the next one shows).
+// In the base game the rune is Mannaz (`rune: 'mannaz'`): it is always there, in the middle (no
+// runeShow, no offset), unlit as each spin starts; its runeLight and runeComplete come in the
+// same places, and a runeComplete for it is followed by the mythic bonus's freeSpinTrigger.
 type BookEventRuneShow = {
 	index: number;
 	type: 'runeShow';
@@ -110,14 +116,14 @@ type BookEventRuneShow = {
 type BookEventRuneLight = {
 	index: number;
 	type: 'runeLight';
-	rune: RuneName;
+	rune: BoardRuneName;
 	positions: Position[];
 };
 
 type BookEventRuneComplete = {
 	index: number;
 	type: 'runeComplete';
-	rune: RuneName;
+	rune: BoardRuneName;
 };
 
 // in the free spins, as symbols land (the spin's, or a tumble's new ones): Fehu symbols at these cells,

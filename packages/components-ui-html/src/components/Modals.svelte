@@ -11,6 +11,7 @@
 	import ModalPayTable from './ModalPayTable.svelte';
 	import ModalGameRules from './ModalGameRules.svelte';
 	import ModalSettings from './ModalSettings.svelte';
+	import ModalReplay from './ModalReplay.svelte';
 	import { UI_HTML_THEME_CLEAN, uiHtmlThemeStyle, type UiHtmlTheme } from '../theme';
 
 	type Props = {
@@ -36,6 +37,8 @@
 		// the game's pay table (symbols, paylines) and rules (features, RTP); placeholders when left out
 		payTable?: Snippet;
 		gameRules?: Snippet;
+		// keeps a replay's opening card away, e.g. while the game's loading screen is up
+		hideReplayCard?: boolean;
 	};
 
 	const props: Props = $props();
@@ -64,6 +67,7 @@
 		{@render props.version()}
 	</ModalGameRules>
 	<ModalSettings />
+	<ModalReplay hidden={props.hideReplayCard} />
 </div>
 
 <style lang="scss">

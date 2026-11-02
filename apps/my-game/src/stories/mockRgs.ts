@@ -20,7 +20,7 @@ import featureTopBooks from './data/feature_books_top';
 import { pickByWeight } from './pickByWeight';
 
 type BetModeName = keyof typeof config.betModes;
-type Book = { weight: number; payoutMultiplier: number; events: unknown[] };
+type Book = { id: number; weight: number; payoutMultiplier: number; events: unknown[] };
 
 const BOOKS: Record<BetModeName, Book[]> = {
 	base: baseBooks,
@@ -53,12 +53,56 @@ const BET_LEVELS = [
 type Rgs = { balance: number; roundID: number; unpaid: number; rounds: MockRounds };
 
 // amounts are kept in the API's integer units (1000000 is 1 dollar)
+// What Engine's reviewers change, taken from the story's iframe url:
+// &currency=JPY (the balance's currency; one without decimals gets levels and balance 100x),
+// &betLevels=1,1.25,1.5,2&defaultBet=1.5 (the bet levels and default, in the currency's units),
+// &resume=BASE:514:2.5 (authenticate answers with that round still open, at that bet), and
+// &rgs_url=... (no mock at all: requests go to that RGS, e.g. an invalid one)
+const urlParam = (key: string) => new URL(window.location.href).searchParams.get(key);
+const currency = () => urlParam('currency')?.toUpperCase() || 'USD';
+const levelScale = () => {
+	try {
+		const { maximumFractionDigits } = new Intl.NumberFormat('en', {
+			style: 'currency',
+			currency: currency(),
+		}).resolvedOptions();
+		return maximumFractionDigits === 0 ? 100 : 1;
+	} catch {
+		// not a currency code (a test of a bad one): the game deals with it, the levels stay as they are
+		return 1;
+	}
+};
+const betLevels = () =>
+	(urlParam('betLevels')?.split(',').map(Number) ?? BET_LEVELS).map((level) => level * levelScale());
+const defaultBet = () => (Number(urlParam('defaultBet')) || 1) * levelScale();
+const toApi = (amount: number) => Math.round(amount * API_AMOUNT_MULTIPLIER);
+
 const createRgs = (balance: number, rounds: MockRounds): Rgs => ({
-	balance: Math.round(balance * API_AMOUNT_MULTIPLIER),
+	balance: toApi(balance * levelScale()),
 	roundID: 0,
 	unpaid: 0,
 	rounds,
 });
+
+// the round of &resume=<mode>:<book id>:<bet>, still open
+const roundToResume = (rgs: Rgs) => {
+	const [mode, id, bet] = urlParam('resume')?.split(':') ?? [];
+	const name = String(mode).toLowerCase() as BetModeName;
+	const book = BOOKS[name]?.find((each) => each.id === Number(id));
+	if (!book) return null;
+	const amount = toApi(Number(bet) * levelScale());
+	rgs.unpaid = Math.round(book.payoutMultiplier * amount);
+	return {
+		roundID: 1,
+		amount,
+		payout: rgs.unpaid,
+		payoutMultiplier: book.payoutMultiplier,
+		active: true,
+		mode,
+		event: null,
+		state: book.events,
+	};
+};
 
 // the rounds that pay the mode's max win (the real odds books hold one for each mode)
 const maxWinBooks = (name: BetModeName) =>
@@ -70,7 +114,7 @@ const booksFor = (rgs: Rgs, name: BetModeName) => {
 	return BOOKS[name];
 };
 
-const balanceObject = (rgs: Rgs) => ({ amount: rgs.balance, currency: 'USD' });
+const balanceObject = (rgs: Rgs) => ({ amount: rgs.balance, currency: currency() });
 
 // what a round's win is waiting for: the game ends the round to get paid
 const payOut = (rgs: Rgs) => {
@@ -83,11 +127,11 @@ const HANDLERS: Record<string, (rgs: Rgs, body: Record<string, any>) => object> 
 		balance: balanceObject(rgs),
 		config: {
 			gameID: config.gameID,
-			minBet: BET_LEVELS[0] * API_AMOUNT_MULTIPLIER,
-			maxBet: BET_LEVELS[BET_LEVELS.length - 1] * API_AMOUNT_MULTIPLIER,
-			stepBet: 0.1 * API_AMOUNT_MULTIPLIER,
-			defaultBetLevel: API_AMOUNT_MULTIPLIER,
-			betLevels: BET_LEVELS.map((level) => Math.round(level * API_AMOUNT_MULTIPLIER)),
+			minBet: toApi(betLevels()[0]),
+			maxBet: toApi(betLevels()[betLevels().length - 1]),
+			stepBet: toApi(0.1 * levelScale()),
+			defaultBetLevel: toApi(defaultBet()),
+			betLevels: betLevels().map(toApi),
 			betModes: {},
 			jurisdiction: {
 				socialCasino: false,
@@ -104,7 +148,7 @@ const HANDLERS: Record<string, (rgs: Rgs, body: Record<string, any>) => object> 
 				minimumRoundDuration: 0,
 			},
 		},
-		round: null,
+		round: roundToResume(rgs),
 	}),
 	'/wallet/balance': (rgs) => ({ balance: balanceObject(rgs) }),
 	'/wallet/play': (rgs, { mode, amount }) => {
@@ -151,6 +195,24 @@ const HANDLERS: Record<string, (rgs: Rgs, body: Record<string, any>) => object> 
 	'/bet/event': (_, { event }) => ({ event }),
 };
 
+// A replay (replay=true in the url) asks GET https://<rgs_url>/bet/replay/<game>/<version>/<mode>/<event>:
+// it gets the round with that id from the story books, as the RGS answers. E.g. add to a PLAY
+// story's url: &replay=true&game=x&version=1&mode=BONUS&event=1&amount=1000000&currency=USD
+const REPLAY_PATH = /\/bet\/replay\/[^/]*\/[^/]*\/([^/]+)\/([^/?]+)/;
+
+const replayAnswer = (url: string) => {
+	const [, mode, event] = url.match(REPLAY_PATH) ?? [];
+	const name = String(mode).toLowerCase() as BetModeName;
+	if (!(name in BOOKS)) return undefined;
+	const book = [...BOOKS[name], ...TOP_BOOKS[name]].find((each) => each.id === Number(event));
+	if (!book) return undefined;
+	return {
+		payoutMultiplier: book.payoutMultiplier,
+		costMultiplier: config.betModes[name].cost,
+		state: book.events,
+	};
+};
+
 let activeRgs: Rgs | null = null;
 let installed = false;
 
@@ -162,12 +224,38 @@ const installFetch = () => {
 	const networkFetch = window.fetch.bind(window);
 	window.fetch = async (input, init) => {
 		const url = typeof input === 'string' ? input : input instanceof URL ? input.href : input.url;
+		// a real (or deliberately invalid) rgs_url in the url gets the network, not the mock
+		if (urlParam('rgs_url')) return networkFetch(input, init);
+		if (activeRgs && REPLAY_PATH.test(url)) {
+			console.log('mock rgs: GET', url.slice(url.indexOf('/bet/replay/')));
+			const answer = replayAnswer(url);
+			// an unknown mode or event is a plain 404, as from the RGS
+			return answer
+				? new Response(JSON.stringify(answer), {
+						status: 200,
+						headers: { 'Content-Type': 'application/json' },
+					})
+				: new Response(null, { status: 404 });
+		}
 		// the game asks https://<rgs_url>/<endpoint>, and Storybook has no rgs_url
 		const path = Object.keys(HANDLERS).find((endpoint) => url.endsWith(endpoint));
 		if (!activeRgs || !path) return networkFetch(input, init);
 
 		const body = init?.body ? JSON.parse(String(init.body)) : {};
-		return new Response(JSON.stringify(HANDLERS[path](activeRgs, body)), {
+		const answer: Record<string, any> = HANDLERS[path](activeRgs, body);
+		// every request, so a check can count them (e.g. that a 0x round sends no end-round)
+		console.log(
+			'mock rgs:',
+			path,
+			JSON.stringify({
+				mode: body.mode,
+				amount: body.amount,
+				payoutMultiplier: answer.round?.payoutMultiplier,
+				active: answer.round?.active,
+				error: answer.error,
+			}),
+		);
+		return new Response(JSON.stringify(answer), {
 			status: 200,
 			headers: { 'Content-Type': 'application/json' },
 		});

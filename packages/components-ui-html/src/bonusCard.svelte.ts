@@ -41,7 +41,7 @@ export const createBonusCard = (getLevels: () => BetModeData[]) => {
 			return betModeData;
 		},
 		get priceText() {
-			return numberToCurrencyString(cost);
+			return numberToCurrencyString(cost, { fixed: true });
 		},
 		get notEnoughBalance() {
 			return notEnoughBalance;

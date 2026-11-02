@@ -34,7 +34,9 @@ export const rgsFetcher = {
 		});
 
 		if (response.status !== 200) console.error('error', response);
-		const data = await response.json();
-		return data as TResponse;
+		// an error can come without a body, like the replay's plain 404 for an unknown event: then
+		// there is no data, and the caller says what went wrong
+		const text = await response.text();
+		return (text ? JSON.parse(text) : {}) as TResponse;
 	},
 };

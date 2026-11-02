@@ -66,9 +66,11 @@
 			</SpineProvider>
 
 			<Text
-				{...context.stateGame.bonusType === 'super'
-					? FREE_SPIN_WORDS.superFreeSpins
-					: FREE_SPIN_WORDS.freeSpins}
+				{...{
+					normal: FREE_SPIN_WORDS.freeSpins,
+					super: FREE_SPIN_WORDS.superFreeSpins,
+					mythic: FREE_SPIN_WORDS.mythicFreeSpins,
+				}[context.stateGame.bonusType]}
 			/>
 		{/snippet}
 	</FreeSpinAnimation>

@@ -4,7 +4,15 @@
 	import config from '../game/config';
 	import { BONUS_TRIGGER, SUPER_TRIGGER, FREE_SPINS_AWARDED, POWER_SPINS } from '../game/constants';
 	import { BONUS_COST, SUPER_COST, BOOSTER_COST } from '../game/betModes';
-	import { BONUS_POWERS, RUNES, RUNE_COLOURS, RUNE_NAMES, type RuneName } from '../game/runes';
+	import {
+		BONUS_POWERS,
+		RUNES,
+		RUNE_COLOURS,
+		RUNE_NAMES,
+		runeShape,
+		type BoardRuneName,
+		type RuneName,
+	} from '../game/runes';
 
 	// The game rules (the menu button opens them), which hold the pay table too: cluster wins, the
 	// wild, tumbles, the wind, the bonus meter, free spins with their runes and power spins, the bonus
@@ -67,26 +75,26 @@
 	const MIN_CLUSTER = Number(Object.keys(config.symbols.L4.paytable[0])[0]);
 
 	const RUNE_TITLES: Record<RuneName, string> = {
-		othala: 'OTHALA',
-		fehu: 'FEHU',
-		hagall: 'HAGALL',
-		ingwaz: 'INGWAZ',
+		othala: 'GREEN RUNE',
+		fehu: 'RED RUNE',
+		hagall: 'BLUE RUNE',
+		ingwaz: 'YELLOW RUNE',
 	};
-	const { normal, super: superPowers } = BONUS_POWERS;
+	const { normal, super: superPowers, mythic: mythicPowers } = BONUS_POWERS;
 	const RUNE_RULES: Record<RuneName, string> = {
 		othala: 'Only premium symbols land in the POWER SPINS.',
-		fehu: `Every win in the POWER SPINS is multiplied by ${normal.mult}, by ${superPowers.mult} in SUPER FREE SPINS. Every FEHU symbol that lands in the FREE SPINS doubles it, without limit.`,
+		fehu: `Every win in the POWER SPINS is multiplied by ${normal.mult}, by ${superPowers.mult} in SUPER FREE SPINS. Every RED RUNE symbol that lands in the FREE SPINS doubles it, without limit.`,
 		hagall:
 			superPowers.wilds === normal.wilds
 				? `Every POWER SPIN lands a ${normal.wilds}x${normal.wilds} BIG WILD.`
 				: `Every POWER SPIN lands a ${normal.wilds}x${normal.wilds} BIG WILD, ${superPowers.wilds}x${superPowers.wilds} in SUPER FREE SPINS.`,
 		ingwaz:
-			'One more POWER SPIN, and one more for every INGWAZ symbol that lands in the FREE SPINS.',
+			'One more POWER SPIN, and one more for every YELLOW RUNE symbol that lands in the FREE SPINS.',
 	};
 
 	// a rune's lines (in board cells) in a square view round them
-	const runeView = (name: RuneName) => {
-		const points = RUNES[name].strokes.flat();
+	const runeView = (name: BoardRuneName) => {
+		const points = runeShape(name).strokes.flat();
 		const xs = points.map(([x]) => x);
 		const ys = points.map(([, y]) => y);
 		const size =
@@ -278,6 +286,25 @@
 	</section>
 
 	<section>
+		<h2>Orange rune</h2>
+		<div class="card text mannaz">
+			<svg viewBox={runeView('mannaz')} class="glyph" aria-hidden="true">
+				{#each runeShape('mannaz').strokes as stroke}
+					<polyline
+						points={stroke.map(([x, y]) => `${x},${y}`).join(' ')}
+						stroke={hex(RUNE_COLOURS.mannaz.neon)}
+					/>
+				{/each}
+			</svg>
+			<p>
+				In the base game the ORANGE RUNE lies across the whole board. Each winning cluster lights
+				the spots of it that it covers, over all of a spin's tumbles, and it starts unlit on every
+				spin. When all of the ORANGE RUNE is lit in one spin, MYTHIC FREE SPINS start.
+			</p>
+		</div>
+	</section>
+
+	<section>
 		<h2>Free spins and runes</h2>
 		<div class="card text">
 			<p>
@@ -310,9 +337,18 @@
 		<div class="card text">
 			<h3>SUPER FREE SPINS</h3>
 			<p>
-				The same as FREE SPINS, with a bigger FEHU: it multiplies the POWER SPINS' wins by
+				The same as FREE SPINS, with a bigger RED RUNE: it multiplies the POWER SPINS' wins by
 				{superPowers.mult} (by {normal.mult} in FREE SPINS), before its symbols double it.{#if superPowers.wilds !== normal.wilds}
-					HAGALL's BIG WILD is {superPowers.wilds}x{superPowers.wilds}.{/if}
+					The BLUE RUNE's BIG WILD is {superPowers.wilds}x{superPowers.wilds}.{/if}
+			</p>
+		</div>
+		<div class="card text">
+			<h3>MYTHIC FREE SPINS</h3>
+			<p>
+				Started only by the ORANGE RUNE. Two of the four runes, chosen at random, are already
+				collected when they start, and the FREE SPINS bring the other two. The powers are as big as
+				in SUPER FREE SPINS: the RED RUNE multiplies the POWER SPINS' wins by {mythicPowers.mult} and
+				the BLUE RUNE's BIG WILD is {mythicPowers.wilds}x{mythicPowers.wilds}.
 			</p>
 		</div>
 	</section>
@@ -729,6 +765,18 @@
 		p {
 			font-size: 0.85rem;
 			line-height: 1.45;
+		}
+	}
+
+	/* Mannaz drawn beside what it does */
+	.mannaz {
+		display: flex;
+		align-items: center;
+		gap: 1.25rem;
+
+		.glyph {
+			flex: none;
+			margin-bottom: 0;
 		}
 	}
 

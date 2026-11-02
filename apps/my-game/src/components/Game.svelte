@@ -143,8 +143,9 @@
 	{/if}
 </App>
 
-<!-- the menus in the UI's black (uiHtmlTheme), with the FS symbols on each bonus -->
-<Modals theme={uiHtmlTheme}>
+<!-- the menus in the UI's black (uiHtmlTheme), with the FS symbols on each bonus; a replay's card
+waits for the loading screen to be pressed -->
+<Modals theme={uiHtmlTheme} hideReplayCard={context.stateLayout.showLoadingScreen}>
 	{#snippet version()}
 		<GameVersion version="0.0.0" />
 	{/snippet}

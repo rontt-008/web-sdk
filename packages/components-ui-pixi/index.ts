@@ -23,6 +23,8 @@ export { UI_THEME_CLEAN } from './src/themeClean';
 export { PORTRAIT_UI_HEIGHT } from './src/constants';
 // where LayoutDesktopBar's bar is, for games to place things on or around it
 export { getDesktopBarBounds } from './src/desktopBar';
+// where LayoutDesktopPanel's bar is, for games to place things on or around it
+export { getDesktopPanelBounds } from './src/desktopPanel';
 // where LayoutLandscapeBar's bar and spin buttons are, for games to fit their board around them
 export { getLandscapeBarBounds } from './src/landscapeBar';
 

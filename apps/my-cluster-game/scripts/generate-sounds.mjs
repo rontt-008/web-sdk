@@ -54,7 +54,7 @@ const notes = (names) => names.split(' ').map(n);
 // G major pentatonic (E minor's), counted upwards from a G: the sound effects keep to it, as it sits
 // with both the base game's D dorian and the free spins' E minor
 const PENTA = [0, 2, 4, 7, 9];
-const penta = (i, root = n('G5')) => root + PENTA[((i % 5) + 5) % 5] + 12 * Math.floor(i / 5);
+const penta = (i, root = n('G4')) => root + PENTA[((i % 5) + 5) % 5] + 12 * Math.floor(i / 5);
 
 let rand = Math.random;
 const seed = (value) => {
@@ -279,18 +279,18 @@ function piano(m, hold, { velocity = 0.6 } = {}) {
 // celesta: a soft little bell
 const celesta = (m, dur = 1.6) =>
 	filter(
-		partials(mtof(m), dur, [[1, 1, dur * 0.75], [2, 0.1, dur * 0.3], [4.02, 0.05, dur * 0.15], [5.4, 0.02, dur * 0.06]], { attack: 0.002 }), // prettier-ignore
+		partials(mtof(m), dur, [[1, 1, dur * 0.75], [2, 0.08, dur * 0.3], [4.02, 0.02, dur * 0.12], [5.4, 0.006, dur * 0.05]], { attack: 0.005 }), // prettier-ignore
 		'lp',
-		7000,
+		4500,
 	);
 
 // a glass bell: two close tones that shimmer against each other
 const crystal = (m, dur = 1.4) => {
 	const f = mtof(m);
 	return filter(
-		partials(f, dur, [[1, 0.7, dur], [1.0035, 0.5, dur * 0.9], [2.76, 0.08, dur * 0.3], [5.4, 0.02, dur * 0.1]], { attack: 0.004 }), // prettier-ignore
+		partials(f, dur, [[1, 0.7, dur], [1.0035, 0.5, dur * 0.9], [2.76, 0.035, dur * 0.25], [5.4, 0.006, dur * 0.08]], { attack: 0.008 }), // prettier-ignore
 		'lp',
-		7500,
+		4500,
 	);
 };
 
@@ -426,7 +426,7 @@ const woodTap = (f = 900, decay = 0.05) =>
 	);
 
 // soft "poof" of air
-const poof = (decay = 0.5, top = 2600) =>
+const poof = (decay = 0.5, top = 1800) =>
 	norm(
 		env(
 			filter(noise(decay), 'lp', (t) => top * Math.exp(-t / (decay * 0.3)) + 180, 0.8),
@@ -448,7 +448,7 @@ function whoosh(dur, f0, f1, { q = 1, peakAt = 0.5 } = {}) {
 }
 
 // leaves rustling for `dur`: a scatter of tiny dry crackles, thickest in the middle
-function rustle(dur, { density = 900, centre = 3200 } = {}) {
+function rustle(dur, { density = 900, centre = 2200 } = {}) {
 	const out = new Float32Array(len(dur));
 	let decayed = 0;
 	for (let i = 0; i < out.length; i++) {
@@ -457,20 +457,20 @@ function rustle(dur, { density = 900, centre = 3200 } = {}) {
 		decayed *= 0.93;
 		out[i] = decayed + (rand() * 2 - 1) * 0.04 * Math.sin(Math.PI * u);
 	}
-	return norm(filter(filter(out, 'bp', centre, 0.8), 'lp', 7000));
+	return norm(filter(filter(out, 'bp', centre, 0.8), 'lp', 4500));
 }
 
 // a distant bird: a few quick chirps
 function bird() {
 	const out = new Float32Array(len(0.6));
-	const f0 = rr(2400, 3200);
+	const f0 = rr(1900, 2600);
 	const count = 2 + Math.floor(rand() * 2);
 	for (let k = 0; k < count; k++) {
 		const up = rand() < 0.6;
 		const chirp = glide(rr(0.05, 0.08), up ? f0 : f0 * 1.3, up ? f0 * 1.3 : f0);
 		mixIn(out, chirp, k * rr(0.1, 0.14), k === count - 1 ? 0.7 : 1);
 	}
-	return filter(out, 'lp', 5000);
+	return filter(out, 'lp', 3800);
 }
 
 // ---------------------------------------------------------------------------------------------
@@ -679,7 +679,7 @@ function forest(loop, { wind = 1, leaves = 1, birds = 1 } = {}) {
 	const rustles = Math.round((loop / 3.5) * leaves);
 	for (let k = 0; k < rustles; k++) {
 		const dur = rr(0.4, 1.2);
-		mx.add(rustle(dur, { centre: rr(2400, 4200) }), rr(0, loop), {
+		mx.add(rustle(dur, { centre: rr(1500, 2700) }), rr(0, loop), {
 			gain: rr(0.04, 0.09) * leaves,
 			pan: rr(-0.9, 0.9),
 			send: 0.2,
@@ -689,7 +689,9 @@ function forest(loop, { wind = 1, leaves = 1, birds = 1 } = {}) {
 	for (let k = 0; k < calls; k++) {
 		mx.add(bird(), rr(0, loop), { gain: rr(0.015, 0.03) * birds, pan: rr(-0.9, 0.9), send: 0.6 });
 	}
-	return mx.render({ reverb: { size: 0.85, damp: 0.6 }, loop });
+	const out = mx.render({ reverb: { size: 0.85, damp: 0.6 }, loop });
+	circularFilter(out, 'lp', 3500);
+	return out;
 }
 
 // ---------------------------------------------------------------------------------------------
@@ -789,7 +791,7 @@ const sparkle = (mx, t0, dur, count, pool, { gain = 0.06 } = {}) => {
 function master(
 	music,
 	drums,
-	{ loop, kicks, cutoff = 6000, wow = 0.6, ambience = 0.16, forestOptions = {} },
+	{ loop, kicks, cutoff = 4800, wow = 0.6, ambience = 0.16, forestOptions = {} },
 ) {
 	for (let i = 0; i < music.L.length; i++) {
 		music.L[i] += drums.L[i];
@@ -888,14 +890,14 @@ function bgmMain() {
 				: [],
 		});
 		// a sprinkle of bells at the end of every fourth bar
-		if (bar % 4 === 3) sparkle(music, T(bar, 8), 2 * beat, 3, notes('A5 C6 D6 E6 G6 A6'));
+		if (bar % 4 === 3) sparkle(music, T(bar, 8), 2 * beat, 3, notes('A4 C5 D5 E5 G5 A5'));
 	}
 
 	playMelody(music, T, beat, MAIN_TUNE, (m) => harp(m, { bright: 0.4 }), { gain: 0.32, pan: -0.1 });
 	fluteLine(music, T, beat, MAIN_TUNE, { from: 16, gain: 0.17, scale: scaleNotes(D_DORIAN) });
-	// the bells answer the flute's phrase ends an octave up
+	// the bells answer the flute's phrase ends
 	for (const [bar, b, name, beats] of MAIN_TUNE) {
-		if (beats >= 2) music.add(celesta(n(name) + 12, 2), T(16 + bar, b * 4 + 2), { gain: 0.06, pan: 0.4, send: 0.5 }); // prettier-ignore
+		if (beats >= 2) music.add(celesta(n(name), 2), T(16 + bar, b * 4 + 2), { gain: 0.06, pan: 0.4, send: 0.5 }); // prettier-ignore
 	}
 
 	return master(
@@ -970,7 +972,7 @@ function bgmFreespin() {
 					: [],
 		});
 		if (bar % 2 === 1)
-			sparkle(music, T(bar, 4), 3 * beat, 3, notes('B5 D6 E6 G6 A6 B6'), { gain: 0.05 });
+			sparkle(music, T(bar, 4), 3 * beat, 3, notes('B4 D5 E5 G5 A5 B5'), { gain: 0.05 });
 	}
 
 	const scale = scaleNotes(E_MINOR);
@@ -986,7 +988,7 @@ function bgmFreespin() {
 		gain: 0.3,
 		pan: -0.1,
 	});
-	playMelody(music, T, beat, FS_TUNE, (m) => celesta(m, 1.4), { from: 16, gain: 0.07, octave: 12, pan: 0.35, send: 0.5 }); // prettier-ignore
+	playMelody(music, T, beat, FS_TUNE, (m) => celesta(m, 1.4), { from: 16, gain: 0.07, octave: -12, pan: 0.35, send: 0.5 }); // prettier-ignore
 
 	return master(
 		music.render({ reverb: { size: 0.82, damp: 0.5 }, loop }),
@@ -1027,7 +1029,7 @@ function bgmWin(level) {
 		const chordNotes = voicing.map((s) => key - 12 + s);
 		pianoChord(music, chordNotes, T(bar, 0), 3.8 * beat, { gain: 0.09 });
 		music.add(bass(key + bassOffset, 3 * beat), T(bar, 0), { gain: 0.34, send: 0.05 });
-		harpArp(music, T, bar, chordNotes, { gain: 0.09, octave: 12 });
+		harpArp(music, T, bar, chordNotes, { gain: 0.09 });
 		if (level >= 3) pad(music, chordNotes, T(bar, 0), 4 * beat, 0.05);
 		beatBar(drums, kicks, T, bar, {
 			kick: [0, 8],
@@ -1035,7 +1037,7 @@ function bgmWin(level) {
 			brushes: [4, 12],
 			shakers: level >= 3 ? 1 : 2,
 		});
-		if (level >= 4) sparkle(music, T(bar, 0), 4 * beat, 6, [0, 2, 4, 7, 9, 12, 14].map((s) => key + 12 + s), { gain: 0.05 }); // prettier-ignore
+		if (level >= 4) sparkle(music, T(bar, 0), 4 * beat, 6, [0, 2, 4, 7, 9, 12, 14].map((s) => key + s), { gain: 0.05 }); // prettier-ignore
 	}
 	for (const [bar, b, s, beats] of WIN_TUNE) {
 		const t = T(bar, b * 4);
@@ -1046,7 +1048,7 @@ function bgmWin(level) {
 	return master(
 		music.render({ reverb: { size: 0.8, damp: 0.5 }, loop }),
 		drums.render({ reverb: { size: 0.4, damp: 0.6, tail: 1 }, loop }),
-		{ loop, kicks, cutoff: 8000, ambience: 0.06, forestOptions: { birds: 0 } },
+		{ loop, kicks, cutoff: 5000, ambience: 0.06, forestOptions: { birds: 0 } },
 	);
 }
 
@@ -1054,27 +1056,28 @@ function bgmWin(level) {
 function shimmerLoop() {
 	const loop = 4;
 	const mx = new Mix(loop + 3);
-	const pool = [0, 2, 4, 7, 9, 12, 14, 16].map((s) => n('G5') + s);
+	const pool = [0, 2, 4, 7, 9, 12, 14, 16].map((s) => n('G4') + s);
 	for (let k = 0; k < 22; k++) {
 		const t = (k / 22) * loop + rr(-0.05, 0.05);
 		mx.add(celesta(pool[Math.floor(rand() * pool.length)], 1.3), t, { gain: rr(0.08, 0.14), pan: rr(-0.7, 0.7), send: 0.55 }); // prettier-ignore
 	}
 	for (let k = 0; k < 6; k++) {
-		mx.add(crystal(pool[Math.floor(rand() * pool.length)] + 12, 1.2), rr(0, loop), { gain: 0.05, pan: rr(-0.8, 0.8), send: 0.6 }); // prettier-ignore
+		mx.add(crystal(pool[Math.floor(rand() * pool.length)], 1.2), rr(0, loop), { gain: 0.05, pan: rr(-0.8, 0.8), send: 0.6 }); // prettier-ignore
 	}
 	const out = mx.render({ reverb: { size: 0.85, damp: 0.5 }, loop });
-	circularFilter(out, 'lp', 7000);
+	circularFilter(out, 'lp', 4500);
 	return out;
 }
 
 // ---------------------------------------------------------------------------------------------
-// sound effects: soft and warm, in G major pentatonic (see PENTA), in a little forest reverb
+// sound effects: soft and warm, in G major pentatonic (see PENTA, from G4: bells kept out of the
+// shrill octaves above), in a little forest reverb, their top softened
 
 const sfx = (build, { size = 0.7, damp = 0.5, tail = 2 } = {}) => {
 	const mx = new Mix(3);
 	build(mx);
 	const out = mx.render({ reverb: { size, damp, tail } });
-	circularFilter(out, 'lp', 9000);
+	circularFilter(out, 'lp', 5000);
 	return out;
 };
 
@@ -1139,16 +1142,16 @@ const wildLanding = () =>
 const clusterWin = () =>
 	sfx((mx) => {
 		strum(mx, notes('D5 A5'), 0, 0.035, (m) => harp(m, { bright: 0.4 }), { gain: 0.35 });
-		mx.add(celesta(n('E6'), 1.4), 0.07, { gain: 0.14, pan: 0.2, send: 0.5 });
+		mx.add(celesta(n('E5'), 1.4), 0.07, { gain: 0.14, pan: 0.2, send: 0.5 });
 		mx.add(piano(n('G4'), 0.8), 0, { gain: 0.1, send: 0.3 });
 	});
 
 // Fehu's multiplier joining a win: a rising sparkle into a bell
 const combine =
-	({ dur = 0.5, top = 'D7' } = {}) =>
+	({ dur = 0.5, top = 'D6' } = {}) =>
 	() =>
 		sfx((mx) => {
-			mx.add(whoosh(dur, 700, 3000, { peakAt: 0.85, q: 1.2 }), 0, {
+			mx.add(whoosh(dur, 600, 1800, { peakAt: 0.85, q: 1.2 }), 0, {
 				gain: 0.12,
 				pan: [-0.4, 0.3],
 				send: 0.3,
@@ -1162,8 +1165,8 @@ const combine =
 const ting = () =>
 	sfx(
 		(mx) => {
-			mx.add(crystal(n('B6'), 0.8), 0, { gain: 0.3, send: 0.45 });
-			mx.add(celesta(n('E7'), 0.5), 0.02, { gain: 0.08, pan: 0.3, send: 0.5 });
+			mx.add(crystal(n('B5'), 0.8), 0, { gain: 0.3, send: 0.45 });
+			mx.add(celesta(n('E6'), 0.5), 0.02, { gain: 0.08, pan: 0.3, send: 0.5 });
 		},
 		{ tail: 1.2 },
 	);
@@ -1176,7 +1179,7 @@ const bonusWon =
 			(mx) => {
 				const up = short ? 0.4 : 0.65;
 				gliss(mx, 0, short ? 8 : 12, 0, up);
-				mx.add(whoosh(up + 0.2, 400, 2400, { peakAt: 0.8 }), 0, {
+				mx.add(whoosh(up + 0.2, 400, 1600, { peakAt: 0.8 }), 0, {
 					gain: 0.1,
 					pan: [-0.5, 0.5],
 					send: 0.4,
@@ -1184,11 +1187,11 @@ const bonusWon =
 				pianoChord(mx, notes('G3 B3 D4 A4'), up, 1.8, { gain: 0.14, roll: 0.03 });
 				mx.add(bass(n('G2'), 1.4), up, { gain: 0.3, send: 0.1 });
 				pad(mx, notes('G3 D4 B4'), up - 0.1, 1.4, 0.06);
-				strum(mx, notes('D6 G6 B6'), up + 0.05, 0.09, (m) => celesta(m, 2), {
+				strum(mx, notes('D5 G5 B5'), up + 0.05, 0.09, (m) => celesta(m, 2), {
 					gain: 0.15,
 					send: 0.55,
 				});
-				if (!short) mx.add(crystal(n('D7'), 2.2), up + 0.35, { gain: 0.12, pan: 0.3, send: 0.6 });
+				if (!short) mx.add(crystal(n('D6'), 2.2), up + 0.35, { gain: 0.12, pan: 0.3, send: 0.6 });
 			},
 			{ size: 0.82, tail: 3 },
 		);
@@ -1206,11 +1209,11 @@ const gust =
 					pan: [-0.8, 0.8],
 					send: 0.2,
 				});
-				mx.add(whoosh(dur * 0.8, 700, 1800, { peakAt: 0.55, q: 1.4 }), dur * 0.1, { gain: 0.12 * strength, pan: [-0.7, 0.7], send: 0.3 }); // prettier-ignore
+				mx.add(whoosh(dur * 0.8, 600, 1400, { peakAt: 0.55, q: 1.4 }), dur * 0.1, { gain: 0.12 * strength, pan: [-0.7, 0.7], send: 0.3 }); // prettier-ignore
 				const leaves = Math.round(4 * strength);
 				for (let k = 0; k < leaves; k++) {
 					const t = rr(0.15, 0.7) * dur;
-					mx.add(rustle(rr(0.4, 0.8), { centre: rr(2500, 4000) }), t, { gain: 0.1 * strength, pan: [-0.6 + t / dur, -0.2 + (1.2 * t) / dur], send: 0.2 }); // prettier-ignore
+					mx.add(rustle(rr(0.4, 0.8), { centre: rr(1600, 2600) }), t, { gain: 0.1 * strength, pan: [-0.6 + t / dur, -0.2 + (1.2 * t) / dur], send: 0.2 }); // prettier-ignore
 				}
 				if (strength > 1) mx.add(whoosh(1.2, 300, 900, { peakAt: 0.5, q: 0.8 }), dur * 0.25, { gain: 0.25, pan: [-0.5, 0.6], send: 0.2 }); // prettier-ignore
 			},
@@ -1226,7 +1229,7 @@ const screenWhoosh = () =>
 				pan: [-0.6, 0.6],
 				send: 0.3,
 			});
-			mx.add(rustle(1, { centre: 3000 }), 0.2, { gain: 0.08, pan: [-0.5, 0.5], send: 0.3 });
+			mx.add(rustle(1, { centre: 2000 }), 0.2, { gain: 0.08, pan: [-0.5, 0.5], send: 0.3 });
 			for (let k = 0; k < 8; k++) mx.add(celesta(penta(3 + k), 1), 0.45 + k * 0.08, { gain: 0.07 + 0.01 * k, pan: -0.6 + 0.15 * k, send: 0.55 }); // prettier-ignore
 			mx.add(sweep(1, 90, 45, 0.2), 0.9, { gain: 0.25, send: 0.2 });
 		},
@@ -1250,7 +1253,7 @@ const jingle = () =>
 			strum(mx, notes('G2 D3 B3 D4 G4 B4'), 1.68, 0.05, (m) => harp(m), { gain: 0.22 });
 			for (const t of [0, 0.6, 0.84, 1.2, 1.44, 1.56, 1.68])
 				mx.add(bodhran(), t, { gain: 0.25, send: 0.15 });
-			strum(mx, notes('G6 B6 D7'), 1.78, 0.1, (m) => celesta(m, 2), { gain: 0.12, send: 0.55 });
+			strum(mx, notes('G5 B5 D6'), 1.78, 0.1, (m) => celesta(m, 2), { gain: 0.12, send: 0.55 });
 			pad(mx, notes('G3 D4 B4'), 1.6, 1.2, 0.05);
 		},
 		{ size: 0.8, tail: 3 },
@@ -1265,8 +1268,8 @@ const youWon = () =>
 			pianoChord(mx, notes('G3 D4 F#4 A4 B4'), 0.85, 2.2, { gain: 0.13, roll: 0.035 });
 			mx.add(bass(n('G2'), 1.8), 0.85, { gain: 0.32, send: 0.1 });
 			pad(mx, notes('G3 B3 D4 A4'), 0.75, 1.8, 0.06);
-			strum(mx, notes('B6 D7 G7'), 0.95, 0.12, (m) => celesta(m, 2.2), { gain: 0.12, send: 0.55 });
-			mx.add(crystal(n('A6'), 2), 1.3, { gain: 0.1, pan: -0.3, send: 0.6 });
+			strum(mx, notes('B5 D6 G6'), 0.95, 0.12, (m) => celesta(m, 2.2), { gain: 0.12, send: 0.55 });
+			mx.add(crystal(n('A5'), 2), 1.3, { gain: 0.1, pan: -0.3, send: 0.6 });
 		},
 		{ size: 0.85, tail: 3 },
 	);
@@ -1277,7 +1280,7 @@ const runeCollected = () =>
 		(mx) => {
 			mx.add(bowl(n('G3'), 3.5), 0, { gain: 0.28, send: 0.4 });
 			mx.add(bowl(n('D4'), 3), 0.04, { gain: 0.12, pan: 0.3, send: 0.45 });
-			strum(mx, notes('B5 D6 G6 A6'), 0.15, 0.11, (m) => crystal(m, 1.8), {
+			strum(mx, notes('B4 D5 G5 A5'), 0.15, 0.11, (m) => crystal(m, 1.8), {
 				gain: 0.12,
 				send: 0.6,
 			});
@@ -1294,7 +1297,7 @@ const winEnd = () =>
 			strum(mx, notes('G2 D3 G3 B3 D4 G4 B4'), 0, 0.035, (m) => harp(m), { gain: 0.2 });
 			pianoChord(mx, notes('G3 B3 D4 A4'), 0, 2, { gain: 0.12 });
 			mx.add(bass(n('G2'), 1.6), 0, { gain: 0.3, send: 0.1 });
-			mx.add(celesta(n('D7'), 2), 0.12, { gain: 0.12, send: 0.55 });
+			mx.add(celesta(n('D6'), 2), 0.12, { gain: 0.12, send: 0.55 });
 		},
 		{ size: 0.82, tail: 3 },
 	);
@@ -1354,7 +1357,7 @@ const SOUNDS = {
 	sfx_btn_spin: { level: -23, peak: 0.6, render: btnSpin },
 	sfx_fs_respins: { level: -17, render: bonusWon({ short: true }) },
 	sfx_multiplier_combine_a: { level: -21, render: combine() },
-	sfx_multiplier_combine_b: { level: -21, render: combine({ dur: 0.35, top: 'B6' }) },
+	sfx_multiplier_combine_b: { level: -21, render: combine({ dur: 0.35, top: 'B5' }) },
 	sfx_multiplier_explosion_a: { level: -20, render: magicPop({ size: 0.7, sparkles: 3 }) },
 	sfx_multiplier_explosion_b: { level: -18, render: magicPop({ size: 1.4, sparkles: 8 }) },
 	sfx_multiplier_explosion_c: { level: -19, render: magicPop({ size: 1, sparkles: 5 }) },

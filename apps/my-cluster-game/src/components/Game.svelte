@@ -26,11 +26,13 @@
 	import ClusterWinAmounts from './ClusterWinAmounts.svelte';
 	import TumbleBoard from './TumbleBoard.svelte';
 	import Wind from './Wind.svelte';
+	import WindTransition from './WindTransition.svelte';
 	import Win from './Win.svelte';
 	import FreeSpinIntro from './FreeSpinIntro.svelte';
 	import FreeSpinCounter from './FreeSpinCounter.svelte';
 	import FreeSpinOutro from './FreeSpinOutro.svelte';
 	import RuneBoard from './RuneBoard.svelte';
+	import MannazBoard from './MannazBoard.svelte';
 	import RuneTablets from './RuneTablets.svelte';
 	import BonusMeter from './BonusMeter.svelte';
 	import Logo from './Logo.svelte';
@@ -98,6 +100,11 @@
 			<TumbleBoard />
 		</MainContainer>
 
+		<!-- the base game's Mannaz, over the symbols (see MannazBoard) -->
+		<MainContainer>
+			<MannazBoard />
+		</MainContainer>
+
 		<MainContainer>
 			<Wind />
 		</MainContainer>
@@ -126,10 +133,13 @@
 		{/if}
 		<PowerSpinsIntro />
 		<FreeSpinOutro />
+		<!-- over everything: the gale as the bonus starts and ends -->
+		<WindTransition />
 	{/if}
 </App>
 
-<Modals theme={uiHtmlTheme}>
+<!-- a replay's card waits for the loading screen to be pressed -->
+<Modals theme={uiHtmlTheme} hideReplayCard={context.stateLayout.showLoadingScreen}>
 	{#snippet version()}
 		<GameVersion version="0.0.0" />
 	{/snippet}

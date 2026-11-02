@@ -10,8 +10,8 @@
 
 	const props: UiLabelOptions = $props();
 	const context = getContext();
-	const label = $derived(stateBetDerived.activeBetMode()?.text.betAmountLabel || i18nDerived.bet());
-	const value = $derived(numberToCurrencyString(stateBetDerived.betCost()));
+	const label = $derived(stateBetDerived.activeBetMode()?.text.betAmountLabel || i18nDerived.betAmount());
+	const value = $derived(numberToCurrencyString(stateBetDerived.betCost(), { fixed: true }));
 	const disabled = $derived(!context.stateXstateDerived.isIdle());
 
 	const onpress = () => {

@@ -58,11 +58,15 @@ export const numberToFloat = (value: number) => Number.parseFloat(`${value}`);
 type CurrencyStringOptions = {
 	// an in-between value of a count up: only the currency's own decimals, e.g. ¥70 instead of ¥69.6
 	counting?: boolean;
+	// a balance or a bet: always the currency's own decimals, e.g. $999.99 instead of $999.994 (Stake
+	// Engine wants exactly two there; only wins show the extra decimals a sub-cent payout needs)
+	fixed?: boolean;
 };
 
 export const numberToCurrencyString = (value: number, options: CurrencyStringOptions = {}) => {
+	const ownDigits = options.counting || options.fixed;
 	if (stateBet.currency in NO_LOCALISATION_CURRENCY_MAP) {
-		const digits = options.counting
+		const digits = ownDigits
 			? NO_LOCALISATION_FRACTION_DIGITS
 			: fractionDigits(numberToFloat(value), NO_LOCALISATION_FRACTION_DIGITS);
 		const number = stateI18n.i18n.number(value, {
@@ -73,9 +77,7 @@ export const numberToCurrencyString = (value: number, options: CurrencyStringOpt
 	}
 
 	const currencyDigits = currencyFractionDigits(stateBet.currency);
-	const digits = options.counting
-		? currencyDigits
-		: fractionDigits(numberToFloat(value), currencyDigits);
+	const digits = ownDigits ? currencyDigits : fractionDigits(numberToFloat(value), currencyDigits);
 	return stateI18n.i18n.number(value, {
 		minimumFractionDigits: digits,
 		maximumFractionDigits: digits,
@@ -87,8 +89,8 @@ export const numberToCurrencyString = (value: number, options: CurrencyStringOpt
 
 // like numberToCurrencyString, but amounts of 1,000 or more are shortened where there's little
 // room, e.g. $1.5K, ¥10K or 25K SC
-export const numberToShortCurrencyString = (value: number) => {
-	if (Math.abs(value) < 1000) return numberToCurrencyString(value);
+export const numberToShortCurrencyString = (value: number, options: CurrencyStringOptions = {}) => {
+	if (Math.abs(value) < 1000) return numberToCurrencyString(value, options);
 
 	// $1K and $1.5K, not $1.00K
 	const compact = { notation: 'compact', minimumFractionDigits: 0, maximumFractionDigits: 2 } as const;

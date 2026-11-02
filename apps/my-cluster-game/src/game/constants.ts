@@ -214,23 +214,36 @@ const l4Win = { ...LEAF_HIT, assetKey: 'leafYellowHit' };
 // the Fehu symbol (F), the user's stone-framed tile, its frame as big as the high symbols' wooden
 // ones (TILE_FILL of a cell); its frame is about 1151 x 1149 of its 1254 x 1254 image, the rest
 // see-through, so the image is drawn that much bigger. It never wins (it is collected as it lands,
-// see the fehuSymbols book event), and settles as it lands.
+// see the fehuSymbols book event). As it lands it plays the user's land animation once (thump, the
+// rune lifting and igniting, a comet round it, two pulses, settling: 1.5 s), drawn at the same size
+// as the still, which its frames line up with; when it ends, its soul flies off.
 const FEHU_FRAME = { width: 1151 / 1254, height: 1149 / 1254 };
 const fStatic = {
 	type: 'sprite',
 	assetKey: 'fehuSymbol',
 	sizeRatios: { width: TILE_FILL / FEHU_FRAME.width, height: TILE_FILL / FEHU_FRAME.height },
 };
-const fLand = { ...fStatic, motion: 'land' as const };
-// the Ingwaz symbol (I), the same: its frame about 1139 x 1141 of its 1254 x 1254 image (see the
-// ingwazSymbols book event)
+const RUNE_LAND_FRAME_RATE = 60;
+const fLand = {
+	type: 'spriteSheet',
+	assetKey: 'fehuLand',
+	sizeRatios: fStatic.sizeRatios,
+	frameRate: RUNE_LAND_FRAME_RATE,
+};
+// the Ingwaz symbol (I), the same: its frame about 1139 x 1141 of its 1254 x 1254 image, and its
+// own land animation, in its colours (see the ingwazSymbols book event)
 const INGWAZ_FRAME = { width: 1139 / 1254, height: 1141 / 1254 };
 const iStatic = {
 	type: 'sprite',
 	assetKey: 'ingwazSymbol',
 	sizeRatios: { width: TILE_FILL / INGWAZ_FRAME.width, height: TILE_FILL / INGWAZ_FRAME.height },
 };
-const iLand = { ...iStatic, motion: 'land' as const };
+const iLand = {
+	type: 'spriteSheet',
+	assetKey: 'ingwazLand',
+	sizeRatios: iStatic.sizeRatios,
+	frameRate: RUNE_LAND_FRAME_RATE,
+};
 
 const sStatic = { type: 'sprite', assetKey: 's.png', sizeRatios: { width: 1.243, height: 1.243 } };
 // the wild, the user's stone tile, as the high symbols are: its idle loop (its letters and runes

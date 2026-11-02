@@ -97,16 +97,16 @@
 	import { IDLE_FRAME_RATE, idleFrame } from '../game/idleClock.svelte';
 	import {
 		NO_OFFSET,
-		RUNES,
 		RUNE_COLOURS,
 		joinBrushStrokes,
 		runeBrushStrokes,
-		type RuneName,
+		runeShape,
+		type BoardRuneName,
 		type RuneOffset,
 	} from '../game/runes';
 
 	type Props = {
-		rune: RuneName;
+		rune: BoardRuneName;
 		// the side of its 5 x 5 cells
 		size: number;
 		// where in them it lies (the grid stays put)
@@ -128,6 +128,9 @@
 		// unlit, its ember breathes and sparks run along its lines (the rune on the board; the boxes'
 		// keep still)
 		idle?: boolean;
+		// how see-through its unlit lines are, its lit ones as bright as ever (Mannaz, drawn over the
+		// symbols)
+		unlitAlpha?: number;
 	};
 
 	const props: Props = $props();
@@ -313,7 +316,7 @@
 		{#if props.spots !== false}
 			<Graphics
 				draw={(graphics) => {
-					RUNES[props.rune].spots.forEach(([reel, row], spot) => {
+					runeShape(props.rune).spots.forEach(([reel, row], spot) => {
 						const inset = cell * SPOT_INSET;
 						graphics
 							.roundRect(
@@ -331,51 +334,53 @@
 
 		<!-- all of it unlit, carved in: the lips, then the grooves over them and the embers in them,
 		each all at once, so lines crossing look cut through each other -->
-		<Container filters={[lipAlpha]}>
+		<Container alpha={props.unlitAlpha ?? 1}>
+			<Container filters={[lipAlpha]}>
+				<Graphics
+					x={cell * LIP.offset}
+					y={cell * LIP.offset}
+					draw={(graphics) => {
+						for (const stroke of lines) {
+							graphics.poly(outline(stroke, LINE_WIDTH, cell)).fill({ color: LIP.colour });
+						}
+					}}
+				/>
+			</Container>
 			<Graphics
-				x={cell * LIP.offset}
-				y={cell * LIP.offset}
 				draw={(graphics) => {
 					for (const stroke of lines) {
-						graphics.poly(outline(stroke, LINE_WIDTH, cell)).fill({ color: LIP.colour });
+						graphics.poly(outline(stroke, LINE_WIDTH, cell)).fill({ color: colours.groove });
 					}
 				}}
 			/>
-		</Container>
-		<Graphics
-			draw={(graphics) => {
-				for (const stroke of lines) {
-					graphics.poly(outline(stroke, LINE_WIDTH, cell)).fill({ color: colours.groove });
-				}
-			}}
-		/>
-		<Graphics
-			draw={(graphics) => {
-				const ember = mix(colours.ember, colours.neon, BREATH * breath);
-				for (const stroke of lines) {
-					graphics.poly(outline(stroke, EMBER_WIDTH, cell)).fill({ color: ember });
-				}
-			}}
-		/>
-		<!-- the sparks running along it, idle: a bright head and a tail fading behind it, in cells -->
-		{#if sparks.length}
 			<Graphics
-				scale={cell}
 				draw={(graphics) => {
-					for (const { stroke, along, length } of sparks) {
-						for (let k = 0; k < SPARK.tail; k++) {
-							const at = along - k * SPARK.spacing;
-							if (at < 0 || at > length) continue;
-							const { x, y } = pointAlong(stroke, at);
-							const fade = 1 - k / SPARK.tail;
-							graphics
-								.circle(x, y, SPARK.radius * (0.4 + 0.6 * fade))
-								.fill({ color: k === 0 ? colours.core : colours.neon, alpha: fade });
-						}
+					const ember = mix(colours.ember, colours.neon, BREATH * breath);
+					for (const stroke of lines) {
+						graphics.poly(outline(stroke, EMBER_WIDTH, cell)).fill({ color: ember });
 					}
 				}}
 			/>
-		{/if}
+			<!-- the sparks running along it, idle: a bright head and a tail fading behind it, in cells -->
+			{#if sparks.length}
+				<Graphics
+					scale={cell}
+					draw={(graphics) => {
+						for (const { stroke, along, length } of sparks) {
+							for (let k = 0; k < SPARK.tail; k++) {
+								const at = along - k * SPARK.spacing;
+								if (at < 0 || at > length) continue;
+								const { x, y } = pointAlong(stroke, at);
+								const fade = 1 - k / SPARK.tail;
+								graphics
+									.circle(x, y, SPARK.radius * (0.4 + 0.6 * fade))
+									.fill({ color: k === 0 ? colours.core : colours.neon, alpha: fade });
+							}
+						}
+					}}
+				/>
+			{/if}
+		</Container>
 
 		<!-- the lit parts' neon glow, blurred, then the lines and their cores over it, in cells -->
 		<Container filters={[blur]}>

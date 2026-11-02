@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { page } from '$app/state';
 	import { stateBet, stateI18n, stateMeta, stateModal, type BetModeData } from 'state-shared';
 	import { GlobalStyle, Modals, UI_HTML_THEME_CLEAN, stateBonus } from 'components-ui-html';
 
@@ -33,6 +34,9 @@
 
 	const props: Props = $props();
 
+	// Storybook's stand-in for SvelteKit's page has no query, so the url's own parameters are passed
+	// on: add &social=true to the story's iframe url for social mode
+	page.url = new URL(window.location.href);
 	setContext();
 	setBetModeMeta();
 

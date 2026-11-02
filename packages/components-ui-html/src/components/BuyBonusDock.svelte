@@ -19,7 +19,7 @@
 <div class="dock">
 	<div class="balance">
 		<span class="label">{i18nDerived.balance()}</span>
-		<span class="balance-value">{numberToCurrencyString(stateBet.balanceAmount)}</span>
+		<span class="balance-value">{numberToCurrencyString(stateBet.balanceAmount, { fixed: true })}</span>
 	</div>
 
 	<OptionsToggle
@@ -47,7 +47,7 @@
 				<div class="amount">
 					<span class="label">{i18nDerived.bet()}</span>
 					<span class="value">
-						<HeadingText>{numberToCurrencyString(stateBet.betAmount)}</HeadingText>
+						<HeadingText>{numberToCurrencyString(stateBet.betAmount, { fixed: true })}</HeadingText>
 					</span>
 				</div>
 

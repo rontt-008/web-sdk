@@ -15,7 +15,7 @@
 	// longer amounts, like MX$10,000.00, get smaller so they stay between the − and + buttons
 	const AMOUNT_FONT_SIZE_REM = 1.75;
 	const AMOUNT_FULL_SIZE_LENGTH = 9;
-	const amountText = $derived(numberToCurrencyString(stateBet.betAmount));
+	const amountText = $derived(numberToCurrencyString(stateBet.betAmount, { fixed: true }));
 	const amountFontSize = $derived(
 		`${AMOUNT_FONT_SIZE_REM * Math.min(1, AMOUNT_FULL_SIZE_LENGTH / amountText.length)}rem`,
 	);

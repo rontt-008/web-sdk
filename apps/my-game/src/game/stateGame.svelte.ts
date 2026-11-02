@@ -2,7 +2,7 @@ import _ from 'lodash';
 import type { Tween } from 'svelte/motion';
 
 import { stateBet } from 'state-shared';
-import { PORTRAIT_UI_HEIGHT, LayoutDesktopBar, getDesktopBarBounds } from 'components-ui-pixi';
+import { PORTRAIT_UI_HEIGHT, LayoutDesktopPanel, getDesktopPanelBounds } from 'components-ui-pixi';
 import { createEnhanceBoard, createReelForSpinning } from 'utils-slots';
 import { createGetWinLevelDataByWinLevelAlias } from 'utils-shared/winLevel';
 
@@ -174,14 +174,14 @@ const screenEdges = () => {
 };
 
 // Where the UI's bar along the bottom of the screen is, in the game's layout: its two ends and the
-// top of its panels. Only on the screens where the UI is drawn as that bar (see uiTheme's layouts).
+// top of its panel. Only on the screens where the UI is drawn as that bar (see uiTheme's layouts).
 const uiBarBounds = () => {
 	const layoutType = stateLayoutDerived.layoutType();
-	if (uiTheme.layouts?.[layoutType] !== LayoutDesktopBar) return undefined;
+	if (uiTheme.layouts?.[layoutType] !== LayoutDesktopPanel) return undefined;
 	const standard = stateLayoutDerived.mainLayoutStandard();
 	const main = stateLayoutDerived.mainLayout();
 	const canvas = stateLayoutDerived.canvasSizes();
-	const bar = getDesktopBarBounds({ theme: uiTheme, layoutType, standard });
+	const bar = getDesktopPanelBounds({ theme: uiTheme, layoutType, standard });
 	// the UI's standard layout is centred across the screen and drawn against its bottom; the game's
 	// is centred on the screen (see MainContainer)
 	const toGameX = (x: number) =>

@@ -18,6 +18,7 @@
 	import { setContext } from '../game/context';
 	import { playBookEvent, playBookEvents } from '../game/utils';
 	import events from './data/base_events';
+	import mannazEvents from './data/mannaz_events';
 
 	setContext();
 </script>
@@ -64,6 +65,28 @@ shiver and are carried off, the board tumbles to fill their cells, then it wins 
 	args={templateArgs({
 		skipLoadingScreen: false,
 		data: events.windSweep,
+		action: async (data) => await playBookEvents(data),
+	})}
+	{template}
+/>
+
+<!-- the base game's Mannaz behind the board: a few of its spots light up under a spin's wins -->
+<Story
+	name="mannazLight"
+	args={templateArgs({
+		skipLoadingScreen: false,
+		data: mannazEvents.mannazLight,
+		action: async (data) => await playBookEvent(data, { bookEvents: [] }),
+	})}
+	{template}
+/>
+
+<!-- all of Mannaz lit in one spin: it flares, and the mythic bonus starts with two runes collected -->
+<Story
+	name="mythicTrigger"
+	args={templateArgs({
+		skipLoadingScreen: false,
+		data: mannazEvents.mythicTrigger,
 		action: async (data) => await playBookEvents(data),
 	})}
 	{template}

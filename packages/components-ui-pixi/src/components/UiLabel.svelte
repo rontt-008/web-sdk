@@ -77,11 +77,12 @@
 	const valueScale = $derived(
 		Math.min(1, valueRoom / Math.max(1, textWidth(props.value, themedValueStyle))),
 	);
-	// plain, a long label (like a bet mode's name over the bet) shrinks too
+	// plain or stacked, a long label (like a bet mode's name over the bet) shrinks too
+	const labelRoom = $derived(
+		props.plain ? props.plain.width : props.stacked ? PILL_WIDTH - UI_BASE_FONT_SIZE : undefined,
+	);
 	const labelScale = $derived(
-		props.plain
-			? Math.min(1, props.plain.width / Math.max(1, textWidth(props.label, themedLabelStyle)))
-			: 1,
+		labelRoom ? Math.min(1, labelRoom / Math.max(1, textWidth(props.label, themedLabelStyle))) : 1,
 	);
 
 	// plain and outlined (on the game's art): the label and the value in an outline of the panel's
@@ -124,7 +125,7 @@
 			borderWidth={theme.outlineWidth}
 			borderAlpha={theme.outlineAlpha}
 		/>
-		<Text anchor={{ x: 0.5, y: 0 }} text={props.label} style={themedLabelStyle} />
+		<Text anchor={{ x: 0.5, y: 0 }} scale={labelScale} text={props.label} style={themedLabelStyle} />
 		<Text
 			anchor={{ x: 0.5, y: 0 }}
 			y={UI_BASE_FONT_SIZE * 0.6}

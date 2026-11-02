@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { stateUrlDerived } from 'state-shared';
+	import { stateReplayDerived, stateUrlDerived } from 'state-shared';
 
 	import assets from '../game/assets';
 	import config from '../game/config';
@@ -30,15 +30,19 @@
 	// picked out in the pink accent), the wild and free spins side by side, and the rest in cards
 	// with pink titles.
 
-	// social mode (social=true) can't use words like bet, buy or pay
-	const words = stateUrlDerived.social()
+	// no words like bet, buy, pay or cost: this game uses social mode's words in every mode (see
+	// context.ts)
+	const words = stateUrlDerived.socialWords()
 		? {
 				bet: 'play amount',
 				payline: 'win line',
 				paylines: 'win lines',
-				buyBonus: 'PLAY BONUS',
+				buyBonus: 'GET BONUS',
 				bonusBuys: 'bonuses',
 				buyIt: 'start it',
+				costs: 'is played for',
+				cost: 'Played for',
+				prices: 'bonuses',
 			}
 		: {
 				bet: 'bet',
@@ -47,7 +51,12 @@
 				buyBonus: 'BUY BONUS',
 				bonusBuys: 'bonus buys',
 				buyIt: 'buy it',
+				costs: 'costs',
+				cost: 'Cost',
+				prices: 'prices',
 			};
+	// the replay card's names for the round's numbers (Engine's words in social mode)
+	const replayWords = stateReplayDerived.words();
 
 	type PayingSymbol = Exclude<keyof typeof config.symbols, 'S'>;
 
@@ -256,7 +265,7 @@
 				<div class="card-art"><BonusCardArt mode={BOOSTER_MODE} size={CARD_ART_SIZE} /></div>
 				<div class="feature-text">
 					<h3>BOOSTER</h3>
-					<p>Each spin costs {BOOSTER_COST}x the {words.bet} and FREE SPINS start more often.</p>
+					<p>Each spin {words.costs} {BOOSTER_COST}x the {words.bet} and FREE SPINS start more often.</p>
 				</div>
 			</div>
 			<div class="card text with-art">
@@ -264,7 +273,7 @@
 				<div class="feature-text">
 					<h3>FEATURE SPIN</h3>
 					<p>
-						Switched on in the {words.buyBonus} menu. Each spin costs {FEATURE_COST}x the {words.bet}
+						Switched on in the {words.buyBonus} menu. Each spin {words.costs} {FEATURE_COST}x the {words.bet}
 						and has at least one BIG WILD that throws 1 to 3 extra WILDs onto the other reels. Every
 						BIG WILD carries a {featureMinMultiplier}x to {featureMaxMultiplier}x multiplier, and
 						the multipliers of the BIG WILDs that are part of a win are added together and multiply
@@ -298,7 +307,7 @@
 		<h2>Return to player</h2>
 		<table class="card modes">
 			<thead>
-				<tr><th>Mode</th><th>Cost</th><th>RTP</th><th>Max win</th></tr>
+				<tr><th>Mode</th><th>{words.cost}</th><th>RTP</th><th>Max win</th></tr>
 			</thead>
 			<tbody>
 				{#each MODES as { name, cost, mode }}
@@ -331,9 +340,9 @@
 			<div>
 				<dt>{words.bet.toUpperCase()} UP and DOWN</dt>
 				<dd>
-					On wide, square and tall screens (a phone held upright), the up and down arrows beside the
-					{words.bet} raise or lower it one level at a time. On small wide screens (a phone held sideways,
-					or a small window), the &minus; and + buttons do the same.
+					The &minus; and + buttons either side of the {words.bet} raise or lower it one level at a
+					time. On tall screens (a phone held upright), the up and down arrows beside the
+					{words.bet} do the same.
 				</dd>
 			</div>
 			<div>
@@ -341,7 +350,7 @@
 				<dd>
 					Shows the {words.bet} of the next spin; press it to pick a {words.bet} from the menu. While
 					the BOOSTER or the FEATURE SPIN is on, it reads BOOSTER or FEATURE SPIN and shows what each
-					spin costs.
+					spin {words.costs}.
 				</dd>
 			</div>
 			<div>
@@ -377,27 +386,27 @@
 			<div>
 				<dt>{words.buyBonus}</dt>
 				<dd>
-					The round black button with the red S, right of the spin button (at the bottom right on
-					tall screens and on small wide screens), opens the bonus menu. It shows the balance and
-					the {words.bet}, with &minus; and + to change the {words.bet} the prices are worked out from.
-					Pick a bonus and check what it costs, then press CONFIRM to
+					The round button with the red S, at the left end of the bar (at the bottom right on tall
+					screens and on small wide screens), opens the bonus menu. It shows the balance and
+					the {words.bet}, with &minus; and + to change the {words.bet} the {words.prices} are worked out
+					from. Pick a bonus and check what it {words.costs}, then press CONFIRM to
 					{words.buyIt}, or CANCEL to go back to the bonus menu; the BOOSTER and FEATURE SPIN cards
 					switch them on the same way, and while one is on, its card's DISABLE button switches it
-					off. The button is greyed out while a round plays, and turns white while the BOOSTER or
+					off. The button is greyed out while a round plays, and turns cream while the BOOSTER or
 					the FEATURE SPIN is on.
 				</dd>
 			</div>
 			<div>
 				<dt>BOOSTER</dt>
 				<dd>
-					The BOOSTER card in the bonus menu turns the booster on or off. Each spin costs
+					The BOOSTER card in the bonus menu turns the booster on or off. Each spin {words.costs}
 					{BOOSTER_COST}x the {words.bet} while it is on.
 				</dd>
 			</div>
 			<div>
 				<dt>FEATURE SPIN</dt>
 				<dd>
-					The FEATURE SPIN card in the bonus menu turns feature spins on or off. Each spin costs
+					The FEATURE SPIN card in the bonus menu turns feature spins on or off. Each spin {words.costs}
 					{FEATURE_COST}x the {words.bet} while it is on.
 				</dd>
 			</div>
@@ -423,9 +432,14 @@
 			<div>
 				<dt>PLAY and REPLAY</dt>
 				<dd>
-					When watching a replay of a round, PLAY starts the round; once it has played, REPLAY plays
-					it again from the start. The replay shows the round's {words.bet} and, for a mode that costs
-					more than the {words.bet}, REAL COST with the mode's multiplier and what the round cost.
+					A replay of a round opens with a card of the round's {replayWords.mode.toLowerCase()},
+					{replayWords.baseBet.toLowerCase()}, {replayWords.costMultiplier.toLowerCase()},
+					{replayWords.totalCost.toLowerCase()}, {replayWords.payoutMultiplier.toLowerCase()} and
+					{replayWords.totalWin.toLowerCase()}. {replayWords.start.toUpperCase()} on the card, or PLAY
+					under the board, starts the round; once it has played, REPLAY plays it again from the start.
+					While it plays, the win and the {replayWords.baseBet.toLowerCase()} show under the board, and
+					for a mode with a {replayWords.costMultiplier.toLowerCase()} above 1x, the
+					{replayWords.totalCost.toUpperCase()} with that multiplier.
 				</dd>
 			</div>
 		</dl>

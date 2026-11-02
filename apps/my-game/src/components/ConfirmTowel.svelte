@@ -17,7 +17,7 @@
 
 	const props: Props = $props();
 
-	const priceText = $derived(numberToCurrencyString(stateBet.betAmount * props.betModeData.costMultiplier));
+	const priceText = $derived(numberToCurrencyString(stateBet.betAmount * props.betModeData.costMultiplier, { fixed: true }));
 	// longer prices, like MX$1,000,000.00, get smaller so they stay on the towel
 	const PRICE_FONT_SIZE_REM = 2.125;
 	const PRICE_FULL_SIZE_LENGTH = 12;
