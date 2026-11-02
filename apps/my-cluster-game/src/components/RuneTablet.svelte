@@ -41,11 +41,11 @@
 	const NARROW_POWER_SIZE = 0.21;
 	// wider than tall by this, the text beside the picture
 	const WIDE = 1.6;
-	// the longest word's and the longest power's widths in their font size (MULTIPLIER 4.43, ONLY
-	// PREMIUMS 6.26 in Germania One bold), with the outline and a little to spare, and the lines'
-	// height
+	// the longest word's and the longest power's widths in their font size (MULTIPLIER 4.43, and
+	// Fehu's once its symbols have doubled it to four figures, 1280x MULTIPLIER about 6.8, in Germania
+	// One bold), with the outline and a little to spare, and the lines' height
 	const LONGEST_WORD = 4.8;
-	const LONGEST_LINE = 6.5;
+	const LONGEST_LINE = 7.1;
 	const LINE_HEIGHT = 1.1;
 
 	// the panel: dark while the rune is locked, a deep shade of the rune's colour once collected
@@ -116,7 +116,7 @@
 			y={top + height / 2}
 			anchor={{ x: 0, y: 0.5 }}
 			alpha={dim}
-			text={RUNES[props.rune].powerText(context.stateGame.bonusType)}
+			text={RUNES[props.rune].powerText(context.stateGame.bonusType, context.stateGame)}
 			style={{
 				...signTextStyle(powerSize),
 				wordWrap: true,
@@ -130,7 +130,7 @@
 			y={top + (pad + glyph + height) / 2}
 			anchor={{ x: 0.5, y: 0.5 }}
 			alpha={dim}
-			text={RUNES[props.rune].powerText(context.stateGame.bonusType)}
+			text={RUNES[props.rune].powerText(context.stateGame.bonusType, context.stateGame)}
 			style={{
 				...signTextStyle(powerSize),
 				align: 'center',

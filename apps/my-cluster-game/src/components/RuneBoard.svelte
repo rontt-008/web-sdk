@@ -1,6 +1,7 @@
 <script lang="ts" module>
 	import type { RuneName, RuneOffset } from '../game/runes';
 	import type { Position } from '../game/types';
+	import type { MeterSoul } from './MeterSouls.svelte';
 
 	// the runes in the free spins, for the rune behind the board and the boxes left of it
 	// (RuneTablets): a rune shows, its spots under wins light up, it is collected, and it hides when
@@ -9,6 +10,12 @@
 		| { type: 'runesShow'; rune: RuneName; offset: RuneOffset }
 		| { type: 'runesLight'; positions: Position[] }
 		| { type: 'runesComplete'; rune: RuneName }
+		// a rune symbol's soul landed in its rune's box (its boost, stateGame's RuneBoosts, grew): the
+		// box pulses
+		| { type: 'runesPulse'; rune: RuneName }
+		// the rune symbols (Fehu's, Ingwaz's) burst into souls that fly into their rune's box (MeterSouls
+		// in RuneTablets): done when they have all landed
+		| { type: 'runeSouls'; rune: RuneName; souls: MeterSoul[] }
 		| { type: 'runesHide' }
 		| { type: 'runesReset' }
 		| {

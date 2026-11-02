@@ -1,14 +1,15 @@
 <script lang="ts">
 	import { onDestroy, type Snippet } from 'svelte';
 
-	import { startMockRgs } from './mockRgs';
+	import { startMockRgs, type MockRounds } from './mockRgs';
 
-	type Props = { balance: number; children: Snippet };
+	// rounds: which rounds it answers with, by the real odds or only top wins
+	type Props = { balance: number; rounds?: MockRounds; children: Snippet };
 
 	const props: Props = $props();
 
 	// started before the children mount, so the game's first request (authenticate) reaches it
-	const stop = startMockRgs({ balance: props.balance });
+	const stop = startMockRgs({ balance: props.balance, rounds: props.rounds });
 	onDestroy(stop);
 </script>
 

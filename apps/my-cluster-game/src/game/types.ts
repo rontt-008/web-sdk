@@ -7,6 +7,9 @@ export type RawSymbol = {
 	multiplier?: number;
 	scatter?: boolean;
 	wild?: boolean;
+	// the Fehu symbol's (F) and the Ingwaz symbol's (I)
+	fehu?: boolean;
+	ingwaz?: boolean;
 };
 export type BetMode = keyof typeof config.betModes;
 export type GameType = keyof typeof config.paddingReels;

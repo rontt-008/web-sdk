@@ -77,6 +77,15 @@ export default {
 		type: 'sprite',
 		src: new URL('../../assets/symbols/leaf-yellow.webp', import.meta.url).href,
 	},
+	// the Fehu symbol (F) and the Ingwaz symbol (I), the user's art, 1254 x 1254
+	fehuSymbol: {
+		type: 'sprite',
+		src: new URL('../../assets/symbols/symbolrune.png', import.meta.url).href,
+	},
+	ingwazSymbol: {
+		type: 'sprite',
+		src: new URL('../../assets/symbols/symbolrune2.png', import.meta.url).href,
+	},
 	// and their hits, 90 frames of 320 x 320 at 60 a second played once on a win (see
 	// art-source/leaf-hits.py)
 	leafGreenHit: {
@@ -253,7 +262,8 @@ export default {
 		type: 'spine',
 		src: {
 			atlas: new URL('../../assets/spines/tumbleWin/tumble_win.atlas', import.meta.url).href,
-			skeleton: new URL('../../assets/spines/tumbleWin/tumble_multiplier.json', import.meta.url).href,
+			skeleton: new URL('../../assets/spines/tumbleWin/tumble_multiplier.json', import.meta.url)
+				.href,
 			scale: 2,
 		},
 	},

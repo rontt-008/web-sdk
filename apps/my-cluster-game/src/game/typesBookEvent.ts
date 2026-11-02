@@ -120,6 +120,23 @@ type BookEventRuneComplete = {
 	rune: RuneName;
 };
 
+// in the free spins, as symbols land (the spin's, or a tumble's new ones): Fehu symbols at these cells,
+// each doubling Fehu's multiplier, now `multiplier`; the tumbleBoard after it fills their cells
+type BookEventFehuSymbols = {
+	index: number;
+	type: 'fehuSymbols';
+	positions: Position[];
+	multiplier: number;
+};
+
+// the same for Ingwaz symbols, each giving Ingwaz one more power spin: it now gives `spins`
+type BookEventIngwazSymbols = {
+	index: number;
+	type: 'ingwazSymbols';
+	positions: Position[];
+	spins: number;
+};
+
 // in a base game spin, after each win: how many symbols its clusters have had so far, all its tumbles
 // together (with BONUS_TRIGGER, the free spins start)
 type BookEventUpdateBonusMeter = {
@@ -185,6 +202,8 @@ export type BookEvent =
 	| BookEventRuneShow
 	| BookEventRuneLight
 	| BookEventRuneComplete
+	| BookEventFehuSymbols
+	| BookEventIngwazSymbols
 	| BookEventUpdateBonusMeter
 	| BookEventPowerSpinsTrigger
 	| BookEventUpdatePowerSpin

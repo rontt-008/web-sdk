@@ -7,6 +7,7 @@
 	import { Container, Sprite } from 'pixi-svelte';
 
 	import RuneTablet from './RuneTablet.svelte';
+	import MeterSouls from './MeterSouls.svelte';
 	import { getContext } from '../game/context';
 	import { LAYOUT_UNIT } from '../game/constants';
 	import {
@@ -121,7 +122,9 @@
 
 	const activate = (name: RuneName | undefined) => {
 		active = name;
-		glows = name ? RUNES[name].spots.map(() => new Tween(0, { duration: 400, easing: cubicOut })) : [];
+		glows = name
+			? RUNES[name].spots.map(() => new Tween(0, { duration: 400, easing: cubicOut }))
+			: [];
 	};
 
 	const reset = () => {
@@ -149,6 +152,11 @@
 			await pulses[rune].set(1.12);
 			await pulses[rune].set(1, { duration: 300 });
 		},
+		runesPulse: async ({ rune }) => {
+			show = true;
+			await pulses[rune].set(1.12);
+			await pulses[rune].set(1, { duration: 300 });
+		},
 		runesHide: () => activate(undefined),
 		runesReset: reset,
 		runesRestore: ({ rune, offsets: restoredOffsets, lit, collected: restored }) => {
@@ -157,10 +165,20 @@
 			offsets = { ...noOffsets(), ...restoredOffsets };
 			activate(rune);
 			if (rune) {
-				lit.forEach((position) => glows[runeSpotIndex(rune, offsets[rune], position)]?.set(1, { duration: 0 }));
+				lit.forEach((position) =>
+					glows[runeSpotIndex(rune, offsets[rune], position)]?.set(1, { duration: 0 }),
+				);
 			}
 		},
 	});
+
+	// the runes whose symbols land in the free spins, their souls flying into the middle of their box
+	// (see runeSouls)
+	const SYMBOL_RUNES: RuneName[] = ['fehu', 'ingwaz'];
+	const boxCentre = (name: RuneName) => {
+		const box = boxes[RUNE_NAMES.indexOf(name)];
+		return { x: box.x + box.width / 2, y: box.y + box.height / 2 };
+	};
 
 	const stateOf = (name: RuneName) =>
 		collected.includes(name) ? 'collected' : name === active ? 'active' : 'waiting';
@@ -191,4 +209,9 @@
 			<Sprite key="runeLadder" width={LADDER_ART.width} height={LADDER_ART.height} />
 		</Container>
 	</FadeContainer>
+
+	<!-- the rune symbols' souls, over the ladder -->
+	{#each SYMBOL_RUNES as name}
+		<MeterSouls rune={name} target={boxCentre(name)} />
+	{/each}
 </MainContainer>

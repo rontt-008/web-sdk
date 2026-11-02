@@ -2,7 +2,7 @@ export default {
 	providerName: 'sample_provider',
 	gameName: 'sample_lines',
 	gameID: '0_0_cluster',
-	rtp: 0.97,
+	rtp: 0.967,
 	numReels: 5,
 	numRows: [5, 5, 5, 5, 5],
 	betModes: {
@@ -10,22 +10,24 @@ export default {
 			cost: 1.0,
 			feature: true,
 			buyBonus: false,
-			rtp: 0.97,
+			rtp: 0.967,
 			max_win: 25000.0,
 		},
+		// the prices of the math (math-sdk games/my_cluster_game), where a bonus averages 96.7x and a super
+		// bonus 290.1x: 96.7% of these
 		bonus: {
-			cost: 500,
+			cost: 100,
 			feature: true,
 			buyBonus: false,
-			rtp: 0.97,
+			rtp: 0.967,
 			max_win: 25000.0,
 		},
-		// the super bonus (see SUPER_TRIGGER), bought; its price the user's
+		// the super bonus (see SUPER_TRIGGER), bought
 		super: {
 			cost: 300,
 			feature: true,
 			buyBonus: false,
-			rtp: 0.97,
+			rtp: 0.967,
 			max_win: 25000.0,
 		},
 	},
@@ -33,6 +35,16 @@ export default {
 		W: {
 			paytable: null,
 			special_properties: ['wild', 'multiplier'],
+		},
+		// the Fehu symbol: lands in the free spins, each one doubling Fehu's multiplier
+		F: {
+			paytable: null,
+			special_properties: ['fehu'],
+		},
+		// the Ingwaz symbol: lands in the free spins, each one giving Ingwaz one more power spin
+		I: {
+			paytable: null,
+			special_properties: ['ingwaz'],
 		},
 		L4: {
 			paytable: [

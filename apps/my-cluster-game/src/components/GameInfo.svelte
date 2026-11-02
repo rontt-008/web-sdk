@@ -75,9 +75,10 @@
 	const { normal, super: superPowers } = BONUS_POWERS;
 	const RUNE_RULES: Record<RuneName, string> = {
 		othala: 'Only premium symbols land in the POWER SPINS.',
-		fehu: `Every win in the POWER SPINS is multiplied by ${normal.mult}, by ${superPowers.mult} in SUPER FREE SPINS.`,
+		fehu: `Every win in the POWER SPINS is multiplied by ${normal.mult}, by ${superPowers.mult} in SUPER FREE SPINS. Every FEHU symbol that lands in the FREE SPINS doubles it, without limit.`,
 		hagall: `Every POWER SPIN lands a ${normal.wilds}x${normal.wilds} BIG WILD, ${superPowers.wilds}x${superPowers.wilds} in SUPER FREE SPINS.`,
-		ingwaz: 'One more POWER SPIN.',
+		ingwaz:
+			'One more POWER SPIN, and one more for every INGWAZ symbol that lands in the FREE SPINS.',
 	};
 
 	// a rune's lines (in board cells) in a square view round them

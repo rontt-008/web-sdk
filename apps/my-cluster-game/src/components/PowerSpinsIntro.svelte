@@ -76,7 +76,7 @@
 					<Text
 						y={GLYPH + POWER.gap}
 						anchor={{ x: 0.5, y: 0 }}
-						text={RUNES[rune].powerText(context.stateGame.bonusType)}
+						text={RUNES[rune].powerText(context.stateGame.bonusType, context.stateGame)}
 						style={{
 							...textStyle(POWER.size),
 							wordWrap: true,

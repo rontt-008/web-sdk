@@ -211,6 +211,27 @@ const l2Win = { ...LEAF_HIT, assetKey: 'leafBrownHit' };
 const l3Win = { ...LEAF_HIT, assetKey: 'leafRedHit' };
 const l4Win = { ...LEAF_HIT, assetKey: 'leafYellowHit' };
 
+// the Fehu symbol (F), the user's stone-framed tile, its frame as big as the high symbols' wooden
+// ones (TILE_FILL of a cell); its frame is about 1151 x 1149 of its 1254 x 1254 image, the rest
+// see-through, so the image is drawn that much bigger. It never wins (it is collected as it lands,
+// see the fehuSymbols book event), and settles as it lands.
+const FEHU_FRAME = { width: 1151 / 1254, height: 1149 / 1254 };
+const fStatic = {
+	type: 'sprite',
+	assetKey: 'fehuSymbol',
+	sizeRatios: { width: TILE_FILL / FEHU_FRAME.width, height: TILE_FILL / FEHU_FRAME.height },
+};
+const fLand = { ...fStatic, motion: 'land' as const };
+// the Ingwaz symbol (I), the same: its frame about 1139 x 1141 of its 1254 x 1254 image (see the
+// ingwazSymbols book event)
+const INGWAZ_FRAME = { width: 1139 / 1254, height: 1141 / 1254 };
+const iStatic = {
+	type: 'sprite',
+	assetKey: 'ingwazSymbol',
+	sizeRatios: { width: TILE_FILL / INGWAZ_FRAME.width, height: TILE_FILL / INGWAZ_FRAME.height },
+};
+const iLand = { ...iStatic, motion: 'land' as const };
+
 const sStatic = { type: 'sprite', assetKey: 's.png', sizeRatios: { width: 1.243, height: 1.243 } };
 // the wild, the user's stone tile, as the high symbols are: its idle loop (its letters and runes
 // moving) in every state but a win, which plays its hit once (it bounces, its letters in a wave),
@@ -326,6 +347,22 @@ export const SYMBOL_INFO_MAP = {
 		spin: wStatic,
 		win: wWin,
 		land: wLand,
+	},
+	F: {
+		explosion,
+		postWinStatic: fStatic,
+		static: fStatic,
+		spin: fStatic,
+		win: fStatic,
+		land: fLand,
+	},
+	I: {
+		explosion,
+		postWinStatic: iStatic,
+		static: iStatic,
+		spin: iStatic,
+		win: iStatic,
+		land: iLand,
 	},
 	S: {
 		explosion,

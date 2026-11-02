@@ -13,7 +13,7 @@ import { stateGame, stateGameDerived, flownKey } from './stateGame.svelte';
 import { LOW_SYMBOLS } from './constants';
 import type { BookEvent, BookEventOfType, BookEventContext } from './typesBookEvent';
 import type { Position } from './types';
-import type { RuneName, RuneOffset } from './runes';
+import { BONUS_POWERS, type RuneName, type RuneOffset } from './runes';
 
 const winLevelSoundsPlay = ({ winLevelData }: { winLevelData: WinLevelData }) => {
 	if (winLevelData?.alias === 'max') eventEmitter.broadcastAsync({ type: 'uiHide' });
@@ -60,6 +60,41 @@ const runesSoFar = ({ bookEvents }: { bookEvents: BookEvent[] }) => {
 		if (bookEvent.type === 'powerSpinsTrigger') rune = undefined;
 	}
 	return { rune, offsets, lit, collected };
+};
+
+// how long rune symbols that land show before they go (fehuSymbols, ingwazSymbols), in ms
+const RUNE_SYMBOLS_SHOWN = 500;
+
+// Rune symbols landed in a free spin (Fehu's or Ingwaz's): shown for a moment, then each bursts into
+// a soul that flies into its rune's box (MeterSouls in RuneTablets), as the winning leaves' fly to
+// the bonus meter in the base game. The symbol goes as its soul sets off, its cell left empty
+// (stateGame.flown) for the tumble after it to fill (tumbleBoard); as each lands the rune's power
+// grows by a step (`onland`) and its box pulses. Done when they have all landed.
+const throwRuneSouls = async ({
+	rune,
+	symbol,
+	positions,
+	onland,
+}: {
+	rune: RuneName;
+	symbol: string;
+	positions: Position[];
+	onland: () => void;
+}) => {
+	await waitForTimeout(RUNE_SYMBOLS_SHOWN / stateBetDerived.timeScale());
+	await eventEmitter.broadcastAsync({
+		type: 'runeSouls',
+		rune,
+		souls: positions.map((position) => ({
+			...stateGameDerived.cellCentre(position),
+			symbol,
+			onleave: () => stateGame.flown.push(flownKey(position)),
+			onland: () => {
+				onland();
+				eventEmitter.broadcast({ type: 'runesPulse', rune });
+			},
+		})),
+	});
 };
 
 const animateSymbols = async ({ positions }: { positions: Position[] }) => {
@@ -203,6 +238,9 @@ export const bookEventHandlerMap: BookEventHandlerMap<BookEvent, BookEventContex
 	freeSpinTrigger: async (bookEvent: BookEventOfType<'freeSpinTrigger'>) => {
 		// the bonus or the super bonus: the intro, the spins' sign and the runes' powers say which
 		stateGame.bonusType = bookEvent.bonusType ?? 'normal';
+		// Fehu's multiplier and Ingwaz's spins back to their own, until their symbols add to them
+		stateGame.fehuMult = undefined;
+		stateGame.ingwazSpins = undefined;
 		// the bonus meter full (a bought bonus may not have filled it); it goes for the free spins
 		eventEmitter.broadcast({ type: 'soundOnce', name: 'sfx_scatter_win_v2' });
 		await eventEmitter.broadcastAsync({ type: 'bonusMeterFull' });
@@ -265,9 +303,9 @@ export const bookEventHandlerMap: BookEventHandlerMap<BookEvent, BookEventContex
 			total: bookEvent.total,
 		});
 	},
-	// the global multiplier, only Fehu's x3 in the power spins (the user removed the free spins' one,
-	// the spin's number), isn't shown on its own (nor the sample's multiplier box); the cluster wins
-	// show it
+	// the global multiplier, only Fehu's (x5, x10 in the super bonus) in the power spins (the user
+	// removed the free spins' one, the spin's number), isn't shown on its own (nor the sample's
+	// multiplier box); the cluster wins show it
 	updateGlobalMult: async () => {},
 	freeSpinEnd: async (bookEvent: BookEventOfType<'freeSpinEnd'>) => {
 		const winLevelData = winLevelMap[bookEvent.winLevel as WinLevel];
@@ -343,6 +381,31 @@ export const bookEventHandlerMap: BookEventHandlerMap<BookEvent, BookEventContex
 		eventEmitter.broadcast({ type: 'soundOnce', name: 'sfx_scatter_win' });
 		await eventEmitter.broadcastAsync({ type: 'runesComplete', rune: bookEvent.rune });
 	},
+	// Fehu symbols landed in a free spin: their souls fly into Fehu's box (throwRuneSouls), each
+	// doubling the multiplier it shows as it lands; then the multiplier is the book's
+	fehuSymbols: async (bookEvent: BookEventOfType<'fehuSymbols'>) => {
+		await throwRuneSouls({
+			rune: 'fehu',
+			symbol: 'F',
+			positions: bookEvent.positions,
+			onland: () => {
+				stateGame.fehuMult = (stateGame.fehuMult ?? BONUS_POWERS[stateGame.bonusType].mult) * 2;
+			},
+		});
+		stateGame.fehuMult = bookEvent.multiplier;
+	},
+	// Ingwaz symbols the same into Ingwaz's box, each one more power spin
+	ingwazSymbols: async (bookEvent: BookEventOfType<'ingwazSymbols'>) => {
+		await throwRuneSouls({
+			rune: 'ingwaz',
+			symbol: 'I',
+			positions: bookEvent.positions,
+			onland: () => {
+				stateGame.ingwazSpins = (stateGame.ingwazSpins ?? 1) + 1;
+			},
+		});
+		stateGame.ingwazSpins = bookEvent.spins;
+	},
 	powerSpinsTrigger: async (bookEvent: BookEventOfType<'powerSpinsTrigger'>) => {
 		// the free spins are over: their rune goes, and the power spins start
 		await eventEmitter.broadcastAsync({ type: 'runesHide' });
@@ -382,8 +445,13 @@ export const bookEventHandlerMap: BookEventHandlerMap<BookEvent, BookEventContex
 		const lastSetTotalWinEvent = findLastBookEvent('setTotalWin' as const);
 		const lastUpdateGlobalMultEvent = findLastBookEvent('updateGlobalMult' as const);
 		const lastUpdatePowerSpinEvent = findLastBookEvent('updatePowerSpin' as const);
+		const lastFehuSymbolsEvent = findLastBookEvent('fehuSymbols' as const);
+		const lastIngwazSymbolsEvent = findLastBookEvent('ingwazSymbols' as const);
 
 		if (lastFreeSpinTriggerEvent) await playBookEvent(lastFreeSpinTriggerEvent, { bookEvents });
+		// Fehu's multiplier and Ingwaz's spins as their symbols had made them (the trigger set them back)
+		if (lastFehuSymbolsEvent) stateGame.fehuMult = lastFehuSymbolsEvent.multiplier;
+		if (lastIngwazSymbolsEvent) stateGame.ingwazSpins = lastIngwazSymbolsEvent.spins;
 		if (lastUpdateFreeSpinEvent) playBookEvent(lastUpdateFreeSpinEvent, { bookEvents });
 		if (lastUpdatePowerSpinEvent) playBookEvent(lastUpdatePowerSpinEvent, { bookEvents });
 		if (lastSetTotalWinEvent) playBookEvent(lastSetTotalWinEvent, { bookEvents });

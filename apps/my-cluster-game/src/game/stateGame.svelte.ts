@@ -88,6 +88,12 @@ export const stateGame = $state({
 	gameType: 'basegame' as GameType,
 	// the free spins' bonus, from freeSpinTrigger (the super bonus's powers are bigger, see runes.ts)
 	bonusType: 'normal' as BonusType,
+	// Fehu's multiplier, doubled by each Fehu symbol collected in the free spins (fehuSymbols); none
+	// yet: the bonus's own (BONUS_POWERS)
+	fehuMult: undefined as number | undefined,
+	// the power spins Ingwaz gives, one more for each Ingwaz symbol collected (ingwazSymbols); none
+	// yet: one
+	ingwazSpins: undefined as number | undefined,
 	tumbleBoardAdding: [] as TumbleSymbol[][],
 	tumbleBoardBase: [] as TumbleSymbol[][],
 	multiplierBoard: [] as (MultiplierSymbol | undefined)[][],
@@ -136,9 +142,7 @@ const boardX = (slide: number) => {
 
 const boardLayout = () => ({
 	x: boardX(boardSlide.current),
-	y:
-		stateLayoutDerived.mainLayout().height * 0.5 -
-		BOARD_RAISE[stateLayoutDerived.layoutType()],
+	y: stateLayoutDerived.mainLayout().height * 0.5 - BOARD_RAISE[stateLayoutDerived.layoutType()],
 	anchor: { x: 0.5, y: 0.5 },
 	pivot: { x: BOARD_SIZES.width / 2, y: BOARD_SIZES.height / 2 },
 	...BOARD_SIZES,
@@ -274,7 +278,12 @@ const sideLayout = () => {
 		(bottom - screenTop - SIDE.margin) * BONUS_METER_ASPECT,
 	);
 	const meterHeight = meterWidth / BONUS_METER_ASPECT;
-	const meter = { x: middle - meterWidth / 2, y: bottom - meterHeight, width: meterWidth, height: meterHeight };
+	const meter = {
+		x: middle - meterWidth / 2,
+		y: bottom - meterHeight,
+		width: meterWidth,
+		height: meterHeight,
+	};
 	const logoHeight = Math.max(
 		0,
 		Math.min(meterWidth / LOGO_ASPECT, meter.y - SIDE.between - screenTop - SIDE.margin),
@@ -301,7 +310,10 @@ const BACKGROUND_ART = { width: 1672, height: 941, ground: 745 };
 // centred on it, with the overflow cropped by the screen's edges
 const backgroundLayout = () => {
 	const canvas = stateLayoutDerived.canvasSizes();
-	const scale = Math.max(canvas.width / BACKGROUND_ART.width, canvas.height / BACKGROUND_ART.height);
+	const scale = Math.max(
+		canvas.width / BACKGROUND_ART.width,
+		canvas.height / BACKGROUND_ART.height,
+	);
 	return {
 		x: (canvas.width - BACKGROUND_ART.width * scale) / 2,
 		y: (canvas.height - BACKGROUND_ART.height * scale) / 2,

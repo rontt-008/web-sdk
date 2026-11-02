@@ -17,7 +17,7 @@
 // anywhere on the board it fits. A spot of it lights up when a winning cluster covers it; when all
 // its spots are lit, its power is collected, and the next rune shows when the next spin starts.
 // After the free spins come 2 power spins (POWER_SPINS) with the collected powers: Fehu multiplies
-// every win (x3, in the super bonus x5), Hagall puts a block of wilds on the board (2x2, in the super
+// every win (x5, in the super bonus x10), Hagall puts a block of wilds on the board (2x2, in the super
 // bonus 3x3), Othala only premiums, Ingwaz one power spin more. Wilds join any symbol's clusters.
 //
 // Wind: now and then (WIND.chance, any spin: base game, free spins and power spins) a gust blows a
@@ -117,7 +117,7 @@ const SWEEP = { chance: 0.03, least: 3 };
 
 // what Fehu's and Hagall's powers give in each bonus: its multiplier, and the side of its block of
 // wilds (the same as BONUS_POWERS in src/game/runes.ts)
-const BONUS_TYPES = { normal: { mult: 3, wilds: 2 }, super: { mult: 5, wilds: 3 } };
+const BONUS_TYPES = { normal: { mult: 5, wilds: 2 }, super: { mult: 10, wilds: 3 } };
 
 // the paytable, from the game's config: { L1: { 5: 0.6, 6: 1.5, ... }, ... }
 const loadConfig = () => {

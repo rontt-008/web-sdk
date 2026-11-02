@@ -1,7 +1,14 @@
 <script lang="ts" module>
-	// a winning leaf's soul, from the middle of its cell (in the main layout) to the bonus meter;
-	// `onleave` is called as it sets off (the leaf goes with it)
-	export type MeterSoul = { x: number; y: number; symbol: string; onleave?: () => void };
+	// a winning leaf's soul, from the middle of its cell (in the main layout) to the bonus meter (or a
+	// rune symbol's, to its rune's box); `onleave` is called as it sets off (the symbol goes with it),
+	// `onland` as it lands
+	export type MeterSoul = {
+		x: number;
+		y: number;
+		symbol: string;
+		onleave?: () => void;
+		onland?: () => void;
+	};
 </script>
 
 <script lang="ts">
@@ -12,12 +19,17 @@
 
 	import { getContext } from '../game/context';
 	import { SYMBOL_SIZE } from '../game/constants';
+	import { RUNE_COLOURS, type RuneName } from '../game/runes';
 
 	type Props = {
-		// where the souls fly into, in the main layout: the end of the meter's filled part
+		// where the souls fly into, in the main layout: the end of the meter's filled part, or a rune's
+		// box
 		target: { x: number; y: number };
 		// called as souls set off, with how many: what to call as each lands
 		onlaunch?: (count: number) => () => void;
+		// the rune whose box they fly into, for its symbols' souls (runeSouls); none: the bonus
+		// meter's, the leaves' (bonusMeterSouls)
+		rune?: RuneName;
 	};
 
 	const props: Props = $props();
@@ -26,7 +38,8 @@
 	// In the base game each winning leaf bursts into a soul, a glowing orb in the leaf's colour with a
 	// near white core, that rises, swings over and dives into the bonus meter's bar, trailing a tail
 	// and sparks, and flashes a ring as it lands (BonusMeter; see winInfo in bookEventHandlerMap). In
-	// seconds, and in a cell's size.
+	// the free spins the rune symbols (Fehu's, Ingwaz's) do the same into their rune's box, in its
+	// colours (RuneTablets; see fehuSymbols and ingwazSymbols). In seconds, and in a cell's size.
 	const SOUL = {
 		// the leaf bursting into it (a flash left where it was), and the flight, which starts at once
 		burst: 0.2,
@@ -53,12 +66,14 @@
 		ringSize: 0.6,
 	};
 	const BLUR = 0.07;
-	// each leaf's soul: its glow and its core
+	// each leaf's soul, and each rune symbol's: its glow and its core
 	const COLOURS: Record<string, { glow: number; core: number }> = {
 		L1: { glow: 0x8fe36b, core: 0xf2ffe8 },
 		L2: { glow: 0xf0a04b, core: 0xfff2e0 },
 		L3: { glow: 0xff5b45, core: 0xffece6 },
 		L4: { glow: 0xffd94a, core: 0xfffbe6 },
+		F: { glow: RUNE_COLOURS.fehu.glow, core: RUNE_COLOURS.fehu.core },
+		I: { glow: RUNE_COLOURS.ingwaz.glow, core: RUNE_COLOURS.ingwaz.core },
 	};
 	const DEFAULT_COLOURS = COLOURS.L4;
 
@@ -77,8 +92,8 @@
 		form: number;
 		// called as it sets off, until then still to call
 		onleave?: () => void;
-		// called as it lands (props.onlaunch)
-		onland?: () => void;
+		// called as it lands (props.onlaunch, and its source's own)
+		onland: (() => void)[];
 		landed: boolean;
 	};
 	type Spark = Point & { vx: number; vy: number; age: number; colour: number };
@@ -138,7 +153,7 @@
 
 	const land = (soul: Soul) => {
 		soul.landed = true;
-		soul.onland?.();
+		soul.onland.forEach((onland) => onland());
 		rings.push({ ...props.target, age: 0, colour: soul.colours.glow });
 		if (clock - lastChime >= CHIME_EVERY) {
 			lastChime = clock;
@@ -202,33 +217,35 @@
 	});
 
 	// done when they have all landed (the meter counts each as it lands, props.onlaunch)
-	context.eventEmitter.subscribeOnMount({
-		bonusMeterSouls: ({ souls: sources }) => {
-			const onland = sources.length ? props.onlaunch?.(sources.length) : undefined;
-			return new Promise<void>((resolve) => {
-				if (!sources.length) return resolve();
-				sources.forEach((source, index) => {
-					const from = { x: source.x, y: source.y };
-					const end = props.target;
-					souls.push({
-						from,
-						rise: {
-							x: from.x + _.random(-SOUL.sway, SOUL.sway, true) * cell,
-							y: from.y - SOUL.lift * cell,
-						},
-						dive: { x: end.x - _.random(0.2, 0.8, true) * cell, y: end.y - SOUL.lift * 0.8 * cell },
-						start: clock + index * SOUL.stagger,
-						colours: COLOURS[source.symbol] ?? DEFAULT_COLOURS,
-						tail: [],
-						form: 0,
-						onleave: source.onleave,
-						onland,
-						landed: false,
-					});
+	const launch = (sources: MeterSoul[]) => {
+		const onland = sources.length ? props.onlaunch?.(sources.length) : undefined;
+		return new Promise<void>((resolve) => {
+			if (!sources.length) return resolve();
+			sources.forEach((source, index) => {
+				const from = { x: source.x, y: source.y };
+				const end = props.target;
+				souls.push({
+					from,
+					rise: {
+						x: from.x + _.random(-SOUL.sway, SOUL.sway, true) * cell,
+						y: from.y - SOUL.lift * cell,
+					},
+					dive: { x: end.x - _.random(0.2, 0.8, true) * cell, y: end.y - SOUL.lift * 0.8 * cell },
+					start: clock + index * SOUL.stagger,
+					colours: COLOURS[source.symbol] ?? DEFAULT_COLOURS,
+					tail: [],
+					form: 0,
+					onleave: source.onleave,
+					onland: [onland, source.onland].filter((call) => call !== undefined),
+					landed: false,
 				});
-				waiting.push({ count: sources.length, resolve });
 			});
-		},
+			waiting.push({ count: sources.length, resolve });
+		});
+	};
+	context.eventEmitter.subscribeOnMount({
+		bonusMeterSouls: ({ souls: sources }) => (props.rune ? undefined : launch(sources)),
+		runeSouls: ({ rune, souls: sources }) => (rune === props.rune ? launch(sources) : undefined),
 	});
 
 	// the glow blurred as much on any screen: the filter's strength is in screen pixels

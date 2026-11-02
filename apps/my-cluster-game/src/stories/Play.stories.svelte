@@ -16,22 +16,36 @@
 	import Game from '../components/Game.svelte';
 	import { setContext } from '../game/context';
 	import MockRgs from './MockRgs.svelte';
+	import type { MockRounds } from './mockRgs';
 
 	setContext();
 </script>
 
-<!-- The game as it runs on Stake Engine, against a mock RGS that answers with the sample's rounds:
-start with a balance and spin. Changing the balance restarts it. -->
-<Story name="sample rounds" args={{ balance: 1000 }}>
+<!-- the game as it runs on Stake Engine, against a mock RGS; changing the balance restarts it -->
+{#snippet play(balance: number, rounds: MockRounds)}
+	{#key balance}
+		<MockRgs {balance} {rounds}>
+			<Authenticate>
+				<StoryLocale lang="en">
+					<Game />
+				</StoryLocale>
+			</Authenticate>
+		</MockRgs>
+	{/key}
+{/snippet}
+
+<!-- The real game with the current math: the mock RGS picks each round by its real odds. Start with a
+balance, spin and buy bonuses. -->
+<Story name="real odds" args={{ balance: 1000 }}>
 	{#snippet template(args)}
-		{#key args.balance}
-			<MockRgs balance={args.balance}>
-				<Authenticate>
-					<StoryLocale lang="en">
-						<Game />
-					</StoryLocale>
-				</Authenticate>
-			</MockRgs>
-		{/key}
+		{@render play(args.balance, 'real odds')}
+	{/snippet}
+</Story>
+
+<!-- Every round is a top win, whichever way it is played (a spin, or either bonus bought): one of the
+mode's 20 biggest wins, half of them the 25,000x max win. -->
+<Story name="top win" args={{ balance: 1000 }}>
+	{#snippet template(args)}
+		{@render play(args.balance, 'top win')}
 	{/snippet}
 </Story>

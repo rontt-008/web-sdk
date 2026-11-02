@@ -1,38 +1,53 @@
 // Stands in for Stake Engine's RGS in Storybook, so the game can be played like the real thing: it
 // keeps a balance, takes each bet at its mode's cost and answers with a round picked by its lookup
-// table weight. Until the game's own math is exported, the rounds are the cluster sample's books,
-// which have no weights, so each is as likely as the next. Requests to the RGS endpoints are answered
-// here; everything else goes through to the network.
+// table weight (or a top win, see startMockRgs). The rounds are the game's math (math-sdk
+// games/my_cluster_game, written by its export_story_books.py). Requests to the RGS endpoints are
+// answered here; everything else goes through to the network.
 import { API_AMOUNT_MULTIPLIER } from 'constants-shared/bet';
 
 import config from '../game/config';
 import baseBooks from './data/base_books';
 import bonusBooks from './data/bonus_books';
 import superBooks from './data/super_books';
+import baseTopBooks from './data/base_books_top';
+import bonusTopBooks from './data/bonus_books_top';
+import superTopBooks from './data/super_books_top';
 import { pickByWeight } from './pickByWeight';
 
 type BetModeName = keyof typeof config.betModes;
 type Book = { weight?: number; payoutMultiplier: number; events: unknown[] };
 
+// drawn by their real odds, with their weights
 const BOOKS: Record<BetModeName, Book[]> = {
 	base: baseBooks,
 	bonus: bonusBooks,
 	super: superBooks,
 };
 
+// each mode's 20 biggest wins, its max wins (25,000x) among them, all as likely
+const TOP_BOOKS: Record<BetModeName, Book[]> = {
+	base: baseTopBooks,
+	bonus: bonusTopBooks,
+	super: superTopBooks,
+};
+
+// which rounds it answers with: picked by the real odds, or only top wins
+export type MockRounds = 'real odds' | 'top win';
+
 // bet sizes offered, in dollars (the bet menu shows a handful of them)
 const BET_LEVELS = [
-	0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1, 1.2, 1.4, 1.6, 1.8, 2, 2.5, 3, 3.5, 4, 4.5, 5, 6, 7,
-	8, 9, 10, 12, 14, 16, 18, 20, 25, 30, 35, 40, 45, 50, 60, 70, 80, 90, 100,
+	0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1, 1.2, 1.4, 1.6, 1.8, 2, 2.5, 3, 3.5, 4, 4.5, 5, 6,
+	7, 8, 9, 10, 12, 14, 16, 18, 20, 25, 30, 35, 40, 45, 50, 60, 70, 80, 90, 100,
 ];
 
-type Rgs = { balance: number; roundID: number; unpaid: number };
+type Rgs = { balance: number; roundID: number; unpaid: number; rounds: MockRounds };
 
 // amounts are kept in the API's integer units (1000000 is 1 dollar)
-const createRgs = (balance: number): Rgs => ({
+const createRgs = (balance: number, rounds: MockRounds): Rgs => ({
 	balance: Math.round(balance * API_AMOUNT_MULTIPLIER),
 	roundID: 0,
 	unpaid: 0,
+	rounds,
 });
 
 const balanceObject = (rgs: Rgs) => ({ amount: rgs.balance, currency: 'USD' });
@@ -79,7 +94,7 @@ const HANDLERS: Record<string, (rgs: Rgs, body: Record<string, any>) => object> 
 		const name = String(mode).toLowerCase() as BetModeName;
 		if (!(name in BOOKS)) return { error: 'ERR_VAL', message: `Unknown bet mode: ${mode}` };
 
-		const books = BOOKS[name];
+		const books = (rgs.rounds === 'top win' ? TOP_BOOKS : BOOKS)[name];
 		const cost = Math.round(amount * config.betModes[name].cost);
 		if (cost > rgs.balance) return { error: 'ERR_IPB', message: 'Insufficient balance' };
 		rgs.balance -= cost;
@@ -132,10 +147,17 @@ const installFetch = () => {
 	};
 };
 
-// Starts a mock RGS with this balance (in dollars). Returns a function that stops it.
-export const startMockRgs = ({ balance }: { balance: number }) => {
+// Starts a mock RGS with this balance (in dollars), answering with these rounds (see MockRounds).
+// Returns a function that stops it.
+export const startMockRgs = ({
+	balance,
+	rounds = 'real odds',
+}: {
+	balance: number;
+	rounds?: MockRounds;
+}) => {
 	installFetch();
-	const rgs = createRgs(balance);
+	const rgs = createRgs(balance, rounds);
 	activeRgs = rgs;
 
 	return () => {

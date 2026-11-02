@@ -13,8 +13,9 @@ type Point = [x: number, y: number];
 
 type Rune = {
 	power: RunePower;
-	// what the power does, in a few words, in the bonus or the super bonus
-	powerText: (bonus: BonusType) => string;
+	// what the power does, in a few words, in the bonus or the super bonus (with what the rune symbols
+	// have added to it so far, see RuneBoosts)
+	powerText: (bonus: BonusType, boosts?: RuneBoosts) => string;
 	// the spots that light up, [reel, row] with row 0 the top row (books count the rows from 1), as
 	// it lies with no offset (see RuneOffset)
 	spots: [reel: number, row: number][];
@@ -25,9 +26,14 @@ type Rune = {
 // what Fehu's and Hagall's powers give in the power spins of each bonus (the super bonus's, from 50+
 // symbols, bigger): the multiplier on every win, and the side of the block of wilds (drawn as one
 // big wild, BigWild); the same as BONUS_TYPES in the book generator
+// what the rune symbols in the free spins have added to two runes' powers (stateGame): Fehu's
+// multiplier, doubled by each Fehu symbol, and Ingwaz's power spins, one more for each Ingwaz symbol;
+// none yet, the powers as they are
+export type RuneBoosts = { fehuMult?: number; ingwazSpins?: number };
+
 export const BONUS_POWERS: Record<BonusType, { mult: number; wilds: number }> = {
-	normal: { mult: 3, wilds: 2 },
-	super: { mult: 5, wilds: 3 },
+	normal: { mult: 5, wilds: 2 },
+	super: { mult: 10, wilds: 3 },
 };
 
 export const RUNES: Record<RuneName, Rune> = {
@@ -54,7 +60,7 @@ export const RUNES: Record<RuneName, Rune> = {
 	},
 	fehu: {
 		power: 'multiplier',
-		powerText: (bonus) => `${BONUS_POWERS[bonus].mult}x MULTIPLIER`,
+		powerText: (bonus, boosts) => `${boosts?.fehuMult ?? BONUS_POWERS[bonus].mult}x MULTIPLIER`,
 		spots: [
 			[2, 0],
 			[3, 0],
@@ -108,7 +114,10 @@ export const RUNES: Record<RuneName, Rune> = {
 	},
 	ingwaz: {
 		power: 'extraSpin',
-		powerText: () => '+1 SPIN',
+		powerText: (_, boosts) => {
+			const spins = boosts?.ingwazSpins ?? 1;
+			return `+${spins} ${spins === 1 ? 'SPIN' : 'SPINS'}`;
+		},
 		spots: [
 			[1, 0],
 			[3, 0],

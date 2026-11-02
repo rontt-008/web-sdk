@@ -29,7 +29,7 @@
 	import { getSymbolY } from '../game/utils';
 	import { SYMBOL_SIZE } from '../game/constants';
 	import { getContext } from '../game/context';
-	import { flownKey } from '../game/stateGame.svelte';
+	import { flownKey, type TumbleSymbol } from '../game/stateGame.svelte';
 
 	const context = getContext();
 
@@ -47,7 +47,7 @@
 		const symbolY = new Tween(initY);
 		const oncomplete = () => {};
 
-		const tumbleSymbol = $state({
+		const tumbleSymbol: TumbleSymbol = $state({
 			symbolY,
 			rawSymbol,
 			symbolState: 'static' as const,
