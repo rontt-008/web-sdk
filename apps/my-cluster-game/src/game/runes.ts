@@ -33,7 +33,7 @@ export type RuneBoosts = { fehuMult?: number; ingwazSpins?: number };
 
 export const BONUS_POWERS: Record<BonusType, { mult: number; wilds: number }> = {
 	normal: { mult: 5, wilds: 2 },
-	super: { mult: 10, wilds: 3 },
+	super: { mult: 10, wilds: 2 },
 };
 
 export const RUNES: Record<RuneName, Rune> = {

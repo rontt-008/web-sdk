@@ -9,9 +9,12 @@ import { BONUS_POWERS } from './runes';
 // betModes; the mock RGS in the stories takes them lowercased).
 export const BONUS_MODE = 'BONUS';
 export const SUPER_MODE = 'SUPER';
+export const BOOSTER_MODE = 'BOOSTER';
 
 export const BONUS_COST = config.betModes.bonus.cost;
 export const SUPER_COST = config.betModes.super.cost;
+// each spin's cost while the booster is on, as a multiple of the bet
+export const BOOSTER_COST = config.betModes.booster.cost;
 
 // Replace the SDK's sample bet modes (boosters, a bonus at 100x, a super bonus at 200x) with the ones
 // this game has: the bonus and the super bonus, bought at their prices. Taken from the SDK's
@@ -27,6 +30,21 @@ export const setBetModeMeta = () => {
 
 	stateMeta.betModeMeta = {
 		BASE: samples.BASE,
+		// switched on in the buy menu (an 'activate' mode, the SDK's ANTE): every spin costs more and
+		// starts the bonuses far more often, until it is switched off there
+		[BOOSTER_MODE]: {
+			...samples.ANTE,
+			mode: BOOSTER_MODE,
+			costMultiplier: BOOSTER_COST,
+			text: {
+				...samples.ANTE.text,
+				title: 'BOOSTER',
+				dialog: `Greatly increases your chance of triggering FREE SPINS and SUPER FREE SPINS. Each spin costs ${BOOSTER_COST}x ${yourBet} while the BOOSTER is on. It stays on until you turn it off.`,
+				description: 'Greatly increases your chance of triggering FREE SPINS.',
+				betAmountLabel: 'BOOSTER',
+				tickerIdle: 'BOOSTER IS ON',
+			},
+		},
 		[BONUS_MODE]: {
 			...samples.BONUS,
 			mode: BONUS_MODE,
@@ -48,8 +66,8 @@ export const setBetModeMeta = () => {
 				...samples.SUPER.text,
 				title: 'SUPER BONUS',
 				button: buyButton,
-				dialog: `Go straight to SUPER FREE SPINS for ${SUPER_COST}x ${yourBet}, as ${SUPER_TRIGGER} connected symbols give them: the runes' powers are bigger, a ${BONUS_POWERS.super.wilds}x${BONUS_POWERS.super.wilds} BIG WILD and a ${BONUS_POWERS.super.mult}x MULTIPLIER.`,
-				description: `SUPER FREE SPINS: bigger rune powers, a ${BONUS_POWERS.super.wilds}x${BONUS_POWERS.super.wilds} BIG WILD and a ${BONUS_POWERS.super.mult}x MULTIPLIER.`,
+				dialog: `Go straight to SUPER FREE SPINS for ${SUPER_COST}x ${yourBet}, as ${SUPER_TRIGGER} connected symbols give them: FEHU's MULTIPLIER is bigger, ${BONUS_POWERS.super.mult}x instead of ${BONUS_POWERS.normal.mult}x.`,
+				description: `SUPER FREE SPINS: a bigger FEHU, a ${BONUS_POWERS.super.mult}x MULTIPLIER.`,
 				tickerSpin: 'SUPER BONUS ACTIVATED',
 			},
 		},

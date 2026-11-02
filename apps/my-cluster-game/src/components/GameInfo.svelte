@@ -3,7 +3,7 @@
 
 	import config from '../game/config';
 	import { BONUS_TRIGGER, SUPER_TRIGGER, FREE_SPINS_AWARDED, POWER_SPINS } from '../game/constants';
-	import { BONUS_COST, SUPER_COST } from '../game/betModes';
+	import { BONUS_COST, SUPER_COST, BOOSTER_COST } from '../game/betModes';
 	import { BONUS_POWERS, RUNES, RUNE_COLOURS, RUNE_NAMES, type RuneName } from '../game/runes';
 
 	// The game rules (the menu button opens them), which hold the pay table too: cluster wins, the
@@ -76,7 +76,10 @@
 	const RUNE_RULES: Record<RuneName, string> = {
 		othala: 'Only premium symbols land in the POWER SPINS.',
 		fehu: `Every win in the POWER SPINS is multiplied by ${normal.mult}, by ${superPowers.mult} in SUPER FREE SPINS. Every FEHU symbol that lands in the FREE SPINS doubles it, without limit.`,
-		hagall: `Every POWER SPIN lands a ${normal.wilds}x${normal.wilds} BIG WILD, ${superPowers.wilds}x${superPowers.wilds} in SUPER FREE SPINS.`,
+		hagall:
+			superPowers.wilds === normal.wilds
+				? `Every POWER SPIN lands a ${normal.wilds}x${normal.wilds} BIG WILD.`
+				: `Every POWER SPIN lands a ${normal.wilds}x${normal.wilds} BIG WILD, ${superPowers.wilds}x${superPowers.wilds} in SUPER FREE SPINS.`,
 		ingwaz:
 			'One more POWER SPIN, and one more for every INGWAZ symbol that lands in the FREE SPINS.',
 	};
@@ -156,6 +159,7 @@
 	// every way to play, with its cost, RTP and max win
 	const MODES = [
 		{ name: 'Base game', cost: 1, mode: config.betModes.base },
+		{ name: 'Booster', cost: BOOSTER_COST, mode: config.betModes.booster },
 		{ name: 'Bonus', cost: BONUS_COST, mode: config.betModes.bonus },
 		{ name: 'Super bonus', cost: SUPER_COST, mode: config.betModes.super },
 	];
@@ -306,8 +310,9 @@
 		<div class="card text">
 			<h3>SUPER FREE SPINS</h3>
 			<p>
-				The same as FREE SPINS, with bigger powers: FEHU multiplies the POWER SPINS' wins by
-				{superPowers.mult} and HAGALL's BIG WILD is {superPowers.wilds}x{superPowers.wilds}.
+				The same as FREE SPINS, with a bigger FEHU: it multiplies the POWER SPINS' wins by
+				{superPowers.mult} (by {normal.mult} in FREE SPINS), before its symbols double it.{#if superPowers.wilds !== normal.wilds}
+					HAGALL's BIG WILD is {superPowers.wilds}x{superPowers.wilds}.{/if}
 			</p>
 		</div>
 	</section>
@@ -319,6 +324,14 @@
 			<p>
 				Go straight to the bonus. BONUS ({times(BONUS_COST)} the {words.bet}) starts FREE SPINS;
 				SUPER BONUS ({times(SUPER_COST)} the {words.bet}) starts SUPER FREE SPINS.
+			</p>
+		</div>
+		<div class="card text">
+			<h3>BOOSTER</h3>
+			<p>
+				Switched on in the bonus menu, every spin costs {times(BOOSTER_COST)} the {words.bet}, and
+				the bonus meter starts FREE SPINS and SUPER FREE SPINS far more often. It plays the same
+				spins as the base game, and stays on until you switch it off.
 			</p>
 		</div>
 	</section>

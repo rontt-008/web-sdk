@@ -13,8 +13,16 @@ export default {
 			rtp: 0.967,
 			max_win: 25000.0,
 		},
+		// the booster: the base game's spins for 3x the bet, starting the bonuses far more often
+		booster: {
+			cost: 3,
+			feature: true,
+			buyBonus: false,
+			rtp: 0.967,
+			max_win: 25000.0,
+		},
 		// the prices of the math (math-sdk games/my_cluster_game), where a bonus averages 96.7x and a super
-		// bonus 290.1x: 96.7% of these
+		// bonus 183.7x: 96.7% of these
 		bonus: {
 			cost: 100,
 			feature: true,
@@ -24,7 +32,7 @@ export default {
 		},
 		// the super bonus (see SUPER_TRIGGER), bought
 		super: {
-			cost: 300,
+			cost: 190,
 			feature: true,
 			buyBonus: false,
 			rtp: 0.967,
