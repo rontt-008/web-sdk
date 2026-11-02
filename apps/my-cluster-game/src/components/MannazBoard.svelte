@@ -1,19 +1,22 @@
 <script lang="ts" module>
 	import type { Position } from '../game/types';
 
-	// the base game's Mannaz (MANNAZ): back to unlit as a base game spin starts, its spots under the
-	// spin's wins lighting up, all of it flaring when it is complete (the mythic bonus follows)
+	// the base game's Mannaz (MANNAZ): gone as each base game spin starts; now and then appearing in
+	// a spin, its spots under the spin's wins lighting up, all of it flaring when it is complete (the
+	// mythic bonus follows)
 	export type EmitterEventMannaz =
 		| { type: 'mannazReset' }
+		| { type: 'mannazShow' }
 		| { type: 'mannazLight'; positions: Position[] }
 		| { type: 'mannazComplete' };
 </script>
 
 <script lang="ts">
-	import { onMount } from 'svelte';
+	import { onMount, untrack } from 'svelte';
 	import { Tween } from 'svelte/motion';
-	import { cubicOut } from 'svelte/easing';
+	import { cubicIn, cubicOut } from 'svelte/easing';
 	import { waitForTimeout } from 'utils-shared/wait';
+	import { stateBetDerived } from 'state-shared';
 
 	import BoardContainer from './BoardContainer.svelte';
 	import RuneGlyph from './RuneGlyph.svelte';
@@ -23,17 +26,22 @@
 
 	const context = getContext();
 
-	// Mannaz across the whole board, in the base game only (it fades out as the bonus starts and back
-	// in as it ends, under the gale). It is drawn over the symbols, not behind them as the free spins'
-	// runes are: across all 25 cells, its staves down the outer reels, it would hardly show between
-	// them. Unlit it is faint (UNLIT), so the symbols read through it; its lit spots glow at full.
+	// Mannaz across the whole board, in some base game spins only: it isn't there until a spin's book
+	// shows it (mannazShow, after the board lands), and goes as the next spin starts or the bonus does.
+	// It is drawn over the symbols, not behind them as the free spins' runes are: across all 25 cells,
+	// its staves down the outer reels, it would hardly show between them. Unlit it is faint (UNLIT),
+	// so the symbols read through it; its lit spots glow at full. It appears in a flare of all its
+	// lines (APPEAR, in ms: fading in while it flares up, then the flare dying down to unlit).
 	const UNLIT = 0.45;
+	const APPEAR = { fadeIn: 350, flare: 250, settle: 550 };
 	const glows = MANNAZ.spots.map(() => new Tween(0, { duration: 650 }));
 	const flash = new Tween(0, { duration: 250, easing: cubicOut });
-	const inBaseGame = () => context.stateGame.gameType === 'basegame';
-	const fade = new Tween(inBaseGame() ? 1 : 0, { duration: 350, easing: cubicOut });
+	const fade = new Tween(0, { duration: 350, easing: cubicOut });
+	// gone as the bonus starts (under the gale), as well as when a spin starts (set straight from
+	// here and the events: a set while another runs drops the first's promise, which mannazShow waits
+	// on)
 	$effect(() => {
-		fade.target = inBaseGame() ? 1 : 0;
+		if (context.stateGame.gameType !== 'basegame') untrack(() => fade.set(0));
 	});
 
 	// a count up a few times a second while some of it is lit, for its lines' crackle
@@ -46,10 +54,24 @@
 		return () => clearInterval(timer);
 	});
 
+	const unlit = (duration: number) => {
+		glows.forEach((glow) => glow.set(0, { duration }));
+		flash.set(0, { duration });
+	};
+
 	context.eventEmitter.subscribeOnMount({
 		mannazReset: () => {
-			glows.forEach((glow) => glow.set(0, { duration: 250 }));
-			flash.set(0, { duration: 250 });
+			fade.set(0, { duration: 250 });
+			unlit(250);
+		},
+		mannazShow: async () => {
+			const speed = stateBetDerived.timeScale();
+			unlit(0);
+			await Promise.all([
+				fade.set(1, { duration: APPEAR.fadeIn / speed }),
+				flash.set(1, { duration: APPEAR.flare / speed, easing: cubicOut }),
+			]);
+			await flash.set(0, { duration: APPEAR.settle / speed, easing: cubicIn });
 		},
 		mannazLight: async ({ positions }) => {
 			const spots = positions.map((position) => runeSpotIndex('mannaz', NO_OFFSET, position));

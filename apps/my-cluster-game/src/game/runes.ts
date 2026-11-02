@@ -153,11 +153,11 @@ export const RUNES: Record<RuneName, Rune> = {
 // the order of the boxes left of the board
 export const RUNE_NAMES: RuneName[] = ['othala', 'fehu', 'hagall', 'ingwaz'];
 
-// Mannaz, the base game's rune (orange): always behind the board in the base game, across all of it
-// (the user's choice of shape: a stave down each side, its arms meeting in the middle). A spot of it
-// lights up when a winning cluster covers it, every base game spin from nothing (a round can't
-// carry anything on to the next); with all of its spots lit in one spin, the spin starts the
-// mythic bonus (freeSpinTrigger, bonusType 'mythic').
+// Mannaz, the base game's rune (orange): in some base game spins, at random, it appears across the
+// whole board (the user's choice of shape: a stave down each side, its arms meeting in the middle),
+// and goes when the next spin starts (a round can't carry anything on to the next). A spot of it
+// lights up when a winning cluster covers it; with all of its spots lit in the spin, the spin starts
+// the mythic bonus (freeSpinTrigger, bonusType 'mythic').
 export const MANNAZ: RuneShape = {
 	spots: [
 		[0, 0],

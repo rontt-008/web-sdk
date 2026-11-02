@@ -297,9 +297,10 @@
 				{/each}
 			</svg>
 			<p>
-				In the base game the ORANGE RUNE lies across the whole board. Each winning cluster lights
-				the spots of it that it covers, over all of a spin's tumbles, and it starts unlit on every
-				spin. When all of the ORANGE RUNE is lit in one spin, MYTHIC FREE SPINS start.
+				Now and then, in a spin of the base game, the ORANGE RUNE appears across the whole board
+				once the symbols have landed. Each winning cluster lights the spots of it that it covers,
+				over all of that spin's tumbles, and it goes when the next spin starts. When all of the
+				ORANGE RUNE is lit, MYTHIC FREE SPINS start.
 			</p>
 		</div>
 	</section>

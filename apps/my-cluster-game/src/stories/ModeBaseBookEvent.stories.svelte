@@ -70,18 +70,20 @@ shiver and are carried off, the board tumbles to fill their cells, then it wins 
 	{template}
 />
 
-<!-- the base game's Mannaz behind the board: a few of its spots light up under a spin's wins -->
+<!-- the base game's Mannaz appearing across the board in a spin, and a few of its spots lighting up
+under its wins -->
 <Story
 	name="mannazLight"
 	args={templateArgs({
 		skipLoadingScreen: false,
 		data: mannazEvents.mannazLight,
-		action: async (data) => await playBookEvent(data, { bookEvents: [] }),
+		action: async (data) => await playBookEvents(data),
 	})}
 	{template}
 />
 
-<!-- all of Mannaz lit in one spin: it flares, and the mythic bonus starts with two runes collected -->
+<!-- Mannaz appearing and all of it lit in the spin: it flares, and the mythic bonus starts with two
+runes collected -->
 <Story
 	name="mythicTrigger"
 	args={templateArgs({

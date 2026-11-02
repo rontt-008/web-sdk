@@ -103,14 +103,16 @@ type BookEventFreeSpinRetrigger = {
 
 // the runes (see runes.ts): a rune shows behind the symbols, `offset` from where RUNES has it, its
 // spots under winning clusters light up, and with all lit it is collected (and the next one shows).
-// In the base game the rune is Mannaz (`rune: 'mannaz'`): it is always there, in the middle (no
-// runeShow, no offset), unlit as each spin starts; its runeLight and runeComplete come in the
-// same places, and a runeComplete for it is followed by the mythic bonus's freeSpinTrigger.
+// In the base game the rune is Mannaz (`rune: 'mannaz'`), in some spins only, at random: such a
+// spin has a runeShow for it after its reveal (and any wind), before its first win (its offset is
+// left out: it always lies across the whole board), and it is gone when the next spin starts; its
+// runeLight and runeComplete come in the same places, and a runeComplete for it is followed by the
+// mythic bonus's freeSpinTrigger.
 type BookEventRuneShow = {
 	index: number;
 	type: 'runeShow';
-	rune: RuneName;
-	offset: RuneOffset;
+	rune: BoardRuneName;
+	offset?: RuneOffset;
 };
 
 type BookEventRuneLight = {

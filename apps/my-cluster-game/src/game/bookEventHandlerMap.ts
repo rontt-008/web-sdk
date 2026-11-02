@@ -13,7 +13,7 @@ import { stateGame, stateGameDerived, flownKey } from './stateGame.svelte';
 import { LOW_SYMBOLS } from './constants';
 import type { BookEvent, BookEventOfType, BookEventContext } from './typesBookEvent';
 import type { BonusType, Position } from './types';
-import { BONUS_POWERS, type RuneName, type RuneOffset } from './runes';
+import { BONUS_POWERS, NO_OFFSET, type RuneName, type RuneOffset } from './runes';
 
 const winLevelSoundsPlay = ({ winLevelData }: { winLevelData: WinLevelData }) => {
 	if (winLevelData?.alias === 'max') eventEmitter.broadcastAsync({ type: 'uiHide' });
@@ -49,9 +49,9 @@ const runesSoFar = ({ bookEvents }: { bookEvents: BookEvent[] }) => {
 	for (const bookEvent of bookEvents) {
 		// the mythic bonus starts with two collected
 		if (bookEvent.type === 'freeSpinTrigger') collected.push(...(bookEvent.collected ?? []));
-		if (bookEvent.type === 'runeShow') {
+		if (bookEvent.type === 'runeShow' && bookEvent.rune !== 'mannaz') {
 			rune = bookEvent.rune;
-			offsets[bookEvent.rune] = bookEvent.offset;
+			offsets[bookEvent.rune] = bookEvent.offset ?? NO_OFFSET;
 			lit = [];
 		}
 		// (the base game's Mannaz, before the bonus, isn't one of them)
@@ -141,7 +141,8 @@ export const bookEventHandlerMap: BookEventHandlerMap<BookEvent, BookEventContex
 		stateGame.flown = [];
 		// the board already in its place for the game type, unless a round is resumed in the bonus
 		stateGameDerived.slideBoard(bookEvent.gameType, { instant: true });
-		// each base game spin counts its connected symbols, and lights Mannaz, from nothing
+		// each base game spin counts its connected symbols from nothing, and starts without Mannaz
+		// (it only shows in some spins, with a runeShow)
 		if (bookEvent.gameType === 'basegame') {
 			eventEmitter.broadcast({ type: 'bonusMeterReset' });
 			eventEmitter.broadcast({ type: 'mannazReset' });
@@ -359,7 +360,8 @@ export const bookEventHandlerMap: BookEventHandlerMap<BookEvent, BookEventContex
 
 		await eventEmitter.broadcastAsync({ type: 'uiHide' });
 		stateGame.gameType = 'basegame';
-		// Mannaz comes back with the base game unlit (after the mythic bonus it was all lit)
+		// no Mannaz back in the base game until a spin shows it, and then unlit (after the mythic bonus
+		// it was all lit)
 		eventEmitter.broadcast({ type: 'mannazReset' });
 		eventEmitter.broadcast({ type: 'freeSpinOutroShow' });
 		eventEmitter.broadcast({ type: 'soundOnce', name: 'sfx_youwon_panel' });
@@ -422,11 +424,18 @@ export const bookEventHandlerMap: BookEventHandlerMap<BookEvent, BookEventContex
 		winLevelSoundsStop();
 		eventEmitter.broadcast({ type: 'winHide' });
 	},
+	// a rune shows behind the symbols: the free spins' next rune, or now and then in a base game spin
+	// Mannaz, across the board (over the symbols, MannazBoard)
 	runeShow: async (bookEvent: BookEventOfType<'runeShow'>) => {
+		if (bookEvent.rune === 'mannaz') {
+			eventEmitter.broadcast({ type: 'soundOnce', name: 'sfx_scatter_reveal' });
+			await eventEmitter.broadcastAsync({ type: 'mannazShow' });
+			return;
+		}
 		await eventEmitter.broadcastAsync({
 			type: 'runesShow',
 			rune: bookEvent.rune,
-			offset: bookEvent.offset,
+			offset: bookEvent.offset ?? NO_OFFSET,
 		});
 	},
 	// a rune's spots under the wins light up: the free spins' rune, or in the base game Mannaz
