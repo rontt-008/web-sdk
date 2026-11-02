@@ -3,6 +3,9 @@
 // 1, as in the books.
 import type { BookEvent } from '../../game/typesBookEvent';
 
+// Mannaz appearing in a spin, after its reveal
+const show: BookEvent = { index: 1, type: 'runeShow', rune: 'mannaz' };
+
 // a few of Mannaz's spots under a spin's wins: the left stave's top three and the left arm's
 const lightSome: BookEvent = {
 	index: 4,
@@ -35,10 +38,12 @@ const lightRest: BookEvent = {
 };
 
 export default {
-	mannazLight: lightSome,
-	// all of Mannaz lit in one spin, and the mythic bonus it starts: 10 MYTHIC FREE SPINS with Fehu
-	// and Hagall already collected
+	// Mannaz appearing, and a few of its spots lighting up
+	mannazLight: [show, lightSome] satisfies BookEvent[],
+	// Mannaz appearing and all of it lit in the spin, and the mythic bonus it starts: 10 MYTHIC FREE
+	// SPINS with Fehu and Hagall already collected
 	mythicTrigger: [
+		show,
 		lightSome,
 		lightRest,
 		{ index: 9, type: 'runeComplete', rune: 'mannaz' },
