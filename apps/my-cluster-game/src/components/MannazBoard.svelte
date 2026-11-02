@@ -14,7 +14,7 @@
 <script lang="ts">
 	import { onMount, untrack } from 'svelte';
 	import { Tween } from 'svelte/motion';
-	import { cubicIn, cubicOut } from 'svelte/easing';
+	import { cubicOut } from 'svelte/easing';
 	import { waitForTimeout } from 'utils-shared/wait';
 	import { stateBetDerived } from 'state-shared';
 
@@ -28,12 +28,9 @@
 
 	// Mannaz across the whole board, in some base game spins only: it isn't there until a spin's book
 	// shows it (mannazShow, after the board lands), and goes as the next spin starts or the bonus does.
-	// It is drawn over the symbols, not behind them as the free spins' runes are: across all 25 cells,
-	// its staves down the outer reels, it would hardly show between them. Unlit it is faint (UNLIT),
-	// so the symbols read through it; its lit spots glow at full. It appears in a flare of all its
-	// lines (APPEAR, in ms: fading in while it flares up, then the flare dying down to unlit).
-	const UNLIT = 0.45;
-	const APPEAR = { fadeIn: 350, flare: 250, settle: 550 };
+	// It shows as the free spins' runes do (RuneBoard, the user's choice): behind the symbols, its lines
+	// between them, fading in unlit (in APPEAR ms), its spots under the spin's wins lighting up.
+	const APPEAR = 350;
 	const glows = MANNAZ.spots.map(() => new Tween(0, { duration: 650 }));
 	const flash = new Tween(0, { duration: 250, easing: cubicOut });
 	const fade = new Tween(0, { duration: 350, easing: cubicOut });
@@ -65,13 +62,8 @@
 			unlit(250);
 		},
 		mannazShow: async () => {
-			const speed = stateBetDerived.timeScale();
 			unlit(0);
-			await Promise.all([
-				fade.set(1, { duration: APPEAR.fadeIn / speed }),
-				flash.set(1, { duration: APPEAR.flare / speed, easing: cubicOut }),
-			]);
-			await flash.set(0, { duration: APPEAR.settle / speed, easing: cubicIn });
+			await fade.set(1, { duration: APPEAR / stateBetDerived.timeScale() });
 		},
 		mannazLight: async ({ positions }) => {
 			const spots = positions.map((position) => runeSpotIndex('mannaz', NO_OFFSET, position));
@@ -91,7 +83,6 @@
 			rune="mannaz"
 			size={SYMBOL_SIZE * 5}
 			alpha={fade.current}
-			unlitAlpha={UNLIT}
 			glows={glows.map((glow) => glow.current)}
 			flash={flash.current}
 			spots={false}

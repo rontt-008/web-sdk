@@ -347,9 +347,10 @@
 			<h3>MYTHIC FREE SPINS</h3>
 			<p>
 				Started only by the ORANGE RUNE. Two of the four runes, chosen at random, are already
-				collected when they start, and the FREE SPINS bring the other two. The powers are as big as
-				in SUPER FREE SPINS: the RED RUNE multiplies the POWER SPINS' wins by {mythicPowers.mult} and
-				the BLUE RUNE's BIG WILD is {mythicPowers.wilds}x{mythicPowers.wilds}.
+				collected when they start, and the FREE SPINS bring the other two. The RED RUNE is the
+				biggest of all: it multiplies the POWER SPINS' wins by {mythicPowers.mult} (by {superPowers.mult}
+				in SUPER FREE SPINS), before its symbols double it. The BLUE RUNE's BIG WILD is
+				{mythicPowers.wilds}x{mythicPowers.wilds}.
 			</p>
 		</div>
 	</section>

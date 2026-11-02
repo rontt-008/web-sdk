@@ -22,7 +22,7 @@ export default {
 			max_win: 25000.0,
 		},
 		// the prices of the math (math-sdk games/my_cluster_game), where a bonus averages 96.7x and a super
-		// bonus 183.7x: 96.7% of these
+		// bonus 193.4x: 96.7% of these
 		bonus: {
 			cost: 100,
 			feature: true,
@@ -32,7 +32,7 @@ export default {
 		},
 		// the super bonus (see SUPER_TRIGGER), bought
 		super: {
-			cost: 190,
+			cost: 200,
 			feature: true,
 			buyBonus: false,
 			rtp: 0.967,

@@ -39,8 +39,8 @@ export type RuneBoosts = { fehuMult?: number; ingwazSpins?: number };
 export const BONUS_POWERS: Record<BonusType, { mult: number; wilds: number }> = {
 	normal: { mult: 5, wilds: 2 },
 	super: { mult: 10, wilds: 2 },
-	// as strong as the super bonus (the user's choice)
-	mythic: { mult: 10, wilds: 2 },
+	// the mythic bonus's Fehu starts at 20 (the user's choice), its wild as the others'
+	mythic: { mult: 20, wilds: 2 },
 };
 
 export const RUNES: Record<RuneName, Rune> = {
