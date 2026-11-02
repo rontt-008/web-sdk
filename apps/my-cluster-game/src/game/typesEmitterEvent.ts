@@ -10,6 +10,8 @@ import type { EmitterEventRunes } from '../components/RuneBoard.svelte';
 import type { EmitterEventPowerSpinsIntro } from '../components/PowerSpinsIntro.svelte';
 import type { EmitterEventBonusMeter } from '../components/BonusMeter.svelte';
 import type { EmitterEventWind } from '../components/Wind.svelte';
+import type { EmitterEventWindTransition } from '../components/WindTransition.svelte';
+import type { EmitterEventMannaz } from '../components/MannazBoard.svelte';
 
 export type EmitterEventGame =
 	| EmitterEventBoard
@@ -23,4 +25,6 @@ export type EmitterEventGame =
 	| EmitterEventRunes
 	| EmitterEventPowerSpinsIntro
 	| EmitterEventBonusMeter
-	| EmitterEventWind;
+	| EmitterEventWind
+	| EmitterEventWindTransition
+	| EmitterEventMannaz;

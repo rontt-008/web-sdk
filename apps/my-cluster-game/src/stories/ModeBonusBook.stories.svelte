@@ -52,6 +52,22 @@
 	{template}
 />
 
+<!-- one book by its index (set it in the controls, or with ?args=data.index:22): e.g. 22 lands a Fehu
+symbol in its first free spin, 103 an Ingwaz symbol, 109 a Fehu symbol with a tumble -->
+<Story
+	name="by index"
+	args={templateArgs({
+		skipLoadingScreen: false,
+		data: { index: 22 },
+		action: async (data: { index: number | string }) => {
+			const book = books[Number(data.index)];
+			if (!book) return console.error('No bonus book at index', data.index);
+			await playBet({ ...book, state: book.events });
+		},
+	})}
+	{template}
+/>
+
 <!-- a bought super bonus (50+ connected symbols): its powers bigger, a 3x3 big wild and x10 -->
 <Story
 	name="super random"

@@ -17,6 +17,7 @@
 		youWonSmall: word('YOU WON', -250, 190),
 		freeSpins: word('FREE SPINS', 323, 112),
 		superFreeSpins: word('SUPER FREE SPINS', 323, 112),
+		mythicFreeSpins: word('MYTHIC FREE SPINS', 323, 112),
 		totalWin: word('TOTAL WIN', 340, 112),
 		totalWinSmall: word('TOTAL WIN', 315, 140),
 	};

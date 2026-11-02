@@ -123,7 +123,8 @@ const BOARD_SLIDE_DURATION = 1200;
 const boardSlide = new Tween(0, { easing: cubicInOut });
 
 // slides the board to its place for the game type, done when it is there; `instant` puts it there
-// straight away (a round resumed in the bonus)
+// straight away: a round resumed in the bonus, and the bonus starting and ending, under the gale
+// (WindTransition), so the player never sees it move
 const slideBoard = (gameType: GameType, { instant = false } = {}) =>
 	boardSlide.set(gameType === 'freegame' ? 1 : 0, {
 		duration: instant ? 0 : BOARD_SLIDE_DURATION / stateBetDerived.timeScale(),

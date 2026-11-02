@@ -11,6 +11,7 @@
 	import InfoCard, { INFO_CARD_ART } from './InfoCard.svelte';
 	import InfoCardRunes from './InfoCardRunes.svelte';
 	import InfoCardMaxWin from './InfoCardMaxWin.svelte';
+	import InfoCardMythic from './InfoCardMythic.svelte';
 	import PressToContinue, { PRESS_TEXT } from './PressToContinue.svelte';
 
 	type Props = {
@@ -22,7 +23,7 @@
 
 	// The start screen: while the game loads, its logo a little above the middle with the loading
 	// progress under it; once loaded, the logo glides up to the top, a little smaller, and three info
-	// cards (InfoCard: the rune powers, the max win, the third empty for now) rise into the middle one
+	// cards (InfoCard: the rune powers, the max win, the mythic bonus) rise into the middle one
 	// after another, side by side and spaced out, between the logo and "press anywhere to continue" at
 	// the bottom. A press fades it all out and the game comes in.
 	const LOGO = { width: 560, middle: 0.45, topWidth: 420, top: 12 };
@@ -118,6 +119,8 @@
 							<InfoCardRunes {...slate} />
 						{:else if i === 1}
 							<InfoCardMaxWin {...slate} />
+						{:else}
+							<InfoCardMythic {...slate} />
 						{/if}
 					{/snippet}
 				</InfoCard>

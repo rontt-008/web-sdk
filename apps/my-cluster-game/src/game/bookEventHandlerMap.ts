@@ -12,7 +12,7 @@ import { winLevelMap, type WinLevel, type WinLevelData } from './winLevelMap';
 import { stateGame, stateGameDerived, flownKey } from './stateGame.svelte';
 import { LOW_SYMBOLS } from './constants';
 import type { BookEvent, BookEventOfType, BookEventContext } from './typesBookEvent';
-import type { Position } from './types';
+import type { BonusType, Position } from './types';
 import { BONUS_POWERS, type RuneName, type RuneOffset } from './runes';
 
 const winLevelSoundsPlay = ({ winLevelData }: { winLevelData: WinLevelData }) => {
@@ -47,13 +47,18 @@ const runesSoFar = ({ bookEvents }: { bookEvents: BookEvent[] }) => {
 	let lit: Position[] = [];
 	const collected: RuneName[] = [];
 	for (const bookEvent of bookEvents) {
+		// the mythic bonus starts with two collected
+		if (bookEvent.type === 'freeSpinTrigger') collected.push(...(bookEvent.collected ?? []));
 		if (bookEvent.type === 'runeShow') {
 			rune = bookEvent.rune;
 			offsets[bookEvent.rune] = bookEvent.offset;
 			lit = [];
 		}
-		if (bookEvent.type === 'runeLight') lit = [...lit, ...bookEvent.positions];
-		if (bookEvent.type === 'runeComplete') {
+		// (the base game's Mannaz, before the bonus, isn't one of them)
+		if (bookEvent.type === 'runeLight' && bookEvent.rune !== 'mannaz') {
+			lit = [...lit, ...bookEvent.positions];
+		}
+		if (bookEvent.type === 'runeComplete' && bookEvent.rune !== 'mannaz') {
 			collected.push(bookEvent.rune);
 			rune = undefined;
 		}
@@ -62,14 +67,33 @@ const runesSoFar = ({ bookEvents }: { bookEvents: BookEvent[] }) => {
 	return { rune, offsets, lit, collected };
 };
 
-// how long rune symbols that land show before they go (fehuSymbols, ingwazSymbols), in ms
-const RUNE_SYMBOLS_SHOWN = 500;
+// what the spins' sign calls the free spins of each bonus
+const SPIN_TITLES: Record<BonusType, string> = {
+	normal: 'FREE SPIN',
+	super: 'SUPER SPIN',
+	mythic: 'MYTHIC SPIN',
+};
 
-// Rune symbols landed in a free spin (Fehu's or Ingwaz's): shown for a moment, then each bursts into
-// a soul that flies into its rune's box (MeterSouls in RuneTablets), as the winning leaves' fly to
-// the bonus meter in the base game. The symbol goes as its soul sets off, its cell left empty
-// (stateGame.flown) for the tumble after it to fill (tumbleBoard); as each lands the rune's power
-// grows by a step (`onland`) and its box pulses. Done when they have all landed.
+// a rune symbol's land animation (fLand, iLand in constants.ts) lasts 1.5 s; one still landing after
+// this long (in ms, plus the animation) isn't waited for any longer
+const RUNE_LAND = { length: 1500, slack: 500 };
+
+// Until the symbols at these cells have played their land animation through: a spin waits only for
+// the other symbols' short settle (see reveal), a tumble for all of it (TumbleBoard).
+const waitForLanded = async (positions: Position[]) => {
+	const until = Date.now() + RUNE_LAND.length / stateBetDerived.timeScale() + RUNE_LAND.slack;
+	const landing = () =>
+		positions.some(
+			({ reel, row }) => stateGame.board[reel]?.reelState.symbols[row]?.symbolState === 'land',
+		);
+	while (landing() && Date.now() < until) await waitForTimeout(1000 / 60);
+};
+
+// Rune symbols landed in a free spin (Fehu's or Ingwaz's): each plays its land animation as it
+// lands, then bursts into a soul that flies into its rune's box (MeterSouls in RuneTablets), as the
+// winning leaves' fly to the bonus meter in the base game. The symbol goes as its soul sets off, its
+// cell left empty (stateGame.flown) for the tumble after it to fill (tumbleBoard); as each lands the
+// rune's power grows by a step (`onland`) and its box pulses. Done when they have all landed.
 const throwRuneSouls = async ({
 	rune,
 	symbol,
@@ -81,7 +105,7 @@ const throwRuneSouls = async ({
 	positions: Position[];
 	onland: () => void;
 }) => {
-	await waitForTimeout(RUNE_SYMBOLS_SHOWN / stateBetDerived.timeScale());
+	await waitForLanded(positions);
 	await eventEmitter.broadcastAsync({
 		type: 'runeSouls',
 		rune,
@@ -117,8 +141,11 @@ export const bookEventHandlerMap: BookEventHandlerMap<BookEvent, BookEventContex
 		stateGame.flown = [];
 		// the board already in its place for the game type, unless a round is resumed in the bonus
 		stateGameDerived.slideBoard(bookEvent.gameType, { instant: true });
-		// each base game spin counts its connected symbols from nothing
-		if (bookEvent.gameType === 'basegame') eventEmitter.broadcast({ type: 'bonusMeterReset' });
+		// each base game spin counts its connected symbols, and lights Mannaz, from nothing
+		if (bookEvent.gameType === 'basegame') {
+			eventEmitter.broadcast({ type: 'bonusMeterReset' });
+			eventEmitter.broadcast({ type: 'mannazReset' });
+		}
 		await stateGameDerived.enhancedBoard.spin({ revealEvent: bookEvent });
 		// done when the last symbols to fall in (the top row) have landed, so their squash isn't cut
 		// short by a win or the next spin
@@ -236,37 +263,57 @@ export const bookEventHandlerMap: BookEventHandlerMap<BookEvent, BookEventContex
 		eventEmitter.broadcast({ type: 'bonusMeterUpdate', amount: bookEvent.amount });
 	},
 	freeSpinTrigger: async (bookEvent: BookEventOfType<'freeSpinTrigger'>) => {
-		// the bonus or the super bonus: the intro, the spins' sign and the runes' powers say which
+		// the bonus, the super bonus or the mythic bonus: the intro, the spins' sign and the runes'
+		// powers say which
 		stateGame.bonusType = bookEvent.bonusType ?? 'normal';
+		const collected = bookEvent.collected ?? [];
 		// Fehu's multiplier and Ingwaz's spins back to their own, until their symbols add to them
 		stateGame.fehuMult = undefined;
 		stateGame.ingwazSpins = undefined;
-		// the bonus meter full (a bought bonus may not have filled it); it goes for the free spins
 		eventEmitter.broadcast({ type: 'soundOnce', name: 'sfx_scatter_win_v2' });
-		await eventEmitter.broadcastAsync({ type: 'bonusMeterFull' });
-		// show free spin intro
+		// the bonus meter full (a bought bonus may not have filled it); it goes for the free spins.
+		// The mythic bonus is Mannaz's, already flaring, not the meter's
+		if (stateGame.bonusType !== 'mythic') await eventEmitter.broadcastAsync({ type: 'bonusMeterFull' });
+		// a gale sweeps the screen (WindTransition). Under it the free spins' setup is put in place,
+		// so nothing moves once it clears: the board in its bonus place right, where the rune ladder
+		// has room, the fox smaller (Mannaz fades as the game type changes), the spins' sign instead of
+		// the meter, the mythic bonus's two runes already collected in their boxes; and the intro is
+		// there, its spins on it (its music and jingle start under the wind). It waits for a press.
 		eventEmitter.broadcast({ type: 'soundOnce', name: 'sfx_superfreespin' });
 		await eventEmitter.broadcastAsync({ type: 'uiHide' });
-		eventEmitter.broadcast({ type: 'freeSpinIntroShow' });
-		eventEmitter.broadcast({ type: 'soundOnce', name: 'jng_intro_fs' });
-		eventEmitter.broadcast({ type: 'soundMusic', name: 'bgm_freespin' });
+		let intro: Promise<unknown> | undefined;
 		await eventEmitter.broadcastAsync({
-			type: 'freeSpinIntroUpdate',
-			totalFreeSpins: bookEvent.totalFs,
+			type: 'windTransition',
+			oncovered: () => {
+				stateGame.gameType = 'freegame';
+				stateGameDerived.slideBoard('freegame', { instant: true });
+				eventEmitter.broadcast({ type: 'bonusMeterHide' });
+				if (collected.length) {
+					eventEmitter.broadcast({ type: 'runesRestore', offsets: {}, lit: [], collected });
+				}
+				eventEmitter.broadcast({ type: 'freeSpinCounterShow' });
+				eventEmitter.broadcast({
+					type: 'freeSpinCounterUpdate',
+					current: undefined,
+					total: bookEvent.totalFs,
+					title: SPIN_TITLES[stateGame.bonusType],
+				});
+				eventEmitter.broadcast({ type: 'freeSpinIntroShow' });
+				eventEmitter.broadcast({ type: 'soundOnce', name: 'jng_intro_fs' });
+				eventEmitter.broadcast({ type: 'soundMusic', name: 'bgm_freespin' });
+				intro = eventEmitter.broadcastAsync({
+					type: 'freeSpinIntroUpdate',
+					totalFreeSpins: bookEvent.totalFs,
+				});
+			},
 		});
-		stateGame.gameType = 'freegame';
+		await intro;
 		eventEmitter.broadcast({ type: 'freeSpinIntroHide' });
-		eventEmitter.broadcast({ type: 'bonusMeterHide' });
-		// the board slides softly back right, where the rune ladder has room, the fox shrinking
-		const slide = stateGameDerived.slideBoard('freegame');
-		eventEmitter.broadcast({ type: 'freeSpinCounterShow' });
-		eventEmitter.broadcast({
-			type: 'freeSpinCounterUpdate',
-			current: undefined,
-			total: bookEvent.totalFs,
-			title: stateGame.bonusType === 'super' ? 'SUPER SPIN' : 'FREE SPIN',
-		});
-		await slide;
+		// the runes already collected pulse in their boxes, one after the other
+		for (const rune of collected) {
+			eventEmitter.broadcast({ type: 'soundOnce', name: 'sfx_multiplier_up' });
+			await eventEmitter.broadcastAsync({ type: 'runesPulse', rune });
+		}
 		await eventEmitter.broadcastAsync({ type: 'uiShow' });
 		await eventEmitter.broadcastAsync({ type: 'drawerButtonShow' });
 		eventEmitter.broadcast({ type: 'drawerFold' });
@@ -312,6 +359,8 @@ export const bookEventHandlerMap: BookEventHandlerMap<BookEvent, BookEventContex
 
 		await eventEmitter.broadcastAsync({ type: 'uiHide' });
 		stateGame.gameType = 'basegame';
+		// Mannaz comes back with the base game unlit (after the mythic bonus it was all lit)
+		eventEmitter.broadcast({ type: 'mannazReset' });
 		eventEmitter.broadcast({ type: 'freeSpinOutroShow' });
 		eventEmitter.broadcast({ type: 'soundOnce', name: 'sfx_youwon_panel' });
 		winLevelSoundsPlay({ winLevelData });
@@ -321,14 +370,21 @@ export const bookEventHandlerMap: BookEventHandlerMap<BookEvent, BookEventContex
 			winLevelData,
 		});
 		winLevelSoundsStop();
-		eventEmitter.broadcast({ type: 'freeSpinOutroHide' });
-		eventEmitter.broadcast({ type: 'freeSpinCounterHide' });
-		stateGame.bonusType = 'normal';
-		eventEmitter.broadcast({ type: 'runesReset' });
-		eventEmitter.broadcast({ type: 'bonusMeterReset' });
-		eventEmitter.broadcast({ type: 'bonusMeterShow' });
-		// back to the base game's place further left, the fox growing again
-		await stateGameDerived.slideBoard('basegame');
+		// a gale sweeps the screen (WindTransition). Under it the end screen and the bonus's pieces
+		// go and the base game's setup is put back, so nothing moves once it clears: the board in its
+		// base game place further left, the fox bigger again, the meter back
+		await eventEmitter.broadcastAsync({
+			type: 'windTransition',
+			oncovered: () => {
+				eventEmitter.broadcast({ type: 'freeSpinOutroHide' });
+				eventEmitter.broadcast({ type: 'freeSpinCounterHide' });
+				stateGame.bonusType = 'normal';
+				eventEmitter.broadcast({ type: 'runesReset' });
+				eventEmitter.broadcast({ type: 'bonusMeterReset' });
+				eventEmitter.broadcast({ type: 'bonusMeterShow' });
+				stateGameDerived.slideBoard('basegame', { instant: true });
+			},
+		});
 		await eventEmitter.broadcastAsync({ type: 'uiShow' });
 		await eventEmitter.broadcastAsync({ type: 'drawerUnfold' });
 		eventEmitter.broadcast({ type: 'drawerButtonHide' });
@@ -373,12 +429,23 @@ export const bookEventHandlerMap: BookEventHandlerMap<BookEvent, BookEventContex
 			offset: bookEvent.offset,
 		});
 	},
+	// a rune's spots under the wins light up: the free spins' rune, or in the base game Mannaz
 	runeLight: async (bookEvent: BookEventOfType<'runeLight'>) => {
 		eventEmitter.broadcast({ type: 'soundOnce', name: 'sfx_multiplier_up' });
+		if (bookEvent.rune === 'mannaz') {
+			await eventEmitter.broadcastAsync({ type: 'mannazLight', positions: bookEvent.positions });
+			return;
+		}
 		await eventEmitter.broadcastAsync({ type: 'runesLight', positions: bookEvent.positions });
 	},
+	// all of a rune lit: the free spins' rune is collected; Mannaz flares, and the mythic bonus
+	// follows (freeSpinTrigger)
 	runeComplete: async (bookEvent: BookEventOfType<'runeComplete'>) => {
 		eventEmitter.broadcast({ type: 'soundOnce', name: 'sfx_scatter_win' });
+		if (bookEvent.rune === 'mannaz') {
+			await eventEmitter.broadcastAsync({ type: 'mannazComplete' });
+			return;
+		}
 		await eventEmitter.broadcastAsync({ type: 'runesComplete', rune: bookEvent.rune });
 	},
 	// Fehu symbols landed in a free spin: their souls fly into Fehu's box (throwRuneSouls), each

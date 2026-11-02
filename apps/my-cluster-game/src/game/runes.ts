@@ -7,20 +7,25 @@ import type { BonusType, Position } from './types';
 
 export type RuneName = 'othala' | 'fehu' | 'hagall' | 'ingwaz';
 export type RunePower = 'premiums' | 'multiplier' | 'wilds' | 'extraSpin';
+// a rune that can lie behind the board: the free spins' four, and the base game's Mannaz (MANNAZ)
+export type BoardRuneName = RuneName | 'mannaz';
 
 // a point on the board in cells: x from the left, y from the top (0 to 5)
 type Point = [x: number, y: number];
 
-type Rune = {
-	power: RunePower;
-	// what the power does, in a few words, in the bonus or the super bonus (with what the rune symbols
-	// have added to it so far, see RuneBoosts)
-	powerText: (bonus: BonusType, boosts?: RuneBoosts) => string;
+type RuneShape = {
 	// the spots that light up, [reel, row] with row 0 the top row (books count the rows from 1), as
 	// it lies with no offset (see RuneOffset)
 	spots: [reel: number, row: number][];
 	// the rune's lines, drawn over its spots and only through them
 	strokes: Point[][];
+};
+
+type Rune = RuneShape & {
+	power: RunePower;
+	// what the power does, in a few words, in the bonus or the super bonus (with what the rune symbols
+	// have added to it so far, see RuneBoosts)
+	powerText: (bonus: BonusType, boosts?: RuneBoosts) => string;
 };
 
 // what Fehu's and Hagall's powers give in the power spins of each bonus (the super bonus's, from 50+
@@ -34,6 +39,8 @@ export type RuneBoosts = { fehuMult?: number; ingwazSpins?: number };
 export const BONUS_POWERS: Record<BonusType, { mult: number; wilds: number }> = {
 	normal: { mult: 5, wilds: 2 },
 	super: { mult: 10, wilds: 3 },
+	// as strong as the super bonus (the user's choice)
+	mythic: { mult: 10, wilds: 3 },
 };
 
 export const RUNES: Record<RuneName, Rune> = {
@@ -146,11 +153,54 @@ export const RUNES: Record<RuneName, Rune> = {
 // the order of the boxes left of the board
 export const RUNE_NAMES: RuneName[] = ['othala', 'fehu', 'hagall', 'ingwaz'];
 
-// Each rune's colours, in the boxes' order green, red, blue and yellow (the user's choice), all
-// made alike (see RuneGlyph): unlit carved into the board, a groove tinted its colour (`groove`)
-// with a dim ember of it down the middle (`ember`); lit a vivid neon with a soft glow round it and a
-// near white core; its spots' squares, unlit and lit; and its box's panel once it is collected
-// (RuneTablet).
+// Mannaz, the base game's rune (orange): always behind the board in the base game, across all of it
+// (the user's choice of shape: a stave down each side, its arms meeting in the middle). A spot of it
+// lights up when a winning cluster covers it, every base game spin from nothing (a round can't
+// carry anything on to the next); with all of its spots lit in one spin, the spin starts the
+// mythic bonus (freeSpinTrigger, bonusType 'mythic').
+export const MANNAZ: RuneShape = {
+	spots: [
+		[0, 0],
+		[0, 1],
+		[0, 2],
+		[0, 3],
+		[0, 4],
+		[1, 1],
+		[2, 2],
+		[3, 1],
+		[4, 0],
+		[4, 1],
+		[4, 2],
+		[4, 3],
+		[4, 4],
+	],
+	strokes: [
+		[
+			[0.5, 0.25],
+			[0.5, 4.75],
+		],
+		[
+			[4.5, 0.25],
+			[4.5, 4.75],
+		],
+		// corner to corner through the cells between, so they stay inside its spots
+		[
+			[0.5, 0.5],
+			[2.5, 2.5],
+			[4.5, 0.5],
+		],
+	],
+};
+
+// a board rune's spots and lines
+export const runeShape = (rune: BoardRuneName): RuneShape =>
+	rune === 'mannaz' ? MANNAZ : RUNES[rune];
+
+// Each rune's colours, in the boxes' order green, red, blue and yellow (the user's choice), and
+// Mannaz orange, all made alike (see RuneGlyph): unlit carved into the board, a groove tinted its
+// colour (`groove`) with a dim ember of it down the middle (`ember`); lit a vivid neon with a soft
+// glow round it and a near white core; its spots' squares, unlit and lit; and its box's panel once
+// it is collected (RuneTablet; Mannaz has no box).
 export type RuneColours = {
 	groove: number;
 	ember: number;
@@ -161,7 +211,17 @@ export type RuneColours = {
 	spotLit: number;
 	collected: number;
 };
-export const RUNE_COLOURS: Record<RuneName, RuneColours> = {
+export const RUNE_COLOURS: Record<BoardRuneName, RuneColours> = {
+	mannaz: {
+		groove: 0x1f1208,
+		ember: 0x9a4a12,
+		neon: 0xff8a1f,
+		glow: 0xff7410,
+		core: 0xfff2e6,
+		spot: 0x50402f,
+		spotLit: 0x8f5a2f,
+		collected: 0x7a3c10,
+	},
 	othala: {
 		groove: 0x0c1a11,
 		ember: 0x1f7a3c,
@@ -211,8 +271,8 @@ export const NO_OFFSET: RuneOffset = { reel: 0, row: 0 };
 
 // which of a rune's spots a book's position (rows counted from 1) is, with the rune at `offset`,
 // or -1
-export const runeSpotIndex = (rune: RuneName, offset: RuneOffset, position: Position) =>
-	RUNES[rune].spots.findIndex(
+export const runeSpotIndex = (rune: BoardRuneName, offset: RuneOffset, position: Position) =>
+	runeShape(rune).spots.findIndex(
 		([reel, row]) => reel + offset.reel === position.reel && row + offset.row === position.row - 1,
 	);
 
@@ -300,8 +360,8 @@ const smoothstep = (t: number) => t * t * (3 - 2 * t);
 
 // Each straight line of the rune is a stroke of its own, as if drawn with a brush (they overlap
 // where they meet), cut where it crosses from one spot into the next.
-const brushStrokes = (rune: RuneName): BrushStroke[] => {
-	const { spots, strokes } = RUNES[rune];
+const brushStrokes = (rune: BoardRuneName): BrushStroke[] => {
+	const { spots, strokes } = runeShape(rune);
 	const random = seeded([...rune].reduce((sum, c) => sum * 31 + c.charCodeAt(0), 7));
 	const lines = strokes.flatMap((points) => points.slice(1).map((end, i) => [points[i], end]));
 
@@ -356,10 +416,10 @@ const brushStrokes = (rune: RuneName): BrushStroke[] => {
 	});
 };
 
-const brushCache = new Map<RuneName, BrushStroke[]>();
+const brushCache = new Map<BoardRuneName, BrushStroke[]>();
 
 // the rune's lines as brush strokes, cut into its spots
-export const runeBrushStrokes = (rune: RuneName) => {
+export const runeBrushStrokes = (rune: BoardRuneName) => {
 	if (!brushCache.has(rune)) brushCache.set(rune, brushStrokes(rune));
 	return brushCache.get(rune)!;
 };

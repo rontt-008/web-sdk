@@ -86,7 +86,17 @@ export default {
 		type: 'sprite',
 		src: new URL('../../assets/symbols/symbolrune2.png', import.meta.url).href,
 	},
-	// and their hits, 90 frames of 320 x 320 at 60 a second played once on a win (see
+	// and their lands, the user's Blender animations: 90 frames of 256 x 256 at 60 a second played
+	// once as they land, lined up with the art above (see art-source/rune-lands.py)
+	fehuLand: {
+		type: 'spriteSheet',
+		src: new URL('../../assets/sprites/symbolLands/fehu-land.json', import.meta.url).href,
+	},
+	ingwazLand: {
+		type: 'spriteSheet',
+		src: new URL('../../assets/sprites/symbolLands/ingwaz-land.json', import.meta.url).href,
+	},
+	// the leaves' hits, 90 frames of 320 x 320 at 60 a second played once on a win (see
 	// art-source/leaf-hits.py)
 	leafGreenHit: {
 		type: 'spriteSheet',

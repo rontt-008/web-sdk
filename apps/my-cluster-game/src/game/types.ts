@@ -13,8 +13,10 @@ export type RawSymbol = {
 };
 export type BetMode = keyof typeof config.betModes;
 export type GameType = keyof typeof config.paddingReels;
-// which bonus the free spins are: the bonus (35+ symbols) or the super bonus (50+), its powers bigger
-export type BonusType = 'normal' | 'super';
+// which bonus the free spins are: the bonus (35+ symbols), the super bonus (50+), its powers bigger,
+// or the mythic bonus (Mannaz fully lit in a base game spin), the super bonus's powers and two of
+// the runes already collected
+export type BonusType = 'normal' | 'super' | 'mythic';
 
 export const SYMBOL_STATES = [
 	'static',
