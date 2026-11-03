@@ -104,7 +104,16 @@ const MENU_BLACK = 'rgba(0, 0, 0, 0.88)';
 export const uiHtmlTheme: UiHtmlTheme = {
 	...UI_HTML_THEME_CLEAN,
 	backdrop: 'rgba(0, 0, 0, 0.65)',
-	panel: { ...UI_HTML_THEME_CLEAN.panel, background: MENU_BLACK, solidBackground: '#0a0a0a' },
+	// the rules' panel (the only solid one) not drawn at all: no background, border or shadow, just
+	// their cards over the blurred game
+	panel: {
+		...UI_HTML_THEME_CLEAN.panel,
+		background: MENU_BLACK,
+		solidBackground: 'transparent',
+		solidBorder: 'none',
+		solidShadow: 'none',
+		solidBorderImage: 'none',
+	},
 	card: { ...UI_HTML_THEME_CLEAN.card, background: MENU_BLACK },
 	dock: { ...UI_HTML_THEME_CLEAN.dock, background: 'rgba(0, 0, 0, 0.8)' },
 	control: {
