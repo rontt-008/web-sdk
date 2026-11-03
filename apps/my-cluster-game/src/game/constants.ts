@@ -144,6 +144,11 @@ export const SPIN_OPTIONS_FAST = {
 
 export const MOTION_BLUR_VELOCITY = 31;
 
+// The glows' and the mist's blurs are drawn at this share of the screen's resolution: a blur loses
+// nothing to it, and its textures (as big as what it blurs) take a quarter of the memory. Its
+// strength, in the filter's own pixels, is scaled by it too, so it spreads as far as before.
+export const BLUR_RESOLUTION = 0.5;
+
 export const zIndexes = {
 	background: {
 		backdrop: -3,
@@ -212,7 +217,7 @@ const l3Win = { ...LEAF_HIT, assetKey: 'leafRedHit' };
 const l4Win = { ...LEAF_HIT, assetKey: 'leafYellowHit' };
 
 // the Fehu symbol (F), the user's stone-framed tile, its frame as big as the high symbols' wooden
-// ones (TILE_FILL of a cell); its frame is about 1151 x 1149 of its 1254 x 1254 image, the rest
+// ones (TILE_FILL of a cell); its frame is about 1151 x 1149 of its 1254 x 1254 original, the rest
 // see-through, so the image is drawn that much bigger. It never wins (it is collected as it lands,
 // see the fehuSymbols book event). As it lands it plays the user's land animation once (thump, the
 // rune lifting and igniting, a comet round it, two pulses, settling: 1.5 s), drawn at the same size
@@ -230,7 +235,7 @@ const fLand = {
 	sizeRatios: fStatic.sizeRatios,
 	frameRate: RUNE_LAND_FRAME_RATE,
 };
-// the Ingwaz symbol (I), the same: its frame about 1139 x 1141 of its 1254 x 1254 image, and its
+// the Ingwaz symbol (I), the same: its frame about 1139 x 1141 of its 1254 x 1254 original, and its
 // own land animation, in its colours (see the ingwazSymbols book event)
 const INGWAZ_FRAME = { width: 1139 / 1254, height: 1141 / 1254 };
 const iStatic = {

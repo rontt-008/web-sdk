@@ -1,3 +1,4 @@
+import { untrack } from 'svelte';
 import type { PixiPoint, Sizes } from './types';
 
 export const REM = 16;
@@ -56,6 +57,11 @@ export function detectWebGL() {
 	return -1;
 }
 
+// props that change what a target measures (a sprite's texture, a text's text or style): when one
+// changes, its size props are set again after it, so it keeps the size it was given
+const RESIZING_PROPS = ['texture', 'textures', 'text', 'style'];
+const SIZE_PROPS = ['width', 'height'];
+
 export function propsSyncEffect<TProps extends object, TTarget>({
 	props,
 	target,
@@ -65,19 +71,30 @@ export function propsSyncEffect<TProps extends object, TTarget>({
 	target?: TTarget | (() => TTarget);
 	ignore?: (keyof TProps)[];
 }) {
+	// Each prop is set on the target by an effect of its own, which runs again only when that prop
+	// changes: one prop changing every frame (a tweened position, say) sets just that one, not every
+	// prop of the component again. The outer effect only follows which props there are, and makes
+	// the inner ones again if one comes or goes.
 	$effect(() => {
-		// The whole thing is wrapped inside an $effect
-		// and because of ”props[key]“，it will react with every single props updated.
-		let targetInstance = target instanceof Function ? target() : target;
-		if (targetInstance) {
-			(Object.keys(props) as (keyof TProps)[])
-				.filter((key) => (ignore ? !ignore.includes(key) : true))
-				.forEach((key) => {
-					if (props[key] !== undefined) {
+		const keys = (Object.keys(props) as (keyof TProps)[]).filter((key) =>
+			ignore ? !ignore.includes(key) : true,
+		);
+		const sizeKeys = keys.filter((key) => SIZE_PROPS.includes(key as string));
+		for (const key of keys) {
+			$effect(() => {
+				const value = props[key];
+				const targetInstance = target instanceof Function ? target() : target;
+				if (!targetInstance || value === undefined) return;
+				// @ts-ignore
+				targetInstance[key] = value;
+				if (!RESIZING_PROPS.includes(key as string)) return;
+				untrack(() => {
+					for (const sizeKey of sizeKeys) {
 						// @ts-ignore
-						targetInstance[key] = props[key];
+						if (props[sizeKey] !== undefined) targetInstance[sizeKey] = props[sizeKey];
 					}
 				});
+			});
 		}
 	});
 }

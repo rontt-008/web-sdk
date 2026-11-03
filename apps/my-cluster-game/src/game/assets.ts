@@ -77,14 +77,15 @@ export default {
 		type: 'sprite',
 		src: new URL('../../assets/symbols/leaf-yellow.webp', import.meta.url).href,
 	},
-	// the Fehu symbol (F) and the Ingwaz symbol (I), the user's art, 1254 x 1254
+	// the Fehu symbol (F) and the Ingwaz symbol (I): the user's art (art-source/symbolrune.png,
+	// symbolrune2.png, 1254 x 1254), made 512 x 512 WebP
 	fehuSymbol: {
 		type: 'sprite',
-		src: new URL('../../assets/symbols/symbolrune.png', import.meta.url).href,
+		src: new URL('../../assets/symbols/symbolrune.webp', import.meta.url).href,
 	},
 	ingwazSymbol: {
 		type: 'sprite',
-		src: new URL('../../assets/symbols/symbolrune2.png', import.meta.url).href,
+		src: new URL('../../assets/symbols/symbolrune2.webp', import.meta.url).href,
 	},
 	// and their lands, the user's Blender animations: 90 frames of 256 x 256 at 60 a second played
 	// once as they land, lined up with the art above (see art-source/rune-lands.py)
@@ -136,7 +137,7 @@ export default {
 	},
 	payFrame: {
 		type: 'sprite',
-		src: new URL('../../assets/sprites/payFrame/payFrame.png', import.meta.url).href,
+		src: new URL('../../assets/sprites/payFrame/payFrame.webp', import.meta.url).href,
 	},
 	// Germania One (OFL, Google Fonts), chunky carved letters like the logo's, for the bonus meter's
 	// count; registered as "Germania One" from its file's name, loaded before the game shows
@@ -199,12 +200,12 @@ export default {
 	// buyBonus), the same as Cat Hunt's
 	buyBonusLogo: {
 		type: 'sprite',
-		src: new URL('../../assets/buy-bonus-logo.png', import.meta.url).href,
+		src: new URL('../../assets/buy-bonus-logo.webp', import.meta.url).href,
 	},
 	// the same logo grown by its outline's width, drawn behind it
 	buyBonusLogoOutline: {
 		type: 'sprite',
-		src: new URL('../../assets/buy-bonus-logo-outline.png', import.meta.url).href,
+		src: new URL('../../assets/buy-bonus-logo-outline.webp', import.meta.url).href,
 	},
 	// the frame round the bonus meter, with the sign for its count (see BonusMeter,
 	// art-source/wood-frames.py)

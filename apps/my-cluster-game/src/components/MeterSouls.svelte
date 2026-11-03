@@ -18,7 +18,7 @@
 	import { stateBetDerived } from 'state-shared';
 
 	import { getContext } from '../game/context';
-	import { SYMBOL_SIZE } from '../game/constants';
+	import { BLUR_RESOLUTION, SYMBOL_SIZE } from '../game/constants';
 	import { RUNE_COLOURS, type RuneName } from '../game/runes';
 
 	type Props = {
@@ -248,10 +248,13 @@
 		runeSouls: ({ rune, souls: sources }) => (rune === props.rune ? launch(sources) : undefined),
 	});
 
-	// the glow blurred as much on any screen: the filter's strength is in screen pixels
-	const blur = new BlurFilter({ strength: 8, quality: 3, resolution: 'inherit' });
+	// the glow blurred as much on any screen: the filter's strength is in screen pixels (at
+	// BLUR_RESOLUTION of the screen's)
+	const blur = new BlurFilter({ strength: 8, quality: 3, resolution: BLUR_RESOLUTION });
 	$effect(() => {
-		blur.strength = cell * BLUR * context.stateLayoutDerived.mainLayout().scale;
+		blur.resolution =
+			(context.stateApp.pixiApplication?.renderer.resolution ?? 1) * BLUR_RESOLUTION;
+		blur.strength = cell * BLUR * context.stateLayoutDerived.mainLayout().scale * BLUR_RESOLUTION;
 	});
 </script>
 

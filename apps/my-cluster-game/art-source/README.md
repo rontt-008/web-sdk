@@ -157,3 +157,11 @@ Originals of art that is processed before it goes into `static/assets` (not load
   stateGame.svelte.ts). The opening is a little wider than tall, so the art is scaled evenly to fit
   the board's height, with more room left and right of it. The solid panel behind the symbols is
   drawn in code (BoardFrame.svelte), tucked under the branches.
+- `symbolrune.png`, `symbolrune2.png`: the rune symbols F (Fehu) and I (Ingwaz), the user's 1254 x 1254
+  PNGs. The game loads them as `static/assets/symbols/symbolrune.webp` and `symbolrune2.webp`: resized
+  to 512 x 512 (Lanczos, alpha premultiplied) and saved as WebP (quality 90, about 70 KB each); the
+  frame measurements in `src/game/constants.ts` (FEHU_FRAME, INGWAZ_FRAME) are shares of the art, so
+  they hold for both sizes.
+- `fehu_land.blend`, `ingwaz_land.blend`: the user's Blender files of the rune symbols' land
+  animations (moved here from `static`, where the build shipped them); `rune-lands.py` makes their
+  sprite sheets.

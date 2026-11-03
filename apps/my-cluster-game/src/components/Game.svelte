@@ -54,6 +54,7 @@
 		}
 	});
 
+
 	context.eventEmitter.subscribeOnMount({
 		buyBonusConfirm: () => {
 			stateModal.modal = { name: 'buyBonusConfirm' };
@@ -62,7 +63,12 @@
 </script>
 
 <App>
-	<EnableSound />
+	<!-- the sound (4-5 MB) starts downloading only once the pictures have loaded, so it doesn't take
+	their bandwidth while the loading screen shows; it is only heard after the loading screen is
+	pressed, and any sound played before it has arrived plays as it does (Howler queues it) -->
+	{#if context.stateApp.loaded}
+		<EnableSound />
+	{/if}
 	<EnableHotkey />
 	<EnableGameActor />
 	<EnablePixiExtension />
