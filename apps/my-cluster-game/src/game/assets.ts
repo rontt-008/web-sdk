@@ -231,6 +231,12 @@ export default {
 		src: new URL('../../assets/background-tree.webp', import.meta.url).href,
 		preload: true,
 	},
+	// how much each pixel of the background's lake ripples (see Water, art-source/water.py)
+	backgroundWater: {
+		type: 'sprite',
+		src: new URL('../../assets/background-water.png', import.meta.url).href,
+		preload: true,
+	},
 	// cloud_1 to cloud_5, drifting across the background's sky (see Clouds)
 	clouds: {
 		type: 'sprites',

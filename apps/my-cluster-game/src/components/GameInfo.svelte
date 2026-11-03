@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { stateUrlDerived } from 'state-shared';
+	import { stateReplayDerived, stateUrlDerived } from 'state-shared';
 
 	import config from '../game/config';
 	import { BONUS_TRIGGER, SUPER_TRIGGER, FREE_SPINS_AWARDED, POWER_SPINS } from '../game/constants';
@@ -15,15 +15,24 @@
 	} from '../game/runes';
 
 	// The game rules (the menu button opens them), which hold the pay table too: cluster wins, the
-	// wild, tumbles, the wind, the bonus meter, free spins with their runes and power spins, the bonus
-	// buys, RTP, the controls and, at the bottom, the disclaimer. Flat cards on the menus' black
+	// wild, tumbles, the wind, the bonus meter, free spins with their runes, rune symbols and power
+	// spins, the bonus buys, RTP, the controls and, at the bottom, the disclaimer. Flat cards on the menus' black
 	// panel, as Cat Hunt's (apps/my-game GameInfo), in the game's warm orange: the symbols as tiles
 	// with their wins under them (the biggest clusters' picked out), the runes drawn in their colours.
 
-	// social mode (social=true) can't use words like bet, buy or pay
-	const words = stateUrlDerived.social()
-		? { bet: 'play amount', buyBonus: 'PLAY BONUS', bonusBuys: 'Bonuses' }
-		: { bet: 'bet', buyBonus: 'BUY BONUS', bonusBuys: 'Bonus buys' };
+	// social mode (social=true) can't use words like bet, buy, pay or cost (Stake Engine's restricted
+	// words); the others are said the same way in both
+	const words = stateUrlDerived.socialWords()
+		? {
+				bet: 'play amount',
+				buyBonus: 'GET BONUS',
+				bonusBuys: 'Bonuses',
+				costs: 'is played for',
+				cost: 'Played for',
+			}
+		: { bet: 'bet', buyBonus: 'BUY BONUS', bonusBuys: 'Bonus buys', costs: 'costs', cost: 'Cost' };
+	// the replay card's names for the round's numbers (Engine's words in social mode)
+	const replayWords = stateReplayDerived.words();
 
 	type PayingSymbol = 'H1' | 'H2' | 'H3' | 'H4' | 'L1' | 'L2' | 'L3' | 'L4';
 
@@ -39,6 +48,8 @@
 		leafRed: new URL('../../assets/symbols/leaf-red.webp', import.meta.url).href,
 		leafYellow: new URL('../../assets/symbols/leaf-yellow.webp', import.meta.url).href,
 		wild: new URL('../../assets/symbols/wild.webp', import.meta.url).href,
+		fehu: new URL('../../assets/symbols/symbolrune.webp', import.meta.url).href,
+		ingwaz: new URL('../../assets/symbols/symbolrune2.webp', import.meta.url).href,
 	};
 
 	// highest paying first
@@ -267,7 +278,7 @@
 		<div class="card text">
 			<p>
 				Now and then, in any spin of the base game or the bonus, a gust of wind blows across the
-				board once the symbols have landed, before any wins are paid. Most gusts blow a few WILDs
+				board once the symbols have landed, before any wins are counted. Most gusts blow a few WILDs
 				onto the board. A rarer, stronger gust carries off every symbol of one kind, and new symbols
 				drop in to fill their places.
 			</p>
@@ -298,7 +309,7 @@
 			</svg>
 			<p>
 				Now and then, in a spin of the base game, the ORANGE RUNE appears across the whole board
-				once the symbols have landed. Each winning cluster lights the spots of it that it covers,
+				as the symbols drop in. Each winning cluster lights the spots of it that it covers,
 				over all of that spin's tumbles, and it goes when the next spin starts. When all of the
 				ORANGE RUNE is lit, MYTHIC FREE SPINS start.
 			</p>
@@ -313,6 +324,11 @@
 				on the board; each winning cluster lights the rune's spots it covers. When all its spots are
 				lit, the rune is collected into its box beside the board, and the next rune comes with the next
 				spin. The runes come in a random order.
+			</p>
+			<p>
+				FREE SPINS, SUPER FREE SPINS and MYTHIC FREE SPINS always give {FREE_SPINS_AWARDED} spins, and
+				can't be re-triggered: no more spins are won during them (the bonus meter and the ORANGE RUNE
+				are only in the base game).
 			</p>
 			<p>
 				After the FREE SPINS come {POWER_SPINS} POWER SPINS, with the powers of every rune collected:
@@ -335,6 +351,32 @@
 				</div>
 			{/each}
 		</div>
+		<!-- the two rune symbols, which land in the free spins and grow their runes' powers -->
+		<div class="pair rune-symbols">
+			<div class="card text with-art">
+				<img src={STILLS.fehu} alt="RED RUNE symbol" class="card-art" />
+				<div class="feature-text">
+					<h3 style:color={hex(RUNE_COLOURS.fehu.neon)}>RED RUNE symbol</h3>
+					<p>
+						Lands only in FREE SPINS, and wins nothing itself. Its light flies into the RED RUNE's box and
+						doubles the RED RUNE's multiplier (in FREE SPINS {normal.mult}x becomes {normal.mult * 2}x, then
+						{normal.mult * 4}x and so on), without limit, then a new symbol drops into its place. The
+						multiplier counts in the POWER SPINS once the RED RUNE is collected.
+					</p>
+				</div>
+			</div>
+			<div class="card text with-art">
+				<img src={STILLS.ingwaz} alt="YELLOW RUNE symbol" class="card-art" />
+				<div class="feature-text">
+					<h3 style:color={hex(RUNE_COLOURS.ingwaz.neon)}>YELLOW RUNE symbol</h3>
+					<p>
+						Lands only in FREE SPINS, and wins nothing itself. Its light flies into the YELLOW RUNE's box and
+						adds one more POWER SPIN, without limit, then a new symbol drops into its place. The extra
+						spins count once the YELLOW RUNE is collected.
+					</p>
+				</div>
+			</div>
+		</div>
 		<div class="card text">
 			<h3>SUPER FREE SPINS</h3>
 			<p>
@@ -349,8 +391,8 @@
 				Started only by the ORANGE RUNE. Two of the four runes, chosen at random, are already
 				collected when they start, and the FREE SPINS bring the other two. The RED RUNE is the
 				biggest of all: it multiplies the POWER SPINS' wins by {mythicPowers.mult} (by {superPowers.mult}
-				in SUPER FREE SPINS), before its symbols double it. The BLUE RUNE's BIG WILD is
-				{mythicPowers.wilds}x{mythicPowers.wilds}.
+				in SUPER FREE SPINS), before its symbols double it.{#if mythicPowers.wilds !== normal.wilds}
+					The BLUE RUNE's BIG WILD is {mythicPowers.wilds}x{mythicPowers.wilds}.{/if}
 			</p>
 		</div>
 	</section>
@@ -367,7 +409,7 @@
 		<div class="card text">
 			<h3>BOOSTER</h3>
 			<p>
-				Switched on in the bonus menu, every spin costs {times(BOOSTER_COST)} the {words.bet}, and
+				Switched on in the bonus menu, every spin {words.costs} {times(BOOSTER_COST)} the {words.bet}, and
 				the bonus meter starts FREE SPINS and SUPER FREE SPINS far more often. It plays the same
 				spins as the base game, and stays on until you switch it off.
 			</p>
@@ -378,7 +420,7 @@
 		<h2>Return to player</h2>
 		<table class="card modes">
 			<thead>
-				<tr><th>Mode</th><th>Cost</th><th>RTP</th><th>Max win</th></tr>
+				<tr><th>Mode</th><th>{words.cost}</th><th>RTP</th><th>Max win</th></tr>
 			</thead>
 			<tbody>
 				{#each MODES as { name, cost, mode }}
@@ -453,7 +495,7 @@
 				<dd>
 					The round button with the red S opens the bonus menu, which shows the balance and the
 					{words.bet}, with &minus; and + to change the {words.bet} the prices are worked out from. Pick
-					a bonus and check what it costs, then press CONFIRM to start it, or CANCEL to go back. The
+					a bonus and check its price, then press CONFIRM to start it, or CANCEL to go back. The
 					button is greyed out while a round plays.
 				</dd>
 			</div>
@@ -479,9 +521,14 @@
 			<div>
 				<dt>PLAY and REPLAY</dt>
 				<dd>
-					When watching a replay of a round, PLAY starts the round; once it has played, REPLAY plays
-					it again from the start. The replay shows the round's {words.bet} and, for a mode that costs
-					more than the {words.bet}, REAL COST with the mode's multiplier and what the round cost.
+					A replay of a round opens with a card of the round's {replayWords.mode.toLowerCase()},
+					{replayWords.baseBet.toLowerCase()}, {replayWords.costMultiplier.toLowerCase()},
+					{replayWords.totalCost.toLowerCase()}, {replayWords.payoutMultiplier.toLowerCase()} and
+					{replayWords.totalWin.toLowerCase()}. {replayWords.start.toUpperCase()} on the card, or PLAY
+					under the board, starts the round; once it has played, REPLAY plays it again from the start.
+					While it plays, the win and the {replayWords.baseBet.toLowerCase()} show under the board, and
+					for a mode with a {replayWords.costMultiplier.toLowerCase()} above 1x, the
+					{replayWords.totalCost.toUpperCase()} with that multiplier.
 				</dd>
 			</div>
 		</dl>

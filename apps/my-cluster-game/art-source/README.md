@@ -28,6 +28,15 @@ Originals of art that is processed before it goes into `static/assets` (not load
   stays where it is; if the background changes it, cut a new one with
   `sky.py --mask-from static/assets/background.webp`, and check it (if the new sky is saturated or
   dark, or the leaves muted, adjust SKY in `sky.py`).
+- `water.py`: cuts `static/assets/background-water.png`, how much each pixel of the background's
+  lake ripples (grey, 0 to 1, over the lake's box: AREA, the same as in `src/components/Water.svelte`):
+  the water is what is smooth across (its streaks run sideways, a bush's leaves don't) and not a
+  warm, textured or dark leaf colour, joined to the open lake, with what it surrounds and the
+  reflections under the far shore; nothing moves above the far shore (SHORE, a line along its
+  sand), and the ripples fade in over a few px from every edge, so the bushes and stones in front
+  stay still. `Water.svelte` draws the lake again over the background with a shader that nudges its
+  pixels by drifting bands of ripples, that much. Run it again if the background changes (and
+  check AREA, SHORE and FAR_BAND still fit it): `"<Blender>/5.2/python/bin/python.exe" -I art-source/water.py`.
 - `leaf-green.webp`, `leaf-brown.webp`, `leaf-red.webp`, `leaf-yellow.webp`: the low symbols (L1 to
   L4), the user's 1254 x 1254 PNGs with haze under alpha 16 cleared and alpha 240+ made solid
   (the green one mirrored, so its tip points left). `symbol-stills.py` draws the

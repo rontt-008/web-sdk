@@ -3,6 +3,7 @@
 
 	import { getContext } from '../game/context';
 	import Clouds from './Clouds.svelte';
+	import Water from './Water.svelte';
 
 	const context = getContext();
 
@@ -12,10 +13,11 @@
 
 <Rectangle {...canvas} backgroundColor={0x000000} zIndex={-3} />
 
-<!-- in the picture's pixels: the picture, the clouds drifting across its sky, and the tree at its top
-	left (static/assets/background-tree.webp, cut out of it) in front of them -->
+<!-- in the picture's pixels: the picture, its lake rippling, the clouds drifting across its sky, and
+	the tree at its top left (static/assets/background-tree.webp, cut out of it) in front of them -->
 <Container x={layout.x} y={layout.y} scale={layout.scale} zIndex={-2}>
 	<Sprite key="background" />
+	<Water />
 	<Clouds width={layout.width} />
 	<Sprite key="backgroundTree" />
 </Container>

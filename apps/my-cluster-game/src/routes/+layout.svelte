@@ -1,7 +1,7 @@
 <script lang="ts">
 	import { type Snippet } from 'svelte';
 	import { GlobalStyle } from 'components-ui-html';
-	import { Authenticate, LoaderBase, LoadI18n } from 'components-shared';
+	import { Authenticate, LoadI18n } from 'components-shared';
 	import Game from '../components/Game.svelte';
 	import { setContext } from '../game/context';
 
@@ -11,12 +11,11 @@
 
 	const props: Props = $props();
 
-	// '/loader.gif' is served from the static folder: apps/my-cluster-game/static/loader.gif
-	const loaderUrl = new URL('../../loader.gif', import.meta.url).href;
-
 	setContext();
 </script>
 
+<!-- the game's own loading screen (LoadingScreen) is the only loader: the SDK template's loader.gif
+is gone, as Stake Engine doesn't allow its old loader (guideline 275) -->
 <GlobalStyle>
 	<Authenticate>
 		<LoadI18n {messagesMap}>
@@ -24,7 +23,5 @@
 		</LoadI18n>
 	</Authenticate>
 </GlobalStyle>
-
-<LoaderBase src={loaderUrl} maxWidth={200} backgroundColor="#000000" timeout={2000} />
 
 {@render props.children()}

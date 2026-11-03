@@ -269,7 +269,7 @@ const sideLayout = () => {
 			width: meterWidth,
 			height: meterWidth / BONUS_METER_ASPECT,
 		};
-		return { logo, meter, sign: { x, y, width } };
+		return { logo, meter, sign: { x, y, width }, beside: true };
 	}
 
 	const middle = (frame.left + frame.right) / 2;
@@ -296,10 +296,12 @@ const sideLayout = () => {
 		width: logoWidth,
 		height: logoHeight,
 	};
-	return { logo, meter, sign: { x: meter.x, y: meter.y, width: meter.width } };
+	return { logo, meter, sign: { x: meter.x, y: meter.y, width: meter.width }, beside: false };
 };
 
 const logoLayout = () => sideLayout().logo;
+// whether the logo is beside the board (rather than over it, at the top of the screen)
+const logoBesideBoard = () => sideLayout().beside;
 const bonusMeterLayout = () => sideLayout().meter;
 const spinSignLayout = () => sideLayout().sign;
 
@@ -368,6 +370,7 @@ export const stateGameDerived = {
 	bonusMeterLayout,
 	spinSignLayout,
 	logoLayout,
+	logoBesideBoard,
 	backgroundLayout,
 	backgroundGround,
 	boardRaw,

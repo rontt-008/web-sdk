@@ -126,8 +126,10 @@
 		<BonusMeter />
 
 		<UI theme={uiTheme}>
+			<!-- the clock and the game's name at the top left; only the clock where the logo is at the
+			top of the screen too (phones held upright), which the name would run into -->
 			{#snippet gameName()}
-				<UiGameName name="RUNEFALL" />
+				<UiGameName name={context.stateGameDerived.logoBesideBoard() ? 'RUNEFALL' : ''} />
 			{/snippet}
 			<!-- no logo in the corner, as in Cat Hunt -->
 			{#snippet logo()}{/snippet}

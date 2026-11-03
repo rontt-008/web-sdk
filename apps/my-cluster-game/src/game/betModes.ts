@@ -23,10 +23,11 @@ export const BOOSTER_COST = config.betModes.booster.cost;
 export const setBetModeMeta = () => {
 	// typed the way the SDK uses them for stateMeta.betModeMeta
 	const samples = DEFAULT_BET_MODE_META as BetModeMeta;
-	// social mode (social=true) can't say bet or buy
-	const social = stateUrlDerived.social();
+	// social mode (social=true) can't say bet, buy or cost (Stake Engine's restricted words)
+	const social = stateUrlDerived.socialWords();
 	const yourBet = social ? 'your play amount' : 'your bet';
 	const buyButton = social ? 'PLAY' : 'BUY';
+	const costs = social ? 'is played for' : 'costs';
 
 	stateMeta.betModeMeta = {
 		BASE: samples.BASE,
@@ -39,7 +40,7 @@ export const setBetModeMeta = () => {
 			text: {
 				...samples.ANTE.text,
 				title: 'BOOSTER',
-				dialog: `Greatly increases your chance of triggering FREE SPINS and SUPER FREE SPINS. Each spin costs ${BOOSTER_COST}x ${yourBet} while the BOOSTER is on. It stays on until you turn it off.`,
+				dialog: `Greatly increases your chance of triggering FREE SPINS and SUPER FREE SPINS. Each spin ${costs} ${BOOSTER_COST}x ${yourBet} while the BOOSTER is on. It stays on until you turn it off.`,
 				description: 'Greatly increases your chance of triggering FREE SPINS.',
 				betAmountLabel: 'BOOSTER',
 				tickerIdle: 'BOOSTER IS ON',
@@ -66,8 +67,8 @@ export const setBetModeMeta = () => {
 				...samples.SUPER.text,
 				title: 'SUPER BONUS',
 				button: buyButton,
-				dialog: `Go straight to SUPER FREE SPINS for ${SUPER_COST}x ${yourBet}, as ${SUPER_TRIGGER} connected symbols give them: FEHU's MULTIPLIER is bigger, ${BONUS_POWERS.super.mult}x instead of ${BONUS_POWERS.normal.mult}x.`,
-				description: `SUPER FREE SPINS: a bigger FEHU, a ${BONUS_POWERS.super.mult}x MULTIPLIER.`,
+				dialog: `Go straight to SUPER FREE SPINS for ${SUPER_COST}x ${yourBet}, as ${SUPER_TRIGGER} connected symbols give them: the RED RUNE's MULTIPLIER is bigger, ${BONUS_POWERS.super.mult}x instead of ${BONUS_POWERS.normal.mult}x.`,
+				description: `SUPER FREE SPINS: a bigger RED RUNE, a ${BONUS_POWERS.super.mult}x MULTIPLIER.`,
 				tickerSpin: 'SUPER BONUS ACTIVATED',
 			},
 		},

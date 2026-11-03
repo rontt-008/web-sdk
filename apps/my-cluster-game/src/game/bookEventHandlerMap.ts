@@ -121,6 +121,25 @@ const throwRuneSouls = async ({
 	});
 };
 
+// Mannaz in a base game spin: the book shows it (runeShow) after the spin's reveal and any wind, but
+// it comes up as the reveal starts, before the symbols land, rather than after them; its runeShow
+// then finds it there (mannazUp)
+let mannazUp = false;
+
+const showMannaz = async () => {
+	eventEmitter.broadcast({ type: 'soundOnce', name: 'sfx_scatter_reveal' });
+	await eventEmitter.broadcastAsync({ type: 'mannazShow' });
+};
+
+// whether the spin this reveal starts shows Mannaz: a runeShow of it before the next reveal
+const spinShowsMannaz = (reveal: BookEvent, bookEvents: BookEvent[]) => {
+	const after = bookEvents.slice(bookEvents.indexOf(reveal) + 1);
+	const next = after.findIndex((bookEvent) => bookEvent.type === 'reveal');
+	return (next < 0 ? after : after.slice(0, next)).some(
+		(bookEvent) => bookEvent.type === 'runeShow' && bookEvent.rune === 'mannaz',
+	);
+};
+
 const animateSymbols = async ({ positions }: { positions: Position[] }) => {
 	eventEmitter.broadcast({ type: 'boardShow' });
 	await eventEmitter.broadcastAsync({
@@ -147,7 +166,12 @@ export const bookEventHandlerMap: BookEventHandlerMap<BookEvent, BookEventContex
 			eventEmitter.broadcast({ type: 'bonusMeterReset' });
 			eventEmitter.broadcast({ type: 'mannazReset' });
 		}
-		await stateGameDerived.enhancedBoard.spin({ revealEvent: bookEvent });
+		// a spin with Mannaz brings it up over the empty board as its symbols fall in
+		mannazUp = bookEvent.gameType === 'basegame' && spinShowsMannaz(bookEvent, bookEvents);
+		await Promise.all([
+			stateGameDerived.enhancedBoard.spin({ revealEvent: bookEvent }),
+			mannazUp && showMannaz(),
+		]);
 		// done when the last symbols to fall in (the top row) have landed, so their squash isn't cut
 		// short by a win or the next spin
 		await waitForTimeout(SYMBOL_MOTIONS.land.duration / stateBetDerived.timeScale());
@@ -428,8 +452,9 @@ export const bookEventHandlerMap: BookEventHandlerMap<BookEvent, BookEventContex
 	// Mannaz, across the board (over the symbols, MannazBoard)
 	runeShow: async (bookEvent: BookEventOfType<'runeShow'>) => {
 		if (bookEvent.rune === 'mannaz') {
-			eventEmitter.broadcast({ type: 'soundOnce', name: 'sfx_scatter_reveal' });
-			await eventEmitter.broadcastAsync({ type: 'mannazShow' });
+			// up already when its spin's reveal brought it in (not when played on its own, a story)
+			if (!mannazUp) await showMannaz();
+			mannazUp = false;
 			return;
 		}
 		await eventEmitter.broadcastAsync({

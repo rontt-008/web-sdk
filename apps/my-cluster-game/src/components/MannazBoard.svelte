@@ -27,7 +27,7 @@
 	const context = getContext();
 
 	// Mannaz across the whole board, in some base game spins only: it isn't there until a spin's book
-	// shows it (mannazShow, after the board lands), and goes as the next spin starts or the bonus does.
+	// shows it (mannazShow, as the spin's symbols fall in), and goes as the next spin starts or the bonus does.
 	// It shows as the free spins' runes do (RuneBoard, the user's choice): behind the symbols, its lines
 	// between them, fading in unlit (in APPEAR ms), its spots under the spin's wins lighting up.
 	const APPEAR = 350;
