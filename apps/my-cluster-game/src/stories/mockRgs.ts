@@ -7,9 +7,11 @@ import { API_AMOUNT_MULTIPLIER } from 'constants-shared/bet';
 
 import config from '../game/config';
 import baseBooks from './data/base_books';
+import boosterBooks from './data/booster_books';
 import bonusBooks from './data/bonus_books';
 import superBooks from './data/super_books';
 import baseTopBooks from './data/base_books_top';
+import boosterTopBooks from './data/booster_books_top';
 import bonusTopBooks from './data/bonus_books_top';
 import superTopBooks from './data/super_books_top';
 import { pickByWeight } from './pickByWeight';
@@ -18,15 +20,17 @@ type BetModeName = keyof typeof config.betModes;
 type Book = { weight?: number; payoutMultiplier: number; events: unknown[] };
 
 // drawn by their real odds, with their weights
-const BOOKS: Record<BetModeName, Book[]> = {
+const BOOKS: Partial<Record<BetModeName, Book[]>> = {
 	base: baseBooks,
+	booster: boosterBooks,
 	bonus: bonusBooks,
 	super: superBooks,
 };
 
 // each mode's 20 biggest wins, its max wins (25,000x) among them, all as likely
-const TOP_BOOKS: Record<BetModeName, Book[]> = {
+const TOP_BOOKS: Partial<Record<BetModeName, Book[]>> = {
 	base: baseTopBooks,
+	booster: boosterTopBooks,
 	bonus: bonusTopBooks,
 	super: superTopBooks,
 };
@@ -92,9 +96,16 @@ const HANDLERS: Record<string, (rgs: Rgs, body: Record<string, any>) => object> 
 		payOut(rgs);
 
 		const name = String(mode).toLowerCase() as BetModeName;
-		if (!(name in BOOKS)) return { error: 'ERR_VAL', message: `Unknown bet mode: ${mode}` };
-
+		if (!(name in config.betModes)) {
+			return { error: 'ERR_VAL', message: `Unknown bet mode: ${mode}` };
+		}
 		const books = (rgs.rounds === 'top win' ? TOP_BOOKS : BOOKS)[name];
+		if (!books?.length) {
+			return {
+				error: 'ERR_VAL',
+				message: `No rounds for bet mode ${mode} in the story data yet: run the math and export_story_books.py`,
+			};
+		}
 		const cost = Math.round(amount * config.betModes[name].cost);
 		if (cost > rgs.balance) return { error: 'ERR_IPB', message: 'Insufficient balance' };
 		rgs.balance -= cost;

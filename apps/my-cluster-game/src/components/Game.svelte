@@ -92,17 +92,17 @@
 			<RuneBoard />
 		</MainContainer>
 
+		<!-- the base game's Mannaz, behind the symbols as the free spins' runes are (see MannazBoard) -->
+		<MainContainer>
+			<MannazBoard />
+		</MainContainer>
+
 		<MainContainer>
 			<Board />
 		</MainContainer>
 
 		<MainContainer>
 			<TumbleBoard />
-		</MainContainer>
-
-		<!-- the base game's Mannaz, over the symbols (see MannazBoard) -->
-		<MainContainer>
-			<MannazBoard />
 		</MainContainer>
 
 		<MainContainer>

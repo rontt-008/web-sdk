@@ -68,7 +68,7 @@ symbol in its first free spin, 103 an Ingwaz symbol, 109 a Fehu symbol with a tu
 	{template}
 />
 
-<!-- a bought super bonus (50+ connected symbols): its powers bigger, a 3x3 big wild and x10 -->
+<!-- a bought super bonus (50+ connected symbols): Fehu bigger, x10 -->
 <Story
 	name="super random"
 	args={templateArgs({

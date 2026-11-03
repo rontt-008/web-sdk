@@ -3,7 +3,7 @@
 
 	import config from '../game/config';
 	import { BONUS_TRIGGER, SUPER_TRIGGER, FREE_SPINS_AWARDED, POWER_SPINS } from '../game/constants';
-	import { BONUS_COST, SUPER_COST } from '../game/betModes';
+	import { BONUS_COST, SUPER_COST, BOOSTER_COST } from '../game/betModes';
 	import {
 		BONUS_POWERS,
 		RUNES,
@@ -84,7 +84,10 @@
 	const RUNE_RULES: Record<RuneName, string> = {
 		othala: 'Only premium symbols land in the POWER SPINS.',
 		fehu: `Every win in the POWER SPINS is multiplied by ${normal.mult}, by ${superPowers.mult} in SUPER FREE SPINS. Every RED RUNE symbol that lands in the FREE SPINS doubles it, without limit.`,
-		hagall: `Every POWER SPIN lands a ${normal.wilds}x${normal.wilds} BIG WILD, ${superPowers.wilds}x${superPowers.wilds} in SUPER FREE SPINS.`,
+		hagall:
+			superPowers.wilds === normal.wilds
+				? `Every POWER SPIN lands a ${normal.wilds}x${normal.wilds} BIG WILD.`
+				: `Every POWER SPIN lands a ${normal.wilds}x${normal.wilds} BIG WILD, ${superPowers.wilds}x${superPowers.wilds} in SUPER FREE SPINS.`,
 		ingwaz:
 			'One more POWER SPIN, and one more for every YELLOW RUNE symbol that lands in the FREE SPINS.',
 	};
@@ -164,6 +167,7 @@
 	// every way to play, with its cost, RTP and max win
 	const MODES = [
 		{ name: 'Base game', cost: 1, mode: config.betModes.base },
+		{ name: 'Booster', cost: BOOSTER_COST, mode: config.betModes.booster },
 		{ name: 'Bonus', cost: BONUS_COST, mode: config.betModes.bonus },
 		{ name: 'Super bonus', cost: SUPER_COST, mode: config.betModes.super },
 	];
@@ -293,10 +297,10 @@
 				{/each}
 			</svg>
 			<p>
-				Now and then, in a spin of the base game, the ORANGE RUNE appears across the whole board once
-				the symbols have landed. Each winning cluster lights the spots of it that it covers, over all
-				of that spin's tumbles, and it goes when the next spin starts. When all of the ORANGE RUNE is
-				lit, MYTHIC FREE SPINS start.
+				Now and then, in a spin of the base game, the ORANGE RUNE appears across the whole board
+				once the symbols have landed. Each winning cluster lights the spots of it that it covers,
+				over all of that spin's tumbles, and it goes when the next spin starts. When all of the
+				ORANGE RUNE is lit, MYTHIC FREE SPINS start.
 			</p>
 		</div>
 	</section>
@@ -334,17 +338,19 @@
 		<div class="card text">
 			<h3>SUPER FREE SPINS</h3>
 			<p>
-				The same as FREE SPINS, with bigger powers: the RED RUNE multiplies the POWER SPINS' wins by
-				{superPowers.mult} and the BLUE RUNE's BIG WILD is {superPowers.wilds}x{superPowers.wilds}.
+				The same as FREE SPINS, with a bigger RED RUNE: it multiplies the POWER SPINS' wins by
+				{superPowers.mult} (by {normal.mult} in FREE SPINS), before its symbols double it.{#if superPowers.wilds !== normal.wilds}
+					The BLUE RUNE's BIG WILD is {superPowers.wilds}x{superPowers.wilds}.{/if}
 			</p>
 		</div>
 		<div class="card text">
 			<h3>MYTHIC FREE SPINS</h3>
 			<p>
 				Started only by the ORANGE RUNE. Two of the four runes, chosen at random, are already
-				collected when they start, and the FREE SPINS bring the other two. The powers are as big as
-				in SUPER FREE SPINS: the RED RUNE multiplies the POWER SPINS' wins by {mythicPowers.mult} and
-				the BLUE RUNE's BIG WILD is {mythicPowers.wilds}x{mythicPowers.wilds}.
+				collected when they start, and the FREE SPINS bring the other two. The RED RUNE is the
+				biggest of all: it multiplies the POWER SPINS' wins by {mythicPowers.mult} (by {superPowers.mult}
+				in SUPER FREE SPINS), before its symbols double it. The BLUE RUNE's BIG WILD is
+				{mythicPowers.wilds}x{mythicPowers.wilds}.
 			</p>
 		</div>
 	</section>
@@ -356,6 +362,14 @@
 			<p>
 				Go straight to the bonus. BONUS ({times(BONUS_COST)} the {words.bet}) starts FREE SPINS;
 				SUPER BONUS ({times(SUPER_COST)} the {words.bet}) starts SUPER FREE SPINS.
+			</p>
+		</div>
+		<div class="card text">
+			<h3>BOOSTER</h3>
+			<p>
+				Switched on in the bonus menu, every spin costs {times(BOOSTER_COST)} the {words.bet}, and
+				the bonus meter starts FREE SPINS and SUPER FREE SPINS far more often. It plays the same
+				spins as the base game, and stays on until you switch it off.
 			</p>
 		</div>
 	</section>
