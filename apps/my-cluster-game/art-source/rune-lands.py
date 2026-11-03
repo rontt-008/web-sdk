@@ -6,8 +6,9 @@
   They are rendered from the same 1254 px art as the game's stills (static/assets/symbols/
   symbolrune.png, symbolrune2.png) and line up with them, so they are used as they are, no fitting.
 - static/assets/sprites/symbolLands/<rune>-land.{webp,json}: packed 10 to a row with a gap between
-  frames (so they don't bleed into each other when drawn smaller), WebP (COMPRESSION), as
-  symbol-animations.py packs the high symbols' idles and hits.
+  frames (so they don't bleed into each other when drawn smaller), WebP (COMPRESSION). (The other
+  symbols' animations are Spine skeletons, symbol-spines.py; these have shader effects, a
+  shockwave and a comet of light, that aren't moved pieces.)
 
 Run from apps/my-cluster-game with the Python that comes with Blender (it has numpy and OpenImageIO):
     "<Blender>/5.2/python/bin/python.exe" -I art-source/rune-lands.py ["<blender stuff folder>"]

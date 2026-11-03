@@ -18,3 +18,7 @@ if (typeof requestAnimationFrame !== 'undefined') requestAnimationFrame(tick);
 
 // the clock's frame, counting up from when the game started
 export const idleFrame = () => frame;
+// and its time in seconds, not rounded to a frame (the idles' skeletons are posed with it every
+// frame, so they move smoothly however fast the screen draws); not reactive
+export const idleTime = () =>
+	typeof performance === 'undefined' ? 0 : (performance.now() - started) / 1000;

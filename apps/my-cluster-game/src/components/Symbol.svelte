@@ -46,7 +46,7 @@
 		phase={props.phase}
 		oncomplete={props.oncomplete}
 	/>
-{:else if symbolInfo.type === 'hit'}
+{:else if symbolInfo.type === 'hit' || symbolInfo.type === 'skeleton'}
 	<SymbolHit
 		{symbolInfo}
 		x={props.x}

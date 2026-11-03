@@ -15,7 +15,7 @@
 
 	const props: Props = $props();
 
-	// a symbol state drawn as a sprite sheet (the leaves' hits, art-source/leaf-hits.py) plays at its
+	// a symbol state drawn as a sprite sheet (the rune symbols' lands, art-source/rune-lands.py) plays at its
 	// own frame rate, or 30 frames a second; the speed is in frames a tick, at 60 ticks a second
 	const FRAME_RATE = 30;
 	const frameRate = $derived(

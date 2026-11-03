@@ -157,9 +157,9 @@ export const zIndexes = {
 // souls are gone already
 const explosion = { type: 'vanish', assetKey: '', sizeRatios: { width: 1, height: 1 } };
 
-// the high symbols, framed tiles playing their idle loops (the user's Blender animations, see
-// art-source/symbol-animations.py and SymbolIdle) in every state but a win, which plays their hit
-// once (SymbolHit, blended in from the idle and back out to it): the wood of their frames is
+// the high symbols, framed tiles playing their idle loops (the user's Blender animations as Spine
+// skeletons, see art-source/symbol-spines.py and SymbolIdle) in every state but a win, which plays
+// their hit once (SymbolHit, blended in from the idle and back out to it): the wood of their frames is
 // about 239 x 228 of their 256 x 256 square (the vines' leaves reach out past it), drawn 93.5% of a
 // cell both ways, so neighbouring frames are a few pixels apart; a little taller than the art, as
 // the frames are a little wider than tall
@@ -186,11 +186,10 @@ const h3Win = { ...TILE_HIT, assetKey: 'mushroomHit', idleKey: 'mushroomIdle' };
 const h4Win = { ...TILE_HIT, assetKey: 'acornHit', idleKey: 'acornIdle' };
 const h5Static = { type: 'sprite', assetKey: 'h5.webp', sizeRatios: { width: 1, height: 1 } };
 
-// the low symbols are leaves, with no Spine; when they win they play the user's hit once (its 90
-// frames made at 60 a second, played at LEAF_HIT_FRAME_RATE so it takes 1 s, as long as the tiles'
-// hits: the user asked for it faster; art-source/leaf-hits.py, SymbolSpriteSheet), its square 1.25
-// times the still's so the leaf can come up toward you, centred on the cell, its first and last
-// frames on the still
+// the low symbols are leaves; when they win they play the user's hit once (a Spine skeleton,
+// art-source/symbol-spines.py, SymbolHit; made 1.5 s long, played LEAF_HIT_SPEED times as fast so
+// it takes 1 s, as long as the tiles' hits: the user asked for it faster), the leaf coming up toward
+// you from the still and settling back on it, drawn over its neighbours (the animating layer)
 const l1Static = { type: 'sprite', assetKey: 'leafGreen', sizeRatios: { width: 1, height: 1 } };
 const l2Static = { type: 'sprite', assetKey: 'leafBrown', sizeRatios: { width: 1, height: 1 } };
 const l3Static = { type: 'sprite', assetKey: 'leafRed', sizeRatios: { width: 1, height: 1 } };
@@ -200,11 +199,11 @@ const l1Land = { ...l1Static, motion: 'land' as const };
 const l2Land = { ...l2Static, motion: 'land' as const };
 const l3Land = { ...l3Static, motion: 'land' as const };
 const l4Land = { ...l4Static, motion: 'land' as const };
-const LEAF_HIT_FRAME_RATE = 90;
+const LEAF_HIT_SPEED = 1.5;
 const LEAF_HIT = {
-	type: 'spriteSheet',
-	sizeRatios: { width: 1.25, height: 1.25 },
-	frameRate: LEAF_HIT_FRAME_RATE,
+	type: 'skeleton',
+	sizeRatios: { width: 1, height: 1 },
+	speed: LEAF_HIT_SPEED,
 };
 const l1Win = { ...LEAF_HIT, assetKey: 'leafGreenHit' };
 const l2Win = { ...LEAF_HIT, assetKey: 'leafBrownHit' };
@@ -248,13 +247,11 @@ const iLand = {
 const sStatic = { type: 'sprite', assetKey: 's.png', sizeRatios: { width: 1.243, height: 1.243 } };
 // the wild, the user's stone tile, as the high symbols are: its idle loop (its letters and runes
 // moving) in every state but a win, which plays its hit once (it bounces, its letters in a wave),
-// both the user's Blender animations (art-source/symbol-animations.py); its frame is about 85% of
-// the art (the rocks on its corners reach further), so drawn 1.08 cells its frame is about as big
-// as their wooden ones, the rocks reaching a little past the cell; it settles as it lands, as they do.
-// Its frames have room round the still's 256 px square (16 px each side, ROOM in the script) for
-// its hit to swell into, so they are drawn that much bigger.
-const WILD_SHEET = 288 / 256;
-const WILD_SIZE = { width: 1.08 * WILD_SHEET, height: 1.08 * WILD_SHEET };
+// both the user's Blender animations (Spine skeletons, art-source/symbol-spines.py); its frame is
+// about 85% of the art (the rocks on its corners reach further), so drawn 1.08 cells its frame is
+// about as big as their wooden ones, the rocks reaching a little past the cell; it settles as it
+// lands, as they do.
+const WILD_SIZE = { width: 1.08, height: 1.08 };
 const wStatic = { type: 'idle', assetKey: 'wildIdle', sizeRatios: WILD_SIZE };
 const wLand = { ...wStatic, motion: 'land' as const };
 const wWin = { type: 'hit', assetKey: 'wildHit', idleKey: 'wildIdle', sizeRatios: WILD_SIZE };

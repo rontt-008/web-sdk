@@ -1,0 +1,11 @@
+leaves.webp
+size: 512, 2048
+filter: MipMapLinearLinear, Linear
+leaf-red
+bounds: 8, 8, 325, 334
+leaf-yellow
+bounds: 8, 350, 289, 334
+leaf-green
+bounds: 8, 692, 334, 332
+leaf-brown
+bounds: 8, 1032, 334, 304

@@ -21,6 +21,7 @@
 	y={props.reelSymbol.symbolY.current}
 	animating={(symbolInfo.type === 'spine' ||
 		symbolInfo.type === 'spriteSheet' ||
+		symbolInfo.type === 'skeleton' ||
 		'motion' in symbolInfo) &&
 		(props.reelSymbol.symbolState === 'land' || props.reelSymbol.symbolState === 'win')}
 >

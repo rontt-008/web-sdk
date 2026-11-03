@@ -1,0 +1,9 @@
+runestone.webp
+size: 512, 1024
+filter: MipMapLinearLinear, Linear
+idle/bg_frame
+bounds: 8, 8, 383, 371
+idle/runestone
+bounds: 8, 387, 223, 243
+idle/glow
+bounds: 239, 387, 115, 145

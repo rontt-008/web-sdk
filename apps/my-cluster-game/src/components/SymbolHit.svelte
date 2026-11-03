@@ -1,12 +1,13 @@
 <script lang="ts">
 	import { untrack } from 'svelte';
 	import { Tween } from 'svelte/motion';
-	import { BaseSprite, getContextApp, type LoadedSpriteSheet } from 'pixi-svelte';
+	import { getContextApp, type LoadedSpine } from 'pixi-svelte';
 	import { stateBetDerived } from 'state-shared';
 
+	import SymbolSkeleton from './SymbolSkeleton.svelte';
 	import { getSymbolInfo } from '../game/utils';
-	import { SYMBOL_SIZE, TILE_ALPHA } from '../game/constants';
-	import { idleFrame } from '../game/idleClock.svelte';
+	import { TILE_ALPHA } from '../game/constants';
+	import { IDLE_FRAME_RATE, idleTime } from '../game/idleClock.svelte';
 
 	type Props = {
 		x?: number;
@@ -21,19 +22,22 @@
 	const props: Props = $props();
 	const context = getContextApp();
 
-	// the user's hit (art-source/symbol-animations.py), played once at the frame rate it was made at;
-	// it starts and ends on the tile at rest, so over its first and last BLEND seconds it fades in
-	// over the idle loop and back out to it: the swap doesn't jump wherever the loop is
-	const HIT_FRAME_RATE = 60;
+	// the user's hit (art-source/symbol-spines.py), played once, `speed` times as fast as it was
+	// made. A tile's (one with an idle) starts and ends on the tile at rest, so over its first and
+	// last BLEND seconds it fades in over the idle loop and back out to it: the swap doesn't jump
+	// wherever the loop is. A leaf's has no idle: it is drawn whole all the way through.
 	const BLEND = 0.1;
 
-	const sheet = (key: string) =>
-		context.stateApp.loadedAssets?.[key] as LoadedSpriteSheet | undefined;
-	const hitTextures = $derived(sheet(props.symbolInfo.assetKey));
-	const idleTextures = $derived(
-		'idleKey' in props.symbolInfo ? sheet(props.symbolInfo.idleKey) : undefined,
+	const idleKey = $derived('idleKey' in props.symbolInfo ? props.symbolInfo.idleKey : undefined);
+	const speed = $derived('speed' in props.symbolInfo ? props.symbolInfo.speed : 1);
+	const alpha = $derived(idleKey ? TILE_ALPHA : 1);
+	const spineData = $derived(
+		context.stateApp.loadedAssets?.[props.symbolInfo.assetKey] as LoadedSpine | undefined,
 	);
-	const length = $derived((hitTextures?.length ?? 0) / HIT_FRAME_RATE);
+	// its length as made, and as played
+	const made = $derived(spineData?.findAnimation('hit')?.duration ?? 0);
+	const length = $derived(made / speed);
+	const phase = $derived((props.phase ?? 0) / IDLE_FRAME_RATE);
 
 	// how far through the hit it is, 0 to 1
 	const progress = new Tween(0);
@@ -57,48 +61,35 @@
 		return () => ++runId;
 	});
 
-	const hitTexture = $derived(
-		hitTextures?.length
-			? hitTextures[
-					Math.min(Math.floor(progress.current * hitTextures.length), hitTextures.length - 1)
-				]
-			: undefined,
-	);
-	const idleTexture = $derived(
-		idleTextures?.length
-			? idleTextures[(idleFrame() + (props.phase ?? 0)) % idleTextures.length]
-			: undefined,
-	);
 	// 0 (the idle) to 1 (the hit)
 	const blend = $derived(
-		length
-			? Math.min(1, (progress.current * length) / BLEND, ((1 - progress.current) * length) / BLEND)
-			: 0,
+		!idleKey
+			? 1
+			: length
+				? Math.min(1, (progress.current * length) / BLEND, ((1 - progress.current) * length) / BLEND)
+				: 0,
 	);
-	const width = $derived(SYMBOL_SIZE * props.symbolInfo.sizeRatios.width);
-	const height = $derived(SYMBOL_SIZE * props.symbolInfo.sizeRatios.height);
 </script>
 
 <!-- the idle stays under the hit as it fades, so the tile's frame and panel never get thinner -->
-{#if idleTexture}
-	<BaseSprite
-		texture={idleTexture}
+{#if idleKey}
+	<SymbolSkeleton
+		assetKey={idleKey}
+		animation="idle"
+		loop
+		time={() => idleTime() + phase}
 		x={props.x}
 		y={props.y}
-		anchor={0.5}
-		alpha={blend < 1 ? TILE_ALPHA : 0}
-		{width}
-		{height}
+		sizeRatios={props.symbolInfo.sizeRatios}
+		alpha={blend < 1 ? alpha : 0}
 	/>
 {/if}
-{#if hitTexture}
-	<BaseSprite
-		texture={hitTexture}
-		x={props.x}
-		y={props.y}
-		anchor={0.5}
-		alpha={TILE_ALPHA * blend}
-		{width}
-		{height}
-	/>
-{/if}
+<SymbolSkeleton
+	assetKey={props.symbolInfo.assetKey}
+	animation="hit"
+	time={() => progress.current * made}
+	x={props.x}
+	y={props.y}
+	sizeRatios={props.symbolInfo.sizeRatios}
+	alpha={alpha * blend}
+/>

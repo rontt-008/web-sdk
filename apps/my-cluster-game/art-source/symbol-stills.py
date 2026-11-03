@@ -236,7 +236,7 @@ def leaf(pixels, saturation=1):
     return out
 
 
-# (leaf-hits.py uses the functions above for the leaves' hits, without running this)
+# (symbol-spines.py uses the functions above for the leaves' hits, without running this)
 if __name__ == '__main__':
     sources = dict(argument.split('=', 1) for argument in sys.argv[1:])
     assert set(sources) <= set(NAMES), f'names are {NAMES}'

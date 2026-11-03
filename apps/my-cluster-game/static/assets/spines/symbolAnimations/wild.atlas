@@ -1,0 +1,43 @@
+wild.webp
+size: 1024, 1024
+filter: MipMapLinearLinear, Linear
+idle/background
+bounds: 8, 8, 567, 575
+idle/letter_W
+bounds: 583, 8, 228, 200
+hit/letter_W
+bounds: 583, 216, 223, 195
+idle/letter_L
+bounds: 819, 8, 101, 178
+hit/letter_L
+bounds: 819, 194, 100, 176
+idle/letter_D
+bounds: 814, 378, 148, 175
+hit/letter_D
+bounds: 583, 419, 147, 172
+idle/letter_I
+bounds: 738, 561, 69, 169
+idle/glow_blue_top
+bounds: 815, 561, 116, 135
+idle/glow_red_bottom
+bounds: 8, 591, 113, 123
+idle/glow_green_bottom
+bounds: 129, 591, 86, 120
+idle/glow_purple_bottom
+bounds: 223, 591, 100, 119
+idle/glow_purple_top
+bounds: 331, 591, 96, 118
+idle/glow_green_top
+bounds: 435, 591, 90, 104
+idle/rune_blue_top
+bounds: 533, 599, 85, 104
+idle/rune_red_bottom
+bounds: 626, 599, 81, 91
+idle/rune_green_bottom
+bounds: 939, 561, 54, 88
+idle/rune_purple_bottom
+bounds: 939, 657, 67, 87
+idle/rune_purple_top
+bounds: 626, 698, 62, 86
+idle/rune_green_top
+bounds: 435, 703, 58, 73

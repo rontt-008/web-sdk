@@ -1,0 +1,11 @@
+acorn.webp
+size: 512, 1024
+filter: MipMapLinearLinear, Linear
+idle/bg_frame
+bounds: 8, 8, 382, 370
+idle/acorn
+bounds: 8, 386, 224, 229
+hit/cap
+bounds: 240, 386, 223, 228
+hit/nut
+bounds: 240, 622, 175, 167

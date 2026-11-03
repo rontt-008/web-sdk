@@ -1,0 +1,15 @@
+blueberries.webp
+size: 512, 1024
+filter: MipMapLinearLinear, Linear
+idle/bg_frame
+bounds: 8, 8, 391, 400
+hit/sprig
+bounds: 8, 416, 237, 204
+idle/berries
+bounds: 253, 416, 240, 201
+idle/stem
+bounds: 253, 625, 98, 123
+idle/leaf_right
+bounds: 359, 625, 82, 120
+idle/leaf_top
+bounds: 8, 628, 127, 86

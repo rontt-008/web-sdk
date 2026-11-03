@@ -37,19 +37,18 @@ Originals of art that is processed before it goes into `static/assets` (not load
   outline); the red one keeps 75% of its saturation (LEAF_SATURATION); cropped, scaled (Lanczos, premultiplied) so the longer side, line included, is 86% of
   256 px and centred on a 256 x 256 transparent square, lossless; the game stretches the square to
   fill a cell, so the margin is the gap between symbols.
-  They have no Spine: their win is the user's hit, below.
+  Their win is the user's hit, below.
 - The leaves' hits: the user's animations, made in Blender, `Downloads/blender stuff/leaf_<colour>_hit.blend`
-  (its frames, scripts and README in `blender stuff/folders/leaf_<colour>_hit`): 90 frames of
-  1600 x 1600 at 60 fps (1.5 s), the leaf at its art's 1254 px in the middle, coming up toward you
-  about 22% and settling back, first and last frames at rest. `leaf-hits.py` makes each frame as the
-  leaf's still is (`symbol-stills.py`'s own functions: the green one mirrored, the thick outline cut
-  away, as much deeper as the leaf has grown, and drawn again thin, the red one less saturated) and
-  moves and scales them all as the still's art (from the first frame) onto a 320 px square, 1.25
-  times the still's, so the leaf has room to grow: `static/assets/sprites/symbolHits/leaf-<colour>-hit.{webp,json}`
-  (2 px between frames, webp:90, about 1 MB each). Its first frame lies on the still (the game
-  draws the square 1.25 times a cell, centred on it, and plays it at 90 fps, 1 s, as the user asked
-  for it faster: LEAF_HIT_FRAME_RATE in `src/game/constants.ts`). Run it again after changing an animation or a
-  still (about 8 minutes): `"<Blender>/5.2/python/bin/python.exe" -I art-source/leaf-hits.py ["<blender stuff folder>"]`.
+  (its frames, scripts and README in `blender stuff/folders/leaf_<colour>_hit`): 90 frames at 60 fps
+  (1.5 s), the leaf coming up toward you about 22% and settling back, starting and ending at rest.
+  `symbol-spines.py` (below) exports them as Spine skeletons: the leaf drawn once, from the first
+  frame the user rendered, as its still is (`symbol-stills.py`'s own functions: the green one
+  mirrored, the thick outline cut away and drawn again thin, the red one less saturated) at 1.5 times
+  the still's size, moving as in Blender, placed so it lies on the still at rest:
+  `static/assets/spines/symbolAnimations/leaf-<colour>-hit.json`, all four leaves in `leaves.atlas`.
+  The game plays it 1.5 times as fast (1 s, as the user asked for it faster: LEAF_HIT_SPEED in
+  `src/game/constants.ts`). Its thin line grows a little with the leaf as it comes toward you (the
+  sprite sheets it replaced drew it again at the same width each frame).
 - `blueberries.webp`, `runestone.webp`, `mushroom.webp`, `acorn.webp`: the high symbols (H1 to H4),
   framed tiles: the user's PNGs (1254 x 1254, the rune stone 1024 x 1024; the acorn and mushroom
   came on black without alpha, so the black joined to their edges is made see-through first) with
@@ -58,39 +57,52 @@ Originals of art that is processed before it goes into `static/assets` (not load
   (cut away from the edge in to the wood) scaled to
   fill the 256 x 256 square. Run it from apps/my-cluster-game with the Python that comes with Blender:
   `"<Blender>/5.2/python/bin/python.exe" -I art-source/symbol-stills.py [blueberries=<new.png> ...]`.
-  The game no longer draws these stills: they set where the idle loops' frames go.
+  The game no longer draws these stills: they set where the idle loops go (see `symbol-spines.py`).
 - `wild.webp`: the wild (W), a stone tile with glowing runes and WILD on it in a frame with rocks on
   its corners (the user's 1237 x 1271 PNG, see-through round it), cleaned and drawn by
   `symbol-stills.py` like the tiles (`wild=<new.png>`), into `static/assets/symbols/wild.webp`,
-  which sets where its idle's frames go. Its idle is the user's Blender animation of the whole
+  which sets where its idle goes. Its idle is the user's Blender animation of the whole
   symbol, its letters bobbing and rocking and its runes floating with their glow breathing
   (`Downloads/blender stuff/IDLE/wild_symbol_idle.blend`, its frames, scripts and README in
   `blender stuff/folders/wild_symbol_idle`; `wild_idle` there is the same with only the letters and
-  runes): 120 frames of 256 x 263 at 30 fps that loop. Its hit is `blender stuff/wild_hit.blend`
-  (`folders/wild_hit`; named without "symbol", HITS in the script): 60 frames at 60 fps, the whole
-  symbol bouncing once with its letters in a wave, rendered with the idle's camera, starting and
-  ending at rest. `symbol-animations.py` draws them into `static/assets/sprites/symbolIdles/wild-idle`
-  and `symbolHits/wild-hit` `.{webp,json}` like the tiles', but on 288 px squares (16 px of room round
-  the still's 256, ROOM in the script, as the hit swells past it; 2.4 and 1.5 MB). The game plays the
-  idle in every state but a win and the hit on a win, drawn 1.08 cells for the still's square
-  (WILD_SIZE and WILD_SHEET in `src/game/constants.ts`, so its frame matches the tiles'), settling as
-  it lands.
+  runes): 120 frames at 30 fps that loop. Its hit is `blender stuff/wild_hit.blend` (`folders/wild_hit`):
+  60 frames at 60 fps, the whole symbol bouncing once with its letters in a wave, rendered with the
+  idle's camera, starting and ending at rest. `wild_hit.blend` was saved again on 2026-11-01 at 21:13,
+  after it was exported, without the `hit` empty that bounces the whole symbol, so
+  `symbol-spines.py` reads its backup `wild_hit.blend1`, the one the game showed (SOURCES in the
+  script). Exported like the tiles' (below), its pieces at 2 px a still px, as it is drawn up to 3
+  cells big too (the big wild). The game plays the idle in every state but a win and the hit on a
+  win, drawn 1.08 cells for the still's square (WILD_SIZE in `src/game/constants.ts`, so its frame
+  matches the tiles'), settling as it lands.
 - The high symbols' idle loops and hits: the user's 2D cut-out animations, made in Blender in
   `Downloads/blender stuff/folders/<name>_idle` and `<name>_hit` (blueberry, runestone, mushroom,
-  acorn: layers, scripts and `export/<name>_<kind>_sheet.png`; the idles are 120 frames of 256 x 256
-  at 30 fps that loop, the hits 60 frames at 60 fps played once, starting and ending on the tile at
-  rest; the hits' .blend files are at the top of `blender stuff`, the idles' in `blender stuff/IDLE`).
-  `symbol-animations.py` draws the game's `static/assets/sprites/symbolIdles/<still>-idle.{webp,json}`
-  and `symbolHits/<still>-hit.{webp,json}` from those sheets: every frame scaled (about 5%) and moved
-  so the tile's wooden frame is where the still's is (the hit is rendered with the idle's camera, so
-  both get the same fit), so the game draws them at the same size (TILE_SIZE in
-  `src/game/constants.ts`, almost as big as a cell); 2 px between frames, WebP (webp:90, about 1.9 MB
-  an idle, 1 MB a hit). The game plays the idles in every state but a win, all from one clock
-  (`src/game/idleClock.svelte.ts`), each reel 8 frames on from the one left of it; a win plays the
-  hit once (`SymbolHit.svelte`), fading in over the idle in its first 0.1 s and back out to it in its
-  last, so it doesn't jump from wherever the loop is. Run it again after changing an animation or a
-  still (it also looks for the folders straight in `blender stuff`):
-  `"<Blender>/5.2/python/bin/python.exe" -I art-source/symbol-animations.py ["<blender stuff folder>"]`.
+  acorn: layers, scripts and `export/<name>_<kind>_sheet.png`; the idles are 120 frames at 30 fps that
+  loop, the hits 60 frames at 60 fps played once, starting and ending on the tile at rest; the
+  .blend files are in `blender stuff`, `blender stuff/IDLE` or their folder). `symbol-spines.py`
+  exports them as Spine skeletons (Spine 4.2 JSON, read by the game's spine-pixi runtime) rather than
+  sprite sheets, so a tile takes about 2.7 MB of GPU memory, not 40 to 55, stays sharp drawn bigger and
+  moves smoothly at any frame rate. Each image card in the .blend is a slot, its piece trimmed to
+  what shows and scaled to 1.5 px a px of the 256 px still, in
+  `static/assets/spines/symbolAnimations/<still>.atlas` + `.webp` (mipmapped; a piece the same in the
+  idle and the hit is stored once), and each Blender object (cards and empties, same names and
+  parents) a bone, keyed 60 times a second and thinned where the motion is a straight line
+  (`<still>-idle.json`, `<still>-hit.json`). A card's `Glow pulse` value is its slot's alpha; the rune
+  stone's hit glow, added light up to 1.4 times bright, is two additive slots, each half of it. The
+  root bone puts the camera's view where the sprite sheets' frames went: the tile's wooden frame
+  where the still's is, found from the user's exported idle sheet; 1 unit is 1 px of the still,
+  origin in its middle. So the game draws them at the still's size (TILE_SIZE in
+  `src/game/constants.ts`, almost as big as a cell). The game plays the idles in every state but a
+  win, all from one clock (`src/game/idleClock.svelte.ts`, posed every frame), each reel 8 frames (of
+  30 a second) on from the one left of it; a win plays the hit once (`SymbolHit.svelte`), fading in
+  over the idle in its first 0.1 s and back out to it in its last, so it doesn't jump from wherever
+  the loop is. Drawn with Spine's maths, the skeletons match the sheets they replaced to within
+  about 4/255 on average (the rest is resampling: one Lanczos step instead of two). Blender adds and
+  mixes the glows in linear light and the game in sRGB, so the runes' brightest cores are a little
+  less white. The pieces must be flat image cards on an orthographic camera looking straight down,
+  with a plain emission/transparent material (the script stops on anything else; the Fehu and
+  Ingwaz lands' shader effects are why they stay sprite sheets, `rune-lands.py`). Run it again after
+  changing an animation or a still (about 40 s):
+  `blender -b --factory-startup --python art-source/symbol-spines.py -- ["<blender stuff folder>"]`.
 - `blueberry_slot.blend`, `stump_slot.blend`, `mushroom_slot.blend`, `acorn_slot.blend` and
   `symbol-sheets.py`: the user's 2D cut-out rigs of the previous high symbols (each has a README
   text inside) and the script that rendered their win animations into sprite sheets; not used since

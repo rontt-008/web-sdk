@@ -7,49 +7,78 @@ export default {
 		src: new URL('../../assets/sprites/logo/logo-idle.json', import.meta.url).href,
 		preload: true,
 	},
-	// the high symbols (see SYMBOL_INFO_MAP): their idle loops, 120 frames of 256 x 256 at 30 a
-	// second, played in every state, and their hits, 60 frames at 60 a second played once on a win
-	// (see art-source/symbol-animations.py)
+	// the high symbols and the wild (see SYMBOL_INFO_MAP): their idle loops, played in every state,
+	// and their hits, played once on a win, the user's Blender animations as Spine skeletons, each
+	// tile's two sharing an atlas (see art-source/symbol-spines.py)
 	blueberriesIdle: {
-		type: 'spriteSheet',
-		src: new URL('../../assets/sprites/symbolIdles/blueberries-idle.json', import.meta.url).href,
+		type: 'spine',
+		src: {
+			atlas: new URL('../../assets/spines/symbolAnimations/blueberries.atlas', import.meta.url).href,
+			skeleton: new URL('../../assets/spines/symbolAnimations/blueberries-idle.json', import.meta.url).href,
+		},
 	},
 	runestoneIdle: {
-		type: 'spriteSheet',
-		src: new URL('../../assets/sprites/symbolIdles/runestone-idle.json', import.meta.url).href,
+		type: 'spine',
+		src: {
+			atlas: new URL('../../assets/spines/symbolAnimations/runestone.atlas', import.meta.url).href,
+			skeleton: new URL('../../assets/spines/symbolAnimations/runestone-idle.json', import.meta.url).href,
+		},
 	},
 	mushroomIdle: {
-		type: 'spriteSheet',
-		src: new URL('../../assets/sprites/symbolIdles/mushroom-idle.json', import.meta.url).href,
+		type: 'spine',
+		src: {
+			atlas: new URL('../../assets/spines/symbolAnimations/mushroom.atlas', import.meta.url).href,
+			skeleton: new URL('../../assets/spines/symbolAnimations/mushroom-idle.json', import.meta.url).href,
+		},
 	},
 	acornIdle: {
-		type: 'spriteSheet',
-		src: new URL('../../assets/sprites/symbolIdles/acorn-idle.json', import.meta.url).href,
+		type: 'spine',
+		src: {
+			atlas: new URL('../../assets/spines/symbolAnimations/acorn.atlas', import.meta.url).href,
+			skeleton: new URL('../../assets/spines/symbolAnimations/acorn-idle.json', import.meta.url).href,
+		},
 	},
-	// and the wild's (W), its letters and runes moving
 	wildIdle: {
-		type: 'spriteSheet',
-		src: new URL('../../assets/sprites/symbolIdles/wild-idle.json', import.meta.url).href,
+		type: 'spine',
+		src: {
+			atlas: new URL('../../assets/spines/symbolAnimations/wild.atlas', import.meta.url).href,
+			skeleton: new URL('../../assets/spines/symbolAnimations/wild-idle.json', import.meta.url).href,
+		},
 	},
 	blueberriesHit: {
-		type: 'spriteSheet',
-		src: new URL('../../assets/sprites/symbolHits/blueberries-hit.json', import.meta.url).href,
+		type: 'spine',
+		src: {
+			atlas: new URL('../../assets/spines/symbolAnimations/blueberries.atlas', import.meta.url).href,
+			skeleton: new URL('../../assets/spines/symbolAnimations/blueberries-hit.json', import.meta.url).href,
+		},
 	},
 	runestoneHit: {
-		type: 'spriteSheet',
-		src: new URL('../../assets/sprites/symbolHits/runestone-hit.json', import.meta.url).href,
+		type: 'spine',
+		src: {
+			atlas: new URL('../../assets/spines/symbolAnimations/runestone.atlas', import.meta.url).href,
+			skeleton: new URL('../../assets/spines/symbolAnimations/runestone-hit.json', import.meta.url).href,
+		},
 	},
 	mushroomHit: {
-		type: 'spriteSheet',
-		src: new URL('../../assets/sprites/symbolHits/mushroom-hit.json', import.meta.url).href,
+		type: 'spine',
+		src: {
+			atlas: new URL('../../assets/spines/symbolAnimations/mushroom.atlas', import.meta.url).href,
+			skeleton: new URL('../../assets/spines/symbolAnimations/mushroom-hit.json', import.meta.url).href,
+		},
 	},
 	acornHit: {
-		type: 'spriteSheet',
-		src: new URL('../../assets/sprites/symbolHits/acorn-hit.json', import.meta.url).href,
+		type: 'spine',
+		src: {
+			atlas: new URL('../../assets/spines/symbolAnimations/acorn.atlas', import.meta.url).href,
+			skeleton: new URL('../../assets/spines/symbolAnimations/acorn-hit.json', import.meta.url).href,
+		},
 	},
 	wildHit: {
-		type: 'spriteSheet',
-		src: new URL('../../assets/sprites/symbolHits/wild-hit.json', import.meta.url).href,
+		type: 'spine',
+		src: {
+			atlas: new URL('../../assets/spines/symbolAnimations/wild.atlas', import.meta.url).href,
+			skeleton: new URL('../../assets/spines/symbolAnimations/wild-hit.json', import.meta.url).href,
+		},
 	},
 	// the sample's fifth high symbol, not in this game's config
 	H5: {
@@ -96,23 +125,35 @@ export default {
 		type: 'spriteSheet',
 		src: new URL('../../assets/sprites/symbolLands/ingwaz-land.json', import.meta.url).href,
 	},
-	// the leaves' hits, 90 frames of 320 x 320 at 60 a second played once on a win (see
-	// art-source/leaf-hits.py)
+	// the leaves' hits, played once on a win, Spine skeletons sharing one atlas (see
+	// art-source/symbol-spines.py)
 	leafGreenHit: {
-		type: 'spriteSheet',
-		src: new URL('../../assets/sprites/symbolHits/leaf-green-hit.json', import.meta.url).href,
+		type: 'spine',
+		src: {
+			atlas: new URL('../../assets/spines/symbolAnimations/leaves.atlas', import.meta.url).href,
+			skeleton: new URL('../../assets/spines/symbolAnimations/leaf-green-hit.json', import.meta.url).href,
+		},
 	},
 	leafBrownHit: {
-		type: 'spriteSheet',
-		src: new URL('../../assets/sprites/symbolHits/leaf-brown-hit.json', import.meta.url).href,
+		type: 'spine',
+		src: {
+			atlas: new URL('../../assets/spines/symbolAnimations/leaves.atlas', import.meta.url).href,
+			skeleton: new URL('../../assets/spines/symbolAnimations/leaf-brown-hit.json', import.meta.url).href,
+		},
 	},
 	leafRedHit: {
-		type: 'spriteSheet',
-		src: new URL('../../assets/sprites/symbolHits/leaf-red-hit.json', import.meta.url).href,
+		type: 'spine',
+		src: {
+			atlas: new URL('../../assets/spines/symbolAnimations/leaves.atlas', import.meta.url).href,
+			skeleton: new URL('../../assets/spines/symbolAnimations/leaf-red-hit.json', import.meta.url).href,
+		},
 	},
 	leafYellowHit: {
-		type: 'spriteSheet',
-		src: new URL('../../assets/sprites/symbolHits/leaf-yellow-hit.json', import.meta.url).href,
+		type: 'spine',
+		src: {
+			atlas: new URL('../../assets/spines/symbolAnimations/leaves.atlas', import.meta.url).href,
+			skeleton: new URL('../../assets/spines/symbolAnimations/leaf-yellow-hit.json', import.meta.url).href,
+		},
 	},
 	M: {
 		type: 'spine',

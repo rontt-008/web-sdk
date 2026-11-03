@@ -1,0 +1,13 @@
+mushroom.webp
+size: 512, 1024
+filter: MipMapLinearLinear, Linear
+idle/bg_frame
+bounds: 8, 8, 384, 372
+idle/mushroom
+bounds: 8, 388, 250, 254
+hit/cap
+bounds: 8, 650, 250, 245
+hit/stem
+bounds: 266, 388, 122, 136
+hit/cap_rim
+bounds: 400, 8, 50, 26
