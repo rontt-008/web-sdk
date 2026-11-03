@@ -31,7 +31,8 @@ export type RawAsset = RawSpine | RawSprite | RawSprites | RawSpriteSheet | RawA
 export type RawType = 'spine' | 'sprite' | 'sprites' | 'spriteSheet' | 'font' | 'audio';
 
 export type SpineSrc = { skeleton: string; atlas: string; scale?: number };
-export type Asset = { type: RawType; src: string | SpineSrc; preload?: boolean };
+// lazy: left out of the loading, loaded only when the game asks for it (stateApp.loadLazyAssets)
+export type Asset = { type: RawType; src: string | SpineSrc; preload?: boolean; lazy?: boolean };
 export type Assets = PIXI.Dict<Asset>;
 
 export type ParticleSpawnOption =

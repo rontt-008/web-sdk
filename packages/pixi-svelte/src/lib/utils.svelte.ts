@@ -73,10 +73,13 @@ export function propsSyncEffect<TProps extends object, TTarget>({
 }) {
 	// Each prop is set on the target by an effect of its own, which runs again only when that prop
 	// changes: one prop changing every frame (a tweened position, say) sets just that one, not every
-	// prop of the component again. The outer effect only follows which props there are, and makes
-	// the inner ones again if one comes or goes.
+	// prop of the component again. Which props there are is read once, as the component starts:
+	// listing the keys of props passed on with a spread (`{...rest}`, as Sprite does) reads every
+	// prop's value through Svelte's proxies, so following the list would list them all again each
+	// time any prop changes (every frame a tweened one moves). The props given at a call site stay
+	// the same; one that only appears later in a spread object is not set.
 	$effect(() => {
-		const keys = (Object.keys(props) as (keyof TProps)[]).filter((key) =>
+		const keys = untrack(() => Object.keys(props) as (keyof TProps)[]).filter((key) =>
 			ignore ? !ignore.includes(key) : true,
 		);
 		const sizeKeys = keys.filter((key) => SIZE_PROPS.includes(key as string));

@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { onMount } from 'svelte';
+	import { onMount, untrack } from 'svelte';
 
 	import { EnablePixiExtension } from 'components-pixi';
 	import { EnableHotkey } from 'components-shared';
@@ -13,6 +13,8 @@
 	import { getContext } from '../game/context';
 	import { setBetModeMeta } from '../game/betModes';
 	import { SMOOTH_TEXTURE_KEYS, smoothTexture } from '../game/smoothTextures';
+	import { loadedTextureSources } from '../game/prepareTextures';
+	import { FOX_ASSET_KEYS } from '../game/assets';
 	import { uiTheme, uiHtmlTheme } from '../game/uiTheme';
 	import EnableSound from './EnableSound.svelte';
 	import EnableGameActor from './EnableGameActor.svelte';
@@ -52,6 +54,21 @@
 			const texture = context.stateApp.loadedAssets?.[key];
 			if (texture && 'source' in texture) smoothTexture(texture);
 		}
+	});
+
+	// the fox is only on wide screens (see Fox), so it is only loaded once the screen is one
+	$effect(() => {
+		if (context.stateLayoutDerived.layoutType() === 'desktop')
+			context.stateApp.loadLazyAssets(FOX_ASSET_KEYS);
+	});
+
+	// once everything is loaded (and smoothed, above), it is all sent to the graphics card while
+	// the loading screen shows, not each texture the first time it is drawn (see prepareTextures)
+	$effect(() => {
+		const renderer = context.stateApp.pixiApplication?.renderer;
+		const loadedAssets = context.stateApp.loadedAssets;
+		if (!context.stateApp.loaded || !renderer) return;
+		untrack(() => renderer.prepare.upload(loadedTextureSources(context.stateApp.assets, loadedAssets)));
 	});
 
 
