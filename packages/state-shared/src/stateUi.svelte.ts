@@ -62,6 +62,8 @@ export const stateUi = $state({
 	freeSpinCounterShow: false,
 	freeSpinCounterCurrent: 0,
 	freeSpinCounterTotal: 0,
+	// what the counter calls the spins (e.g. POWER SPINS), when not the UI's FREE SPINS
+	freeSpinCounterLabel: '',
 	menuOpen: false,
 	drawerFold: false,
 	drawerButtonShow: false,

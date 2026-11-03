@@ -40,6 +40,9 @@
 	import Logo from './Logo.svelte';
 	import PowerSpinsIntro from './PowerSpinsIntro.svelte';
 	import GameInfo from './GameInfo.svelte';
+	import BonusTablet from './BonusTablet.svelte';
+	import ConfirmTablet from './ConfirmTablet.svelte';
+	import BonusGust from './BonusGust.svelte';
 
 	const context = getContext();
 
@@ -143,19 +146,23 @@
 		<BonusMeter />
 
 		<UI theme={uiTheme}>
-			<!-- the clock and the game's name at the top left; only the clock where the logo is at the
-			top of the screen too (phones held upright), which the name would run into -->
+			<!-- the clock and the game's name at the top left; on phones (and where the logo is at the
+			top of the screen too) only the clock, as the name would run into the logo or the board's
+			frame -->
 			{#snippet gameName()}
-				<UiGameName name={context.stateGameDerived.logoBesideBoard() ? 'RUNEFALL' : ''} />
+				<UiGameName
+					name={['desktop', 'tablet'].includes(context.stateLayoutDerived.layoutType()) &&
+					context.stateGameDerived.logoBesideBoard()
+						? 'RUNEFALL'
+						: ''}
+				/>
 			{/snippet}
 			<!-- no logo in the corner, as in Cat Hunt -->
 			{#snippet logo()}{/snippet}
 		</UI>
 		<Win />
 		<FreeSpinIntro />
-		{#if ['desktop', 'landscape'].includes(context.stateLayoutDerived.layoutType())}
-			<FreeSpinCounter />
-		{/if}
+		<FreeSpinCounter />
 		<PowerSpinsIntro />
 		<FreeSpinOutro />
 		<!-- over everything: the gale as the bonus starts and ends -->
@@ -167,6 +174,18 @@
 <Modals theme={uiHtmlTheme} hideReplayCard={context.stateLayout.showLoadingScreen}>
 	{#snippet version()}
 		<GameVersion version="0.0.0" />
+	{/snippet}
+	<!-- the bonuses hang as rune slates from a branch, as Lazy Evening's towels hang from a line -->
+	{#snippet bonusCard({ levels, levelRow })}
+		<BonusTablet {levels} {levelRow} />
+	{/snippet}
+	<!-- buying one, or switching one on, is confirmed on its slate, bigger -->
+	{#snippet bonusConfirm({ betModeData, confirm, cancel })}
+		<ConfirmTablet {betModeData} onconfirm={confirm} oncancel={cancel} />
+	{/snippet}
+	<!-- a bonus once bought: its runes flare and a gust blows it away in leaves, then it starts -->
+	{#snippet bonusBought({ betModeData, start })}
+		<BonusGust {betModeData} onstart={start} />
 	{/snippet}
 	<!-- no pay table: the rules hold the symbol wins too (see uiTheme's hidePayTable) -->
 	{#snippet gameRules()}

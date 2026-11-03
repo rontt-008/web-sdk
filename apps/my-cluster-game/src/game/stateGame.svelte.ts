@@ -3,6 +3,7 @@ import { Tween } from 'svelte/motion';
 import { cubicInOut } from 'svelte/easing';
 
 import { stateBet, stateBetDerived } from 'state-shared';
+import { getLandscapeBarBounds, PORTRAIT_UI_HEIGHT } from 'components-ui-pixi';
 import { createEnhanceBoard, createReelForCascading } from 'utils-slots';
 import { createGetWinLevelDataByWinLevelAlias } from 'utils-shared/winLevel';
 
@@ -10,6 +11,7 @@ import type { BonusType, GameType, Position, RawSymbol, SymbolState } from './ty
 import { stateLayoutDerived } from './stateLayout';
 import { winLevelMap } from './winLevelMap';
 import { eventEmitter } from './eventEmitter';
+import { uiTheme } from './uiTheme';
 import {
 	SYMBOL_SIZE,
 	LAYOUT_UNIT,
@@ -110,9 +112,49 @@ export const flownKey = ({ reel, row }: Position) => `${reel}:${row}`;
 const BOARD_RAISE = { desktop: 27, landscape: 55, tablet: 55, portrait: 40 };
 // how far right of the middle (left when negative) in the bonus: on wide screens a little left,
 // sharing the room between the rune ladder on its left and the logo, bonus meter and fox on its
-// right (further left makes those bigger and the ladder smaller); on phones held sideways, right to
-// clear the menu, mute and buy bonus buttons on the left
-const BOARD_SHIFT = { desktop: -30, landscape: 100, tablet: 0, portrait: 0 };
+// right (further left makes those bigger and the ladder smaller); on phones held sideways it is
+// placed from the UI's bar instead (landscapeBoardX)
+const BOARD_SHIFT = { desktop: -30, landscape: 0, tablet: 0, portrait: 0 };
+// On phones held sideways the UI (LayoutLandscapeBar) is a bar along the bottom and the spin buttons
+// in a column on the right: the board sits above the bar (PHONE_GAP clear of it), and left of
+// the column with the logo and bonus meter (or spin sign) between them, LANDSCAPE_SIDE of the room
+// the frame leaves (the rest, on its left, is the rune ladder's in the bonus)
+const PHONE_GAP = LAYOUT_UNIT * 0.08;
+const LANDSCAPE_SIDE = 0.6;
+
+// The landscape bar's top and the left of its spin buttons' column, in the main layout.
+const landscapeBar = () => {
+	const canvas = stateLayoutDerived.canvasSizes();
+	const standard = stateLayoutDerived.mainLayoutStandard();
+	const main = stateLayoutDerived.mainLayout();
+	const bar = getLandscapeBarBounds({ theme: uiTheme, standard, canvas });
+	// the standard layout is centred across the screen and drawn against its bottom
+	const canvasX = canvas.width / 2 + (bar.columnLeft - standard.width / 2) * standard.scale;
+	const canvasY = canvas.height - (standard.height - bar.top) * standard.scale;
+	return {
+		top: main.height / 2 + (canvasY - main.y) / main.scale,
+		columnLeft: main.width / 2 + (canvasX - main.x) / main.scale,
+	};
+};
+
+// the screen's right edge in the main layout, or on phones held sideways the spin buttons' column
+const uiRight = () => {
+	const main = stateLayoutDerived.mainLayout();
+	if (stateLayoutDerived.layoutType() === 'landscape') return landscapeBar().columnLeft;
+	return main.width / 2 + stateLayoutDerived.canvasSizes().width / 2 / main.scale;
+};
+
+// the board's middle on phones held sideways: its frame LANDSCAPE_SIDE of the free room from the
+// column, the rest on its left
+const landscapeBoardX = () => {
+	const main = stateLayoutDerived.mainLayout();
+	const reach = boardFrameReach();
+	const screenLeft = main.width / 2 - main.x / main.scale;
+	const left = screenLeft + BOARD_SCREEN_MARGIN;
+	const right = uiRight() - SIDE.margin;
+	const free = Math.max(0, right - left - reach.left - reach.right - SIDE.gap);
+	return right - free * LANDSCAPE_SIDE - SIDE.gap - reach.right;
+};
 // In the base game it is up to this much further left, where the rune ladder isn't (it only shows
 // in the bonus), so the fox right of it has room to be bigger; never so far that its frame leaves
 // the screen (BOARD_SCREEN_MARGIN from the edge). Between the two it slides softly (slideBoard).
@@ -134,16 +176,37 @@ const slideBoard = (gameType: GameType, { instant = false } = {}) =>
 const boardX = (slide: number) => {
 	const layoutType = stateLayoutDerived.layoutType();
 	const main = stateLayoutDerived.mainLayout();
-	const bonusX = main.width * 0.5 + BOARD_SHIFT[layoutType];
+	const bonusX =
+		layoutType === 'landscape' ? landscapeBoardX() : main.width * 0.5 + BOARD_SHIFT[layoutType];
 	const screenLeft = main.width / 2 - main.x / main.scale;
 	const frameLeft = bonusX - boardFrameReach().left;
 	const room = Math.max(0, frameLeft - screenLeft - BOARD_SCREEN_MARGIN);
 	return bonusX - Math.min(BASE_SLIDE[layoutType], room) * (1 - slide);
 };
 
+// The top of the UI on phones held upright (LayoutPortraitBar, which keeps below PORTRAIT_UI_HEIGHT
+// of the standard layout, drawn against the screen's bottom), in the main layout.
+const portraitUiTop = () => {
+	const canvas = stateLayoutDerived.canvasSizes();
+	const main = stateLayoutDerived.mainLayout();
+	const canvasY = canvas.height - PORTRAIT_UI_HEIGHT * stateLayoutDerived.mainLayoutStandard().scale;
+	return main.height / 2 + (canvasY - main.y) / main.scale;
+};
+
+// the board's middle, top to bottom: raised from the middle of the screen; on phones higher still if
+// its frame would reach down to the UI (held upright, the logo and bonus meter over it then shrink
+// to the room left above it)
+const boardY = () => {
+	const layoutType = stateLayoutDerived.layoutType();
+	const y = stateLayoutDerived.mainLayout().height * 0.5 - BOARD_RAISE[layoutType];
+	if (layoutType !== 'landscape' && layoutType !== 'portrait') return y;
+	const uiTop = layoutType === 'landscape' ? landscapeBar().top : portraitUiTop();
+	return Math.min(y, uiTop - PHONE_GAP - boardFrameReach().below);
+};
+
 const boardLayout = () => ({
 	x: boardX(boardSlide.current),
-	y: stateLayoutDerived.mainLayout().height * 0.5 - BOARD_RAISE[stateLayoutDerived.layoutType()],
+	y: boardY(),
 	anchor: { x: 0.5, y: 0.5 },
 	pivot: { x: BOARD_SIZES.width / 2, y: BOARD_SIZES.height / 2 },
 	...BOARD_SIZES,
@@ -173,14 +236,21 @@ const BOARD_FRAME_MARGIN = LAYOUT_UNIT * 0.1;
 
 // the frame's size, wherever the board is: the board's units per pixel of the art (`scale`), the
 // same both ways so the art keeps its shape (the opening is a little wider than tall, so there is
-// more panel left and right of the board), and how far its art reaches left of the board's middle
+// more panel left and right of the board), and how far its art reaches left of the board's middle,
+// right of it (beside the bonus meter, `upperRight`) and below it
 const boardFrameReach = () => {
 	const { opening, visible } = BOARD_FRAME_ART;
 	const scale = Math.max(
 		(BOARD_SIZES.width + BOARD_FRAME_MARGIN * 2) / (opening.right - opening.left),
 		(BOARD_SIZES.height + BOARD_FRAME_MARGIN * 2) / (opening.bottom - opening.top),
 	);
-	return { scale, left: ((opening.left + opening.right) / 2 - visible.left) * scale };
+	const middle = { x: (opening.left + opening.right) / 2, y: (opening.top + opening.bottom) / 2 };
+	return {
+		scale,
+		left: (middle.x - visible.left) * scale,
+		right: (visible.upperRight - middle.x) * scale,
+		below: (visible.bottom - middle.y) * scale,
+	};
 };
 
 // the frame drawn so its opening fits the board plus a margin, centred on it; `opening` and
@@ -242,7 +312,8 @@ const sideLayout = () => {
 	const board = boardLayout();
 	const frame = boardFrameLayout().visible;
 	const main = stateLayoutDerived.mainLayout();
-	const screenRight = main.width / 2 + stateLayoutDerived.canvasSizes().width / 2 / main.scale;
+	// (on phones held sideways, the spin buttons' column)
+	const screenRight = uiRight();
 	const screenTop = main.height / 2 - main.y / main.scale;
 	const left = frame.upperRight + SIDE.gap;
 	const room = screenRight - SIDE.margin - left;

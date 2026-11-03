@@ -6,7 +6,7 @@
 	import type { UiLabelOptions } from '../types';
 
 	const props: UiLabelOptions = $props();
-	const label = $derived(i18nDerived.freeSpins());
+	const label = $derived(stateUi.freeSpinCounterLabel || i18nDerived.freeSpins());
 	const value = $derived(`${stateUi.freeSpinCounterCurrent} / ${stateUi.freeSpinCounterTotal}`);
 </script>
 
