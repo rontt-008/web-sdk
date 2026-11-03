@@ -183,8 +183,9 @@
 	};
 </script>
 
-<!-- only on wide screens: phones held sideways have the spin and bet buttons right of the board -->
-{#if context.stateLayoutDerived.layoutType() === 'desktop' && layout.height >= FOX.minHeight}
+<!-- only on wide screens: phones held sideways have the spin and bet buttons right of the board;
+and once its art is loaded (it is lazy, loaded by Game when the screen is wide) -->
+{#if context.stateLayoutDerived.layoutType() === 'desktop' && layout.height >= FOX.minHeight && context.stateApp.loadedAssets.foxIdle && context.stateApp.loadedAssets.foxGust}
 	<Container
 		x={layout.x}
 		y={layout.y}

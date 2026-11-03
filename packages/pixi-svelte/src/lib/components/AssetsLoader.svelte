@@ -13,10 +13,13 @@
 
 	let preLoaded = $state(false);
 
+	// the lazy ones are left to the game (stateApp.loadLazyAssets)
 	const assetNameList = $derived(
 		context.stateApp.assets
 			? Object.keys(context.stateApp.assets).filter(
-					(key) => Boolean(context.stateApp.assets?.[key].preload) === false,
+					(key) =>
+						Boolean(context.stateApp.assets?.[key].preload) === false &&
+						!context.stateApp.assets?.[key].lazy,
 				)
 			: [],
 	);
@@ -24,7 +27,9 @@
 	const preAssetNameList = $derived(
 		context.stateApp.assets
 			? Object.keys(context.stateApp.assets).filter(
-					(key) => context.stateApp.assets?.[key].preload === true,
+					(key) =>
+						context.stateApp.assets?.[key].preload === true &&
+						!context.stateApp.assets?.[key].lazy,
 				)
 			: [],
 	);
@@ -69,7 +74,12 @@
 			(async () => {
 				if (preAssetNameList.length > 0) {
 					const preLoadedAssets = await loadAssets(preAssetNameList);
-					if (preLoadedAssets) context.stateApp.loadedAssets = preLoadedAssets;
+					// added to what is there, as a lazy asset may have arrived first
+					if (preLoadedAssets)
+						context.stateApp.loadedAssets = {
+							...context.stateApp.loadedAssets,
+							...preLoadedAssets,
+						};
 				}
 				preLoaded = true;
 			})();

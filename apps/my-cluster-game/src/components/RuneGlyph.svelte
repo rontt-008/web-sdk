@@ -358,11 +358,13 @@
 					}
 				}}
 			/>
+			<!-- drawn white and tinted its breathing colour (white tinted is exactly the tint), so the
+			lines are built once, not again every frame it breathes -->
 			<Graphics
+				tint={mix(colours.ember, colours.neon, BREATH * breath)}
 				draw={(graphics) => {
-					const ember = mix(colours.ember, colours.neon, BREATH * breath);
 					for (const stroke of lines) {
-						graphics.poly(outline(stroke, EMBER_WIDTH, cell)).fill({ color: ember });
+						graphics.poly(outline(stroke, EMBER_WIDTH, cell)).fill({ color: 0xffffff });
 					}
 				}}
 			/>
