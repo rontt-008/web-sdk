@@ -3,7 +3,7 @@
 - the user's 2D cut-out animations, made in Blender, in "<blender stuff>" or "<blender stuff>/folders"
   (the .blend files are at the top of "<blender stuff>"): "<rune>_land/export/<rune>_land_sheet.png",
   90 frames of 256 x 256 at 60 fps played once (1.5 s), starting and ending on the symbol at rest.
-  They are rendered from the same 1254 px art as the game's stills (static/assets/symbols/
+  They are rendered from the same 1254 px art as the game's stills (art-source/
   symbolrune.png, symbolrune2.png) and line up with them, so they are used as they are, no fitting.
 - static/assets/sprites/symbolLands/<rune>-land.{webp,json}: packed 10 to a row with a gap between
   frames (so they don't bleed into each other when drawn smaller), WebP (COMPRESSION). (The other

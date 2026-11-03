@@ -1,10 +1,9 @@
 # Encodes the sound sprite (the 16-bit WAV generate-sounds.mjs writes) into the formats the game
-# loads, with the FFmpeg inside Blender (ffmpeg itself isn't installed): ogg, mp3 and ac3 through
-# Blender's audio library, and m4a (AAC in MP4) by rendering the WAV as the only strip of an
-# audio-only video, the one way Blender writes MP4. Each lines up with the WAV to the sample, which
-# a sprite needs (checked with a click at a known time): MP4 carries the AAC encoder's start-up
-# delay for the player to skip, and AC3's encoder starts 256 samples late, so it is given the WAV
-# that much early.
+# loads, with the FFmpeg inside Blender (ffmpeg itself isn't installed): ogg through Blender's audio
+# library, and m4a (AAC in MP4) by rendering the WAV as the only strip of an audio-only video, the
+# one way Blender writes MP4. Each lines up with the WAV to the sample, which a sprite needs
+# (checked with a click at a known time): MP4 carries the AAC encoder's start-up delay for the
+# player to skip. (mp3 and ac3 were dropped: Ogg and M4A cover every browser the game runs in.)
 #
 #   blender -b --factory-startup --python scripts/encode-sounds.py -- <sprite.wav> <out dir>
 
@@ -20,15 +19,12 @@ import bpy
 wav_path, out_dir = sys.argv[sys.argv.index('--') + 1 :][:2]
 RATE = 44100
 BITRATE = 128000
-AC3_DELAY = 256
 
 sound = aud.Sound(wav_path)
 duration = sound.length / RATE
 
 for ext, container, codec, start in [
 	('ogg', aud.CONTAINER_OGG, aud.CODEC_VORBIS, 0),
-	('mp3', aud.CONTAINER_MP3, aud.CODEC_MP3, 0),
-	('ac3', aud.CONTAINER_AC3, aud.CODEC_AC3, AC3_DELAY),
 ]:
 	source = sound.limit(start / RATE, duration) if start else sound
 	source.write(

@@ -1,6 +1,6 @@
 // Stands in for Stake Engine's RGS in Storybook, so the game can be played like the real thing: it
 // keeps a balance, takes each bet at its mode's cost and answers with a round picked by its lookup
-// table weight (or a top win, see startMockRgs). The rounds are the game's math (math-sdk
+// table weight (or a top win or a Mannaz round, see startMockRgs). The rounds are the game's math (math-sdk
 // games/my_cluster_game, written by its export_story_books.py). Requests to the RGS endpoints are
 // answered here; everything else goes through to the network.
 import { API_AMOUNT_MULTIPLIER } from 'constants-shared/bet';
@@ -14,6 +14,8 @@ import baseTopBooks from './data/base_books_top';
 import boosterTopBooks from './data/booster_books_top';
 import bonusTopBooks from './data/bonus_books_top';
 import superTopBooks from './data/super_books_top';
+import baseMannazBooks from './data/base_books_mannaz';
+import boosterMannazBooks from './data/booster_books_mannaz';
 import { pickByWeight } from './pickByWeight';
 
 type BetModeName = keyof typeof config.betModes;
@@ -35,8 +37,23 @@ const TOP_BOOKS: Partial<Record<BetModeName, Book[]>> = {
 	super: superTopBooks,
 };
 
-// which rounds it answers with: picked by the real odds, or only top wins
-export type MockRounds = 'real odds' | 'top win';
+// rounds where Mannaz appears in the base game, all as likely: half of them light it all and play the
+// mythic free spins. The bonus buys have no Mannaz, so they're played by the real odds.
+const MANNAZ_BOOKS: Partial<Record<BetModeName, Book[]>> = {
+	base: baseMannazBooks,
+	booster: boosterMannazBooks,
+	bonus: bonusBooks,
+	super: superBooks,
+};
+
+// which rounds it answers with: picked by the real odds, only top wins, or only Mannaz rounds
+export type MockRounds = 'real odds' | 'top win' | 'mythic rune';
+
+const ROUNDS: Record<MockRounds, Partial<Record<BetModeName, Book[]>>> = {
+	'real odds': BOOKS,
+	'top win': TOP_BOOKS,
+	'mythic rune': MANNAZ_BOOKS,
+};
 
 // bet sizes offered, in dollars (the bet menu shows a handful of them)
 const BET_LEVELS = [
@@ -99,7 +116,7 @@ const HANDLERS: Record<string, (rgs: Rgs, body: Record<string, any>) => object> 
 		if (!(name in config.betModes)) {
 			return { error: 'ERR_VAL', message: `Unknown bet mode: ${mode}` };
 		}
-		const books = (rgs.rounds === 'top win' ? TOP_BOOKS : BOOKS)[name];
+		const books = ROUNDS[rgs.rounds][name];
 		if (!books?.length) {
 			return {
 				error: 'ERR_VAL',

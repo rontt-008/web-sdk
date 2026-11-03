@@ -94,6 +94,7 @@
 	import { Container, Graphics } from 'pixi-svelte';
 
 	import { getContext } from '../game/context';
+	import { BLUR_RESOLUTION } from '../game/constants';
 	import { IDLE_FRAME_RATE, idleFrame } from '../game/idleClock.svelte';
 	import {
 		NO_OFFSET,
@@ -215,10 +216,14 @@
 	const cell = $derived(props.size / 5);
 	const glowOf = (spot: number) => Math.max(props.glows[spot] ?? 0, props.flash ?? 0);
 
-	// the glow blurred as much on any screen: the filter's strength is in screen pixels
-	const blur = new BlurFilter({ strength: 8, quality: 3, resolution: 'inherit' });
+	// the glow blurred as much on any screen: the filter's strength is in screen pixels (at
+	// BLUR_RESOLUTION of the screen's)
+	const blur = new BlurFilter({ strength: 8, quality: 3, resolution: BLUR_RESOLUTION });
 	$effect(() => {
-		blur.strength = cell * GLOW_BLUR * context.stateLayoutDerived.mainLayout().scale;
+		blur.resolution =
+			(context.stateApp.pixiApplication?.renderer.resolution ?? 1) * BLUR_RESOLUTION;
+		blur.strength =
+			cell * GLOW_BLUR * context.stateLayoutDerived.mainLayout().scale * BLUR_RESOLUTION;
 	});
 
 	// lit strokes, the parts of a line lit as much as each other in one piece (no seams between

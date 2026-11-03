@@ -15,6 +15,7 @@
 	import { stateBetDerived } from 'state-shared';
 
 	import { getContext } from '../game/context';
+	import { BLUR_RESOLUTION } from '../game/constants';
 
 	const context = getContext();
 
@@ -105,7 +106,14 @@
 		length: number;
 		width: number;
 	};
-	type Puff = { start: number; y: number; speed: number; size: number; colour: number; alpha: number };
+	type Puff = {
+		start: number;
+		y: number;
+		speed: number;
+		size: number;
+		colour: number;
+		alpha: number;
+	};
 	type Leaf = {
 		key: string;
 		start: number;
@@ -163,7 +171,9 @@
 				(sum, ripple, i) =>
 					sum +
 					ripple.size *
-						Math.sin((y / screen.height) * ripple.waves * TAU + clock * ripple.speed + offset * (i + 1)),
+						Math.sin(
+							(y / screen.height) * ripple.waves * TAU + clock * ripple.speed + offset * (i + 1),
+						),
 				0,
 			));
 
@@ -236,7 +246,8 @@
 			if (age < 0) continue;
 			const size = leaf.size * unit;
 			leaf.x = -size + age * leaf.speed * width;
-			leaf.y = leaf.top * height + leaf.bob * unit * Math.sin(age * leaf.bobRate * TAU + leaf.phase);
+			leaf.y =
+				leaf.top * height + leaf.bob * unit * Math.sin(age * leaf.bobRate * TAU + leaf.phase);
 			if (leaf.loop) {
 				// round and round as it goes, a cycloid: backwards over the top of each loop
 				const angle = age * leaf.loop.rate + leaf.phase;
@@ -248,9 +259,12 @@
 		}
 		streaks = streaks.filter(
 			(streak) =>
-				clock < streak.start || ((clock - streak.start) * streak.speed - streak.length) * width < width,
+				clock < streak.start ||
+				((clock - streak.start) * streak.speed - streak.length) * width < width,
 		);
-		puffs = puffs.filter((puff) => clock < puff.start || (clock - puff.start) * puff.speed < 1 + puff.size);
+		puffs = puffs.filter(
+			(puff) => clock < puff.start || (clock - puff.start) * puff.speed < 1 + puff.size,
+		);
 		_.remove(leaves, (leaf) => leaf.x > width + leaf.size * unit * 2);
 		// gone once its back edge is past the screen's right edge
 		if (gale?.clearing !== undefined && clock - gale.clearing >= TIMING.out) gale = undefined;
@@ -312,9 +326,12 @@
 		return [...upper, ...lower];
 	};
 
-	const mistBlur = new BlurFilter({ quality: 4, resolution: 'inherit' });
+	// at BLUR_RESOLUTION of the screen's resolution, its strength to match
+	const mistBlur = new BlurFilter({ quality: 4, resolution: BLUR_RESOLUTION });
 	$effect(() => {
-		mistBlur.strength = MIST.blur * unit;
+		mistBlur.resolution =
+			(context.stateApp.pixiApplication?.renderer.resolution ?? 1) * BLUR_RESOLUTION;
+		mistBlur.strength = MIST.blur * unit * BLUR_RESOLUTION;
 	});
 	const bodyFill = $derived(
 		new FillGradient({

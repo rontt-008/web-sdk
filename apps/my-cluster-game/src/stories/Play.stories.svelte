@@ -49,3 +49,12 @@ mode's 20 biggest wins, half of them the 25,000x max win. -->
 		{@render play(args.balance, 'top win')}
 	{/snippet}
 </Story>
+
+<!-- Every spin is a round where Mannaz, the mythic rune, appears: in half of them it is lit all over and
+the mythic free spins are played, in the others it is not completed. The bonus buys play by the real odds
+(they have no Mannaz). -->
+<Story name="mythic rune" args={{ balance: 1000 }}>
+	{#snippet template(args)}
+		{@render play(args.balance, 'mythic rune')}
+	{/snippet}
+</Story>

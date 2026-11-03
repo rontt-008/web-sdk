@@ -6,7 +6,7 @@
 //   node scripts/generate-sounds.mjs --preview <dir>  (also writes each sound as <dir>/<name>.wav)
 //   node scripts/generate-sounds.mjs --dry ...        (only renders: no sprite written)
 //
-// Writes static/assets/audio/sounds.{ogg,m4a,mp3,ac3} + sounds.json. ffmpeg isn't installed, so the
+// Writes static/assets/audio/sounds.{ogg,m4a} + sounds.json (Ogg for most browsers, M4A for Safari). ffmpeg isn't installed, so the
 // encoding is done by Blender's own FFmpeg (scripts/encode-sounds.py; BLENDER=<path to blender.exe>
 // if it isn't the Steam one). Output is deterministic: tweak a recipe and re-run to regenerate.
 //
@@ -1430,7 +1430,7 @@ function wav(L, R) {
 	return buf;
 }
 
-const FORMATS = ['ogg', 'm4a', 'mp3', 'ac3'];
+const FORMATS = ['ogg', 'm4a'];
 const BLENDER =
 	process.env.BLENDER || 'C:/Program Files (x86)/Steam/steamapps/common/Blender/blender.exe';
 
