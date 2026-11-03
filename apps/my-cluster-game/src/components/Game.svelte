@@ -7,7 +7,7 @@
 	import { App } from 'pixi-svelte';
 	import { stateModal } from 'state-shared';
 
-	import { UI, UiGameName } from 'components-ui-pixi';
+	import { UI } from 'components-ui-pixi';
 	import { GameVersion, Modals } from 'components-ui-html';
 
 	import { getContext } from '../game/context';
@@ -143,11 +143,8 @@
 		<BonusMeter />
 
 		<UI theme={uiTheme}>
-			<!-- the clock and the game's name at the top left; only the clock where the logo is at the
-			top of the screen too (phones held upright), which the name would run into -->
-			{#snippet gameName()}
-				<UiGameName name={context.stateGameDerived.logoBesideBoard() ? 'RUNEFALL' : ''} />
-			{/snippet}
+			<!-- no clock or game name at the top left -->
+			{#snippet gameName()}{/snippet}
 			<!-- no logo in the corner, as in Cat Hunt -->
 			{#snippet logo()}{/snippet}
 		</UI>
