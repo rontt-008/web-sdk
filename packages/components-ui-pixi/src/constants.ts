@@ -41,6 +41,10 @@ export const PORTRAIT_WIN_OFFSET = 670;
 // panel), for a game to fit its board just above it
 export const PORTRAIT_UI_HEIGHT = PORTRAIT_WIN_OFFSET + UI_BASE_FONT_SIZE * 0.35;
 
+// how far LayoutPortraitBar's panel comes down during FREE SPINS (its buttons' drawer folded): the
+// portrait UI then reaches this much less far up
+export const PORTRAIT_PANEL_FOLD = 300;
+
 // landscape
 export const LANDSCAPE_BASE_SIZE = UI_BASE_SIZE * 1.1;
 

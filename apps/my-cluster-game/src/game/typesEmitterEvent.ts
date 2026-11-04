@@ -12,6 +12,7 @@ import type { EmitterEventBonusMeter } from '../components/BonusMeter.svelte';
 import type { EmitterEventWind } from '../components/Wind.svelte';
 import type { EmitterEventWindTransition } from '../components/WindTransition.svelte';
 import type { EmitterEventMannaz } from '../components/MannazBoard.svelte';
+import type { EmitterEventFox } from '../components/Fox.svelte';
 
 export type EmitterEventGame =
 	| EmitterEventBoard
@@ -27,4 +28,5 @@ export type EmitterEventGame =
 	| EmitterEventBonusMeter
 	| EmitterEventWind
 	| EmitterEventWindTransition
-	| EmitterEventMannaz;
+	| EmitterEventMannaz
+	| EmitterEventFox;

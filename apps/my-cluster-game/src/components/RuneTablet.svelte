@@ -2,11 +2,8 @@
 	import { Container, Graphics, Text } from 'pixi-svelte';
 
 	import RuneGlyph from './RuneGlyph.svelte';
-	import { RUNES, RUNE_COLOURS, type RuneName, type RuneOffset } from '../game/runes';
+	import { RUNE_COLOURS, type RuneName, type RuneOffset } from '../game/runes';
 	import { signTextStyle } from '../game/signText';
-	import { getContext } from '../game/context';
-
-	const context = getContext();
 
 	// One rune's box: in one of the ladder's compartments (see RuneTablets), the ladder drawn over it.
 	type Props = {
@@ -21,6 +18,10 @@
 		// the size the picture and power are laid out in, in the middle of the box: the same for all
 		// the boxes, so they all look alike though the compartments differ a little
 		content: { width: number; height: number };
+		// its power, and how wide the longest of the boxes' powers and words are in their font size
+		// (measured in RuneTablets), so all the boxes' powers are the same size
+		power: string;
+		longest: { line: number; word: number };
 		// still to come, behind the board now, or collected
 		state: 'waiting' | 'active' | 'collected';
 		// where the rune lies on the board, or lay (the picture shows it there)
@@ -41,11 +42,7 @@
 	const NARROW_POWER_SIZE = 0.21;
 	// wider than tall by this, the text beside the picture
 	const WIDE = 1.6;
-	// the longest word's and the longest power's widths in their font size (MULTIPLIER 4.43, and
-	// Fehu's once its symbols have doubled it to four figures, 1280x MULTIPLIER about 6.8, in Germania
-	// One bold), with the outline and a little to spare, and the lines' height
-	const LONGEST_WORD = 4.8;
-	const LONGEST_LINE = 7.1;
+	// the lines' height, in their font size
 	const LINE_HEIGHT = 1.1;
 
 	// the panel: dark while the rune is locked, a deep shade of the rune's colour once collected
@@ -68,16 +65,18 @@
 	// fits (not wrapped: sized to fit, the text measures a hair wider when wrapping), or on two where
 	// that is bigger (narrow boxes, lying down on phones)
 	const power = $derived.by(() => {
-		if (wide) return { size: Math.min(height * POWER_SIZE, textWidth / LONGEST_WORD), wrap: true };
+		const { line, word } = props.longest;
+		if (wide) return { size: Math.min(height * POWER_SIZE, textWidth / word), wrap: true };
 		const room = height - pad * 2 - glyph;
-		const oneLine = Math.min(room / LINE_HEIGHT, textWidth / LONGEST_LINE);
-		const twoLines = Math.min(room / (LINE_HEIGHT * 2), textWidth / LONGEST_WORD);
+		const oneLine = Math.min(room / LINE_HEIGHT, textWidth / line);
+		const twoLines = Math.min(room / (LINE_HEIGHT * 2), textWidth / word);
 		return {
 			size: Math.min(height * NARROW_POWER_SIZE, Math.max(oneLine, twoLines)),
 			wrap: twoLines > oneLine,
 		};
 	});
 	const powerSize = $derived(power.size);
+	// the picture dimmed while the rune is still to come; its power always bright, to be read
 	const dim = $derived(props.state === 'waiting' ? 0.6 : 1);
 </script>
 
@@ -115,8 +114,7 @@
 			x={textLeft}
 			y={top + height / 2}
 			anchor={{ x: 0, y: 0.5 }}
-			alpha={dim}
-			text={RUNES[props.rune].powerText(context.stateGame.bonusType, context.stateGame)}
+			text={props.power}
 			style={{
 				...signTextStyle(powerSize),
 				wordWrap: true,
@@ -129,8 +127,7 @@
 			x={props.width / 2}
 			y={top + (pad + glyph + height) / 2}
 			anchor={{ x: 0.5, y: 0.5 }}
-			alpha={dim}
-			text={RUNES[props.rune].powerText(context.stateGame.bonusType, context.stateGame)}
+			text={props.power}
 			style={{
 				...signTextStyle(powerSize),
 				align: 'center',

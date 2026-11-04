@@ -9,6 +9,7 @@
 	import { MainContainer } from 'components-layout';
 	import { FadeContainer } from 'components-pixi';
 	import { Sprite, Text } from 'pixi-svelte';
+	import { stateUi } from 'state-shared';
 
 	import { getContext } from '../game/context';
 	import { signTextStyle } from '../game/signText';
@@ -49,33 +50,48 @@
 	// FREE SPIN, or POWER SPIN after the free spins
 	let title = $state('FREE SPIN');
 
+	// the phones' bars (LayoutPortraitBar, LayoutLandscapeBar) show the count too, in the bet's place,
+	// from stateUi
 	context.eventEmitter.subscribeOnMount({
-		freeSpinCounterShow: () => (show = true),
-		freeSpinCounterHide: () => (show = false),
+		freeSpinCounterShow: () => {
+			show = true;
+			stateUi.freeSpinCounterShow = true;
+		},
+		freeSpinCounterHide: () => {
+			show = false;
+			stateUi.freeSpinCounterShow = false;
+		},
 		freeSpinCounterUpdate: (emitterEvent) => {
 			if (emitterEvent.current !== undefined) current = emitterEvent.current;
 			if (emitterEvent.total !== undefined) total = emitterEvent.total;
 			if (emitterEvent.title !== undefined) title = emitterEvent.title;
+			stateUi.freeSpinCounterCurrent = current;
+			stateUi.freeSpinCounterTotal = total;
+			stateUi.freeSpinCounterLabel = `${title}S`;
 		},
 	});
 </script>
 
-<MainContainer>
-	<FadeContainer {show} x={layout.x} y={layout.y}>
-		<Sprite key="spinSign" width={layout.width} height={layout.height} />
-		<Text
-			x={layout.middle.x}
-			y={layout.middle.y}
-			anchor={{ x: 0.5, y: 1 }}
-			text={title}
-			style={signTextStyle(layout.planksHeight * TITLE_SIZE)}
-		/>
-		<Text
-			x={layout.middle.x}
-			y={layout.middle.y}
-			anchor={{ x: 0.5, y: 0 }}
-			text={`${current} OF ${total}`}
-			style={signTextStyle(layout.planksHeight * COUNT_SIZE)}
-		/>
-	</FadeContainer>
-</MainContainer>
+<!-- the sign beside the board (wide screens, phones held sideways); where the board takes the
+screen's width (phones held upright) the bar shows the count instead -->
+{#if ['desktop', 'landscape'].includes(context.stateLayoutDerived.layoutType())}
+	<MainContainer>
+		<FadeContainer {show} x={layout.x} y={layout.y}>
+			<Sprite key="spinSign" width={layout.width} height={layout.height} />
+			<Text
+				x={layout.middle.x}
+				y={layout.middle.y}
+				anchor={{ x: 0.5, y: 1 }}
+				text={title}
+				style={signTextStyle(layout.planksHeight * TITLE_SIZE)}
+			/>
+			<Text
+				x={layout.middle.x}
+				y={layout.middle.y}
+				anchor={{ x: 0.5, y: 0 }}
+				text={`${current} OF ${total}`}
+				style={signTextStyle(layout.planksHeight * COUNT_SIZE)}
+			/>
+		</FadeContainer>
+	</MainContainer>
+{/if}

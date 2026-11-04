@@ -13,7 +13,7 @@
 	import type { LayoutUiProps } from '../types';
 	import { getContext } from '../context';
 	import { getBuyBonusExtraWidth, getMenuButtons, getPanelCornerRadius, getUiTheme } from '../theme';
-	import { UI_BASE_SIZE } from '../constants';
+	import { PORTRAIT_PANEL_FOLD, UI_BASE_SIZE } from '../constants';
 
 	const props: LayoutUiProps = $props();
 	const context = getContext();
@@ -68,7 +68,7 @@
 	// down closer to the bottom, its BET turning into the free spin counter; the arrow button brings
 	// them back. The game folds and unfolds it with drawerFold and drawerUnfold.
 	const DRAWER_Y = { unfold: 0, fold: 520 };
-	const PANEL_FOLD = 300;
+	const PANEL_FOLD = PORTRAIT_PANEL_FOLD;
 	const drawerTween = new Tween(stateUi.drawerFold ? DRAWER_Y.fold : DRAWER_Y.unfold, {
 		easing: cubicInOut,
 	});

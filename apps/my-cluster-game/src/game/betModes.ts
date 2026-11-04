@@ -23,7 +23,8 @@ export const BOOSTER_COST = config.betModes.booster.cost;
 export const setBetModeMeta = () => {
 	// typed the way the SDK uses them for stateMeta.betModeMeta
 	const samples = DEFAULT_BET_MODE_META as BetModeMeta;
-	// social mode (social=true) can't say bet, buy or cost (Stake Engine's restricted words)
+	// no bet, buy or cost (Stake Engine's restricted words): this game uses social mode's words in
+	// every mode (see context.ts)
 	const social = stateUrlDerived.socialWords();
 	const yourBet = social ? 'your play amount' : 'your bet';
 	const buyButton = social ? 'PLAY' : 'BUY';
@@ -56,6 +57,8 @@ export const setBetModeMeta = () => {
 				button: buyButton,
 				dialog: `Go straight to FREE SPINS for ${BONUS_COST}x ${yourBet}, as ${BONUS_TRIGGER} connected symbols give them.`,
 				description: 'FREE SPINS: collect runes for their powers in the POWER SPINS.',
+				// (not the sample's PLACE YOUR BET: no restricted words anywhere)
+				tickerIdle: 'COME AND PLAY',
 				tickerSpin: 'BONUS ACTIVATED',
 			},
 		},
@@ -69,6 +72,7 @@ export const setBetModeMeta = () => {
 				button: buyButton,
 				dialog: `Go straight to SUPER FREE SPINS for ${SUPER_COST}x ${yourBet}, as ${SUPER_TRIGGER} connected symbols give them: the RED RUNE's MULTIPLIER is bigger, ${BONUS_POWERS.super.mult}x instead of ${BONUS_POWERS.normal.mult}x, and the BLUE RUNE's BIG WILD ${BONUS_POWERS.super.wilds}x${BONUS_POWERS.super.wilds} instead of ${BONUS_POWERS.normal.wilds}x${BONUS_POWERS.normal.wilds}.`,
 				description: `SUPER FREE SPINS: a ${BONUS_POWERS.super.mult}x MULTIPLIER and a ${BONUS_POWERS.super.wilds}x${BONUS_POWERS.super.wilds} BIG WILD.`,
+				tickerIdle: 'COME AND PLAY',
 				tickerSpin: 'SUPER BONUS ACTIVATED',
 			},
 		},

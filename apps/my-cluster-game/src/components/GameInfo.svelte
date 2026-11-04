@@ -20,8 +20,8 @@
 	// panel, as Cat Hunt's (apps/my-game GameInfo), in the game's warm orange: the symbols as tiles
 	// with their wins under them (the biggest clusters' picked out), the runes drawn in their colours.
 
-	// social mode (social=true) can't use words like bet, buy, pay or cost (Stake Engine's restricted
-	// words); the others are said the same way in both
+	// no words like bet, buy, pay or cost (Stake Engine's restricted words): this game uses social
+	// mode's words in every mode (see context.ts)
 	const words = stateUrlDerived.socialWords()
 		? {
 				bet: 'play amount',
@@ -453,8 +453,12 @@
 				</dd>
 			</div>
 			<div>
-				<dt>&minus; and +</dt>
-				<dd>Beside the {words.bet}, they lower or raise it one level at a time.</dd>
+				<dt>{words.bet.toUpperCase()} UP and DOWN</dt>
+				<dd>
+					The &minus; and + buttons beside the {words.bet} lower or raise it one level at a time. On
+					tall screens (a phone held upright), the up and down arrows beside the {words.bet} do the
+					same.
+				</dd>
 			</div>
 			<div>
 				<dt>{words.bet.toUpperCase()}</dt>
@@ -509,7 +513,8 @@
 				<dt>ARROW</dt>
 				<dd>
 					On tall screens (like a phone held upright), the controls slide down out of the way during
-					FREE SPINS; the arrow button brings them back up, or slides them down again.
+					FREE SPINS, and the {words.bet}'s place shows the spins played and left; the arrow button
+					brings the controls back up, or slides them down again.
 				</dd>
 			</div>
 			<div>

@@ -2,6 +2,7 @@ import { setContextEventEmitter, getContextEventEmitter } from 'utils-event-emit
 import { setContextXstate, getContextXstate } from 'utils-xstate';
 import { setContextLayout, getContextLayout } from 'utils-layout';
 import { setContextApp, getContextApp } from 'pixi-svelte';
+import { stateConfig } from 'state-shared';
 
 import { eventEmitter, type EmitterEvent } from './eventEmitter';
 import { stateXstate, stateXstateDerived } from './stateXstate';
@@ -16,6 +17,9 @@ export const setContext = () => {
 	setContextXstate({ stateXstate, stateXstateDerived });
 	setContextLayout({ stateLayout, stateLayoutDerived });
 	setContextApp({ stateApp });
+	// none of Stake Engine's restricted words (bet, buy, cost, pay, ...) anywhere: social mode's words
+	// are used in every mode, not only on Stake.US, as in Lazy Evening
+	stateConfig.socialWordsEverywhere = true;
 };
 
 export const getContext = () => ({

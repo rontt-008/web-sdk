@@ -10,7 +10,6 @@
 </script>
 
 <script lang="ts">
-	import { CanvasSizeRectangle } from 'components-layout';
 	import { FadeContainer } from 'components-pixi';
 	import { Container, Text } from 'pixi-svelte';
 	import { waitForResolve } from 'utils-shared/wait';
@@ -24,7 +23,7 @@
 
 	const context = getContext();
 
-	// On the free spins screens' wooden panel, popping in with the same rays behind it (see
+	// On the free spins screens' wooden panel, dropping in over the same backdrop (see
 	// FreeSpinAnimation), in its words' space (its planks about 1610 x 940 round the middle): the
 	// title with how many spins ("2 POWER SPINS"), and each collected rune with its power under it,
 	// room for all four (each power's words wrap in its rune's width, the longest, MULTIPLIER, just
@@ -60,9 +59,7 @@
 </script>
 
 <FadeContainer {show}>
-	<CanvasSizeRectangle backgroundColor={0x000000} backgroundAlpha={0.5} />
-
-	<FreeSpinAnimation>
+	<FreeSpinAnimation power={0.75}>
 		{#snippet children()}
 			<Text
 				anchor={0.5}

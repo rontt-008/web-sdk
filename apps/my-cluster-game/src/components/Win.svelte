@@ -12,10 +12,10 @@
 	import { FadeContainer, WinCountUpProvider, ResponsiveText } from 'components-pixi';
 	import { waitForResolve, waitForTimeout } from 'utils-shared/wait';
 	import { bookEventAmountToCurrencyString } from 'utils-shared/amount';
-	import { CanvasSizeRectangle, MainContainer } from 'components-layout';
+	import { MainContainer } from 'components-layout';
 	import { OnMount } from 'components-shared';
 
-	import WinAnimation from './WinAnimation.svelte';
+	import BigWin from './BigWin.svelte';
 	import PressToContinue from './PressToContinue.svelte';
 	import { LAYOUT_UNIT } from '../game/constants';
 	import { signTextStyle } from '../game/signText';
@@ -26,6 +26,8 @@
 	let show = $state(false);
 	let amount = $state(0);
 	let winLevelData = $state<WinLevelData>();
+	// counts the wins shown, so each starts afresh
+	let round = $state(0);
 	let oncomplete = $state(() => {});
 	let onCountUpComplete = $state(() => {});
 
@@ -35,6 +37,7 @@
 		winUpdate: async (emitterEvent) => {
 			amount = emitterEvent.amount;
 			winLevelData = emitterEvent.winLevelData;
+			round++;
 			await waitForResolve((resolve) => (oncomplete = resolve));
 		},
 	});
@@ -42,59 +45,51 @@
 
 <FadeContainer {show}>
 	{#if winLevelData}
-		{@const isBigWin = winLevelData.type === 'big'}
-		{@const duration = winLevelData.presentDuration}
-		<WinCountUpProvider {amount} {duration} oncomplete={() => onCountUpComplete()}>
-			{#snippet children({ countUpAmount, startCountUp, finishCountUp, countUpCompleted })}
-				{#if isBigWin}
-					<CanvasSizeRectangle backgroundColor={0x000000} backgroundAlpha={0.5} />
-				{/if}
+		{#key round}
+			{#if winLevelData.type === 'big'}
+				<!-- a big win: its own screen, climbing through the levels (BigWin) -->
+				<BigWin {amount} level={winLevelData.level} oncomplete={() => oncomplete()} />
+			{:else}
+				<!-- a smaller one: the amount counts up over the board and goes on by itself; a press
+				hurries it -->
+				<WinCountUpProvider
+					{amount}
+					duration={winLevelData.presentDuration}
+					oncomplete={() => onCountUpComplete()}
+				>
+					{#snippet children({ countUpAmount, startCountUp, finishCountUp, countUpCompleted })}
+						<OnMount
+							onmount={async () => {
+								await startCountUp();
+								await waitForTimeout(300);
+								oncomplete();
+							}}
+						/>
 
-				<OnMount
-					onmount={async () => {
-						await startCountUp();
-						await waitForTimeout(300);
-						oncomplete();
-					}}
-				/>
-
-				<MainContainer>
-					<Container
-						x={context.stateGameDerived.boardLayout().x}
-						y={context.stateGameDerived.boardLayout().y}
-					>
-						{#if winLevelData?.animation}
-							<WinAnimation animationMap={winLevelData.animation}>
+						<MainContainer>
+							<Container
+								x={context.stateGameDerived.boardLayout().x}
+								y={context.stateGameDerived.boardLayout().y}
+							>
 								<ResponsiveText
 									anchor={0.5}
-									maxWidth={2130}
+									maxWidth={context.stateLayoutDerived.canvasSizes().width /
+										context.stateLayoutDerived.mainLayout().scale}
 									text={bookEventAmountToCurrencyString(countUpAmount, {
 										counting: !countUpCompleted,
 									})}
-									style={{ ...signTextStyle(LAYOUT_UNIT * 3.6), align: 'center' }}
+									style={{ ...signTextStyle(LAYOUT_UNIT), align: 'center' }}
 								/>
-							</WinAnimation>
-						{:else}
-							<ResponsiveText
-								anchor={0.5}
-								maxWidth={context.stateLayoutDerived.canvasSizes().width /
-									context.stateLayoutDerived.mainLayout().scale}
-								text={bookEventAmountToCurrencyString(countUpAmount, {
-									counting: !countUpCompleted,
-								})}
-								style={{ ...signTextStyle(LAYOUT_UNIT), align: 'center' }}
-							/>
-						{/if}
-					</Container>
-				</MainContainer>
+							</Container>
+						</MainContainer>
 
-				<!-- "press anywhere to continue" only on a big win; a small one goes on by itself, a press
-				still hurries it -->
-				<PressToContinue
-					hideText={!isBigWin}
-					onpress={() => (countUpCompleted ? oncomplete() : finishCountUp())}
-				/>
-			{/snippet}
-		</WinCountUpProvider>
+						<PressToContinue
+							hideText
+							onpress={() => (countUpCompleted ? oncomplete() : finishCountUp())}
+						/>
+					{/snippet}
+				</WinCountUpProvider>
+			{/if}
+		{/key}
 	{/if}
 </FadeContainer>

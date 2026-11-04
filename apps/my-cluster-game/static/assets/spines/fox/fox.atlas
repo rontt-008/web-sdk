@@ -1,0 +1,7 @@
+fox.webp
+size: 512, 512
+filter: MipMapLinearLinear, Linear
+body
+bounds: 8, 8, 472, 382
+shadow
+bounds: 8, 398, 388, 66

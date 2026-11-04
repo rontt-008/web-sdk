@@ -1,4 +1,10 @@
-import { UI_THEME_CLEAN, LayoutDesktopPanel, type UiTheme } from 'components-ui-pixi';
+import {
+	UI_THEME_CLEAN,
+	LayoutDesktopPanel,
+	LayoutPortraitBar,
+	LayoutLandscapeBar,
+	type UiTheme,
+} from 'components-ui-pixi';
 import { UI_HTML_THEME_CLEAN, type UiHtmlTheme } from 'components-ui-html';
 
 // The UI chunky and charcoal, from the user's mock: near-black outlines, hard drop shadows under the
@@ -59,8 +65,17 @@ export const uiTheme: UiTheme = {
 		betLevel: { track: 0x2d2c33, fill: CREAM },
 		win: 0xffd34d,
 	},
-	// on wide and almost square screens, the chunky panel right across the bottom
-	layouts: { desktop: LayoutDesktopPanel, tablet: LayoutDesktopPanel },
+	// on wide and almost square screens, the chunky panel right across the bottom; on phones the same
+	// as Lazy Evening (apps/my-game): held upright, a panel of the amounts over the spin row and a pill
+	// of menu and sound; held sideways (and the miniplayer), a bar right across the bottom and the spin
+	// buttons in a column on the right. In the bonus they show the free and power spins' count in the
+	// bet's place (FreeSpinCounter keeps stateUi's counter)
+	layouts: {
+		desktop: LayoutDesktopPanel,
+		tablet: LayoutDesktopPanel,
+		portrait: LayoutPortraitBar,
+		landscape: LayoutLandscapeBar,
+	},
 	// the buy bonus button a disc at the bar's left end: the bonus logo in red with a thin black
 	// outline, on charcoal
 	buyBonus: {

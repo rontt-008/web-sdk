@@ -40,6 +40,9 @@
 	import Logo from './Logo.svelte';
 	import PowerSpinsIntro from './PowerSpinsIntro.svelte';
 	import GameInfo from './GameInfo.svelte';
+	import BonusTablet from './BonusTablet.svelte';
+	import ConfirmTablet from './ConfirmTablet.svelte';
+	import BonusGust from './BonusGust.svelte';
 
 	const context = getContext();
 
@@ -150,9 +153,7 @@
 		</UI>
 		<Win />
 		<FreeSpinIntro />
-		{#if ['desktop', 'landscape'].includes(context.stateLayoutDerived.layoutType())}
-			<FreeSpinCounter />
-		{/if}
+		<FreeSpinCounter />
 		<PowerSpinsIntro />
 		<FreeSpinOutro />
 		<!-- over everything: the gale as the bonus starts and ends -->
@@ -164,6 +165,18 @@
 <Modals theme={uiHtmlTheme} hideReplayCard={context.stateLayout.showLoadingScreen}>
 	{#snippet version()}
 		<GameVersion version="0.0.0" />
+	{/snippet}
+	<!-- the bonuses hang as rune slates from a branch, as Lazy Evening's towels hang from a line -->
+	{#snippet bonusCard({ levels, levelRow })}
+		<BonusTablet {levels} {levelRow} />
+	{/snippet}
+	<!-- buying one, or switching one on, is confirmed on its slate, bigger -->
+	{#snippet bonusConfirm({ betModeData, confirm, cancel })}
+		<ConfirmTablet {betModeData} onconfirm={confirm} oncancel={cancel} />
+	{/snippet}
+	<!-- a bonus once bought: its runes flare and a gust blows it away in leaves, then it starts -->
+	{#snippet bonusBought({ betModeData, start })}
+		<BonusGust {betModeData} onstart={start} />
 	{/snippet}
 	<!-- no pay table: the rules hold the symbol wins too (see uiTheme's hidePayTable) -->
 	{#snippet gameRules()}
