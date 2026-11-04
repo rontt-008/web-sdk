@@ -8,24 +8,21 @@
 </script>
 
 <script lang="ts">
-	import { SpineProvider, SpineTrack, SpineSlot, Text } from 'pixi-svelte';
+	import { Text } from 'pixi-svelte';
 	import { FadeContainer, WinCountUpProvider, ResponsiveText } from 'components-pixi';
 	import { bookEventAmountToCurrencyString } from 'utils-shared/amount';
 	import { waitForResolve } from 'utils-shared/wait';
-	import { CanvasSizeRectangle } from 'components-layout';
 	import { OnMount } from 'components-shared';
 
 	import { getContext } from '../game/context';
 	import { signTextStyle } from '../game/signText';
-	import FreeSpinAnimation, { FREE_SPIN_WORDS } from './FreeSpinAnimation.svelte';
+	import FreeSpinAnimation, { FREE_SPIN_NUMBER, FREE_SPIN_WORDS } from './FreeSpinAnimation.svelte';
+	import FreeSpinPop from './FreeSpinPop.svelte';
 	import PressToContinue from './PressToContinue.svelte';
-
-	type AnimationName = 'intro' | 'idle';
 
 	const context = getContext();
 
 	let show = $state(true);
-	let animationName = $state<AnimationName>('intro');
 	let amount = $state(0);
 	let winLevelData = $state<WinLevelData>();
 	let oncomplete = $state(() => {});
@@ -50,9 +47,8 @@
 			{#snippet children({ countUpAmount, startCountUp, finishCountUp, countUpCompleted })}
 				<OnMount onmount={() => startCountUp()} />
 
-				<CanvasSizeRectangle backgroundColor={0x000000} backgroundAlpha={0.5} />
-
-				<FreeSpinAnimation>
+				<!-- a stronger backdrop for a big total -->
+				<FreeSpinAnimation power={isBigWin ? 0.9 : 0.5}>
 					{#snippet children({ sizes })}
 						{#if isBigWin}
 							<Text {...FREE_SPIN_WORDS.congratulations} />
@@ -61,26 +57,16 @@
 							<Text {...FREE_SPIN_WORDS.youWonSmall} />
 						{/if}
 
-						<SpineProvider key="fsOutroNumber" width={sizes.width * 0.4}>
-							<SpineTrack
-								trackIndex={0}
-								{animationName}
-								loop={animationName === 'idle'}
-								listener={{
-									complete: () => (animationName = 'idle'),
-								}}
+						<FreeSpinPop y={FREE_SPIN_NUMBER.y}>
+							<ResponsiveText
+								anchor={0.5}
+								style={signTextStyle(FREE_SPIN_NUMBER.size)}
+								text={bookEventAmountToCurrencyString(countUpAmount, {
+									counting: !countUpCompleted,
+								})}
+								maxWidth={sizes.width * 2.24}
 							/>
-							<SpineSlot slotName="slot_number">
-								<ResponsiveText
-									anchor={0.5}
-									style={signTextStyle(sizes.width * 0.15)}
-									text={bookEventAmountToCurrencyString(countUpAmount, {
-										counting: !countUpCompleted,
-									})}
-									maxWidth={sizes.width}
-								/>
-							</SpineSlot>
-						</SpineProvider>
+						</FreeSpinPop>
 
 						<Text {...isBigWin ? FREE_SPIN_WORDS.totalWin : FREE_SPIN_WORDS.totalWinSmall} />
 					{/snippet}

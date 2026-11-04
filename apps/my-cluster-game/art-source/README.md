@@ -14,6 +14,21 @@ Originals of art that is processed before it goes into `static/assets` (not load
   frames are 501 x 402 with the paws 378 px down (see Fox.svelte). It also finds the eyes in every
   frame (their outlines, the fur's colours around them and how they move) and writes them to
   `src/game/foxEyes.ts`, for the blink Fox.svelte draws over them.
+- The fox's look-around and surprise are the user's mesh rig (`<blender stuff>/IDLE/kettu_look_around.blend`
+  and `<blender stuff>/kettu_surprised.blend`, made in `<blender stuff>/folders/<name>`: the same
+  drawing, 1312 x 1199 canvas, 30 fps; 10 s and 2.2 s). `fox-spine.py` exports both as one Spine
+  skeleton, `static/assets/spines/fox/fox.json` with animations `look` and `surprised` (run it from
+  apps/my-cluster-game with Blender: `blender -b --factory-startup --python art-source/fox-spine.py`;
+  it opens the .blends itself, listed in its ANIMATIONS): the drawing with the sprite frames'
+  outline and shadow at their 3/8 scale, one weighted mesh on a 20 px grid over it (weights taken
+  from the surprise rig's 8 px mesh), its 24 bones (the look leaves the eye bones at rest) keyed
+  every frame and thinned. Its units are the sprite frames' px from their anchor (the canvas lands
+  at `FRAME_OFFSET`, found by matching the drawing on the idle's first frame), so Fox.svelte draws
+  it where the sprites are. Each animation starts and ends bent (a mesh deform easing off over
+  0.7 s for the look, 0.4 s for the surprise) onto the sprite idle's first frame, found by running
+  Blender on kettuO.blend too (each old piece's picture matched in the drawing, followed through
+  its mesh), so the game cuts between them and the idle with nothing to see. The rig's shape keys
+  (breathing, brows) and eyelids are left out; the game's own blink follows the `face` bone.
 - `clouds-1.png`, `clouds-2.png`, `clouds-3.png`: clouds on a see-through background. `sky.py` cuts
   each cloud out on its own (with the wisps near it) into `static/assets/sprites/clouds` (cloud_1 to
   cloud_5), and cuts the tree at the top left of `static/assets/background.webp` out of its sky into

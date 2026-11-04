@@ -1,9 +1,18 @@
+<script lang="ts" module>
+	// the fox is surprised (a bonus starting); done once the surprise has hit, the gale can come
+	export type EmitterEventFox = { type: 'foxSurprised' };
+</script>
+
 <script lang="ts">
 	import _ from 'lodash';
 	import type { ComponentProps } from 'svelte';
+	import { Tween } from 'svelte/motion';
 	import { ColorMatrixFilter, FillGradient } from 'pixi.js';
-	import { Container, Graphics, SpriteSheet } from 'pixi-svelte';
+	import { Container, Graphics, SpineProvider, SpriteSheet } from 'pixi-svelte';
+	import { stateBetDerived } from 'state-shared';
+	import { waitForTimeout } from 'utils-shared/wait';
 
+	import FoxSpine from './FoxSpine.svelte';
 	import { getContext } from '../game/context';
 	import { LAYOUT_UNIT } from '../game/constants';
 	import { FOX_EYES } from '../game/foxEyes';
@@ -20,9 +29,12 @@
 	const FOX_RATIO = FOX_ART.width / FOX_ART.height;
 	// rendered at 24 frames a second; the speed is in frames a tick, at 60 ticks a second
 	const FOX_ANIMATION_SPEED = 24 / 60;
-	// how often a gust swings its tail, from one gust's start to the next; it waits for the idle to
-	// finish its loop, as the gust starts and ends in the idle's first pose
-	const GUST_EVERY = 10_000;
+	// Now and then, as its idle finishes a loop, it does something else: a gust of wind swings its
+	// tail, or it looks around (the user's mesh rig as a Spine skeleton, foxRig, 10 s), both starting
+	// and ending in the idle's first pose (the look's rig is bent onto it there, see fox-spine.py), so
+	// they switch straight over. This long (seconds, at random) after the last one ended; `look`, the
+	// share of them that look around (never twice running).
+	const VARIETY = { every: { min: 9, max: 15 }, look: 0.5 };
 	// now and then it blinks (in seconds): its lids, drawn over its eyes in the fur's colours, close,
 	// stay shut a moment and open again, and sometimes it blinks again straight after
 	const BLINK = {
@@ -40,24 +52,85 @@
 	const lookFilter = new ColorMatrixFilter({ resolution: 'inherit' });
 	lookFilter.matrix = lookMatrix(FOX_LOOK);
 
-	let gusting = $state(false);
-	let lastGust = performance.now();
-	// a gust of wind over the board (Wind: blowing wilds onto it or sweeping symbols off it) swings
-	// its tail too, as soon as its idle has finished its loop, about as the wind reaches it
-	let windBlowing = false;
+	// As a bonus starts, before its gale blows in (freeSpinTrigger), it is surprised (the user's
+	// kettu_surprised.blend on the same rig, 2.2 s): straight away, from whatever it is doing. From
+	// its idle it switches straight over (the idle strays a pixel or two from its first pose, hidden
+	// by the start of the surprise); from looking around the surprise blends in bone by bone over
+	// `mix` (s); from a gust (its tail up) it fades in over the gust's frame over `fade` (ms). The
+	// gale comes `lead` (ms) in, the surprise just held.
+	const SURPRISE = { mix: 0.25, fade: 200, lead: 650 };
 
-	const onIdleLoop = () => {
-		if (!windBlowing && performance.now() - lastGust < GUST_EVERY) return;
-		windBlowing = false;
-		lastGust = performance.now();
-		gusting = true;
+	// what it is doing: its idle loop, a gust swinging its tail, looking around, or surprised
+	type Mode = 'idle' | 'gust' | 'look' | 'surprised';
+	let mode = $state<Mode>('idle');
+	const gusting = $derived(mode === 'gust');
+	const onRig = $derived(mode === 'look' || mode === 'surprised');
+	const nextVariety = () =>
+		performance.now() + _.random(VARIETY.every.min, VARIETY.every.max, true) * 1000;
+	let varietyAt = nextVariety();
+	let lookedLast = false;
+	// a gust of wind over the board (Wind: blowing wilds onto it or sweeping symbols off it) swings
+	// its tail too, as soon as its idle has finished its loop (or its look), about as the wind
+	// reaches it
+	let windBlowing = false;
+	// the gust's frame held under the surprise as it fades in, and how far in it is
+	let held = $state(false);
+	const rigIn = new Tween(1);
+
+	const start = (next: Mode) => {
+		mode = next;
+		lookedLast = next === 'look';
+		if (next === 'gust') windBlowing = false;
 	};
-	const onGustComplete = () => (gusting = false);
+	const onIdleLoop = () => {
+		if (windBlowing) return start('gust');
+		if (performance.now() < varietyAt) return;
+		const canLook = !lookedLast && !!context.stateApp.loadedAssets.foxRig;
+		start(canLook && Math.random() < VARIETY.look ? 'look' : 'gust');
+	};
+	const onDone = () => {
+		frame = 0;
+		varietyAt = nextVariety();
+		start(windBlowing ? 'gust' : 'idle');
+	};
+	const onRigDone = (animation: string) => {
+		if (animation === mode) onDone();
+	};
 
 	const onWind = () => {
 		if (!gusting) windBlowing = true;
 	};
-	context.eventEmitter.subscribeOnMount({ windGust: onWind, windSweep: onWind });
+
+	const surprise = async () => {
+		if (!shown || !context.stateApp.loadedAssets.foxRig || mode === 'surprised') return;
+		if (mode === 'gust') {
+			held = true;
+			rigIn.set(0, { duration: 0 });
+			rigIn.set(1, { duration: SURPRISE.fade }).then(() => (held = false));
+		}
+		start('surprised');
+		await waitForTimeout(SURPRISE.lead / stateBetDerived.timeScale());
+	};
+
+	// in the look, where its face bone is (the eyes slide with it), and where it was as the look
+	// started: the blink follows the difference
+	let face = $state<{ x: number; y: number }>();
+	let faceStart: { x: number; y: number } | undefined;
+	const onFaceMove = (at: { x: number; y: number }) => {
+		faceStart ??= at;
+		face = at;
+	};
+	$effect(() => {
+		if (!onRig) {
+			face = undefined;
+			faceStart = undefined;
+		}
+	});
+	context.eventEmitter.subscribeOnMount({
+		windGust: onWind,
+		windSweep: onWind,
+		foxSurprised: surprise,
+	});
 
 	// sizes are of the whole art, shadow included
 	const FOX = {
@@ -101,6 +174,15 @@
 			height,
 		};
 	});
+
+	// only on wide screens (phones held sideways have the spin and bet buttons right of the board),
+	// and once its art is loaded (it is lazy, loaded by Game when the screen is wide)
+	const shown = $derived(
+		context.stateLayoutDerived.layoutType() === 'desktop' &&
+			layout.height >= FOX.minHeight &&
+			!!context.stateApp.loadedAssets.foxIdle &&
+			!!context.stateApp.loadedAssets.foxGust,
+	);
 
 	// the frame shown, and how shut the lids are, from 0 (open) to 1 (shut)
 	let frame = $state(0);
@@ -163,8 +245,14 @@
 	// each lid comes down from the top of its eye's outline, its dark edge at the same share of the
 	// way to the bottom across the eye, so shut it follows the bottom of the eye
 	const drawLids: ComponentProps<typeof Graphics>['draw'] = (graphics) => {
-		if (lids <= 0) return;
-		const [dx, dy] = FOX_EYES.offsets[gusting ? 'gust' : 'idle'][frame] ?? [0, 0];
+		// (not while surprised: its eyes go wide)
+		if (lids <= 0 || mode === 'surprised') return;
+		const [dx, dy] =
+			mode === 'look'
+				? face && faceStart
+					? [face.x - faceStart.x, face.y - faceStart.y]
+					: [0, 0]
+				: (FOX_EYES.offsets[gusting ? 'gust' : 'idle'][frame] ?? [0, 0]);
 		FOX_EYES.eyes.forEach((eye, index) => {
 			const top = eye.outline.map(([x, y]) => ({ x: x + dx - ORIGIN.x, y: y + dy - ORIGIN.y }));
 			const edge = eye.outline.map(([x, y, bottom]) => ({
@@ -183,25 +271,39 @@
 	};
 </script>
 
-<!-- only on wide screens: phones held sideways have the spin and bet buttons right of the board;
-and once its art is loaded (it is lazy, loaded by Game when the screen is wide) -->
-{#if context.stateLayoutDerived.layoutType() === 'desktop' && layout.height >= FOX.minHeight && context.stateApp.loadedAssets.foxIdle && context.stateApp.loadedAssets.foxGust}
+{#if shown}
 	<Container
 		x={layout.x}
 		y={layout.y}
 		scale={layout.height / FOX_ART.height}
 		filters={[lookFilter]}
 	>
-		<SpriteSheet
-			key={gusting ? 'foxGust' : 'foxIdle'}
-			anchor={{ x: 0.5, y: FOX_ART.paws / FOX_ART.height }}
-			animationSpeed={FOX_ANIMATION_SPEED}
-			loop={!gusting}
-			onLoop={onIdleLoop}
-			onComplete={onGustComplete}
-			{onFrameChange}
-			play
-		/>
+		{#if !onRig || held}
+			<!-- (held: the gust's frame, still, under the surprise fading in) -->
+			<SpriteSheet
+				key={gusting || held ? 'foxGust' : 'foxIdle'}
+				anchor={{ x: 0.5, y: FOX_ART.paws / FOX_ART.height }}
+				animationSpeed={FOX_ANIMATION_SPEED}
+				loop={!gusting && !held}
+				onLoop={onIdleLoop}
+				onComplete={onDone}
+				{onFrameChange}
+				play={!held}
+			/>
+		{/if}
+		{#if onRig}
+			<!-- its skeleton's units are the frames' px, its origin their anchor (fox-spine.py) -->
+			<Container alpha={rigIn.current}>
+				<SpineProvider key="foxRig">
+					<FoxSpine
+						animation={mode}
+						mix={SURPRISE.mix}
+						oncomplete={onRigDone}
+						onface={onFaceMove}
+					/>
+				</SpineProvider>
+			</Container>
+		{/if}
 		<Graphics draw={drawLids} />
 	</Container>
 {/if}

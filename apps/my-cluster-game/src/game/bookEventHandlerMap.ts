@@ -298,7 +298,10 @@ export const bookEventHandlerMap: BookEventHandlerMap<BookEvent, BookEventContex
 		eventEmitter.broadcast({ type: 'soundOnce', name: 'sfx_scatter_win_v2' });
 		// the bonus meter full (a bought bonus may not have filled it); it goes for the free spins.
 		// The mythic bonus is Mannaz's, already flaring, not the meter's
-		if (stateGame.bonusType !== 'mythic') await eventEmitter.broadcastAsync({ type: 'bonusMeterFull' });
+		if (stateGame.bonusType !== 'mythic')
+			await eventEmitter.broadcastAsync({ type: 'bonusMeterFull' });
+		// the fox is surprised (on wide screens, where it shows), and as its surprise hits, the gale
+		await eventEmitter.broadcastAsync({ type: 'foxSurprised' });
 		// a gale sweeps the screen (WindTransition). Under it the free spins' setup is put in place,
 		// so nothing moves once it clears: the board in its bonus place right, where the rune ladder
 		// has room, the fox smaller (Mannaz fades as the game type changes), the spins' sign instead of

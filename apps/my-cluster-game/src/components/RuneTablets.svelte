@@ -6,10 +6,13 @@
 	import { FadeContainer } from 'components-pixi';
 	import { Container, Sprite } from 'pixi-svelte';
 
+	import { CanvasTextMetrics, TextStyle } from 'pixi.js';
+
 	import RuneTablet from './RuneTablet.svelte';
 	import MeterSouls from './MeterSouls.svelte';
 	import { getContext } from '../game/context';
-	import { LAYOUT_UNIT } from '../game/constants';
+	import { RUNE_LADDER_ART } from '../game/stateGame.svelte';
+	import { signTextStyle } from '../game/signText';
 	import {
 		NO_OFFSET,
 		RUNES,
@@ -25,8 +28,7 @@
 	// art-source/wood-frames.py), standing up, in its pixels: its size and its four compartments, inside
 	// the branches, top to bottom; and how far a box's panel reaches under the branches round it.
 	const LADDER_ART = {
-		width: 606,
-		height: 1499,
+		...RUNE_LADDER_ART,
 		compartments: [
 			{ left: 106, top: 114, right: 519, bottom: 437 },
 			{ left: 109, top: 469, right: 520, bottom: 790 },
@@ -36,49 +38,25 @@
 	};
 	const TUCK = 12;
 
-	// from the ladder to the board's frame and to the screen's edge, and how wide it gets
-	const GAP = LAYOUT_UNIT * 0.04;
-	const MARGIN = LAYOUT_UNIT * 0.04;
-	const MAX_WIDTH = LAYOUT_UNIT * 3.2;
-	// the room for it this much lower than from the top of the screen to the bottom of the board (its
-	// bottom still clears the UI's bar)
-	const DROP = LAYOUT_UNIT * 0.2;
-	// narrower than this left of the frame (phones held upright), it lies down in the bonus meter's
-	// place above the board (the meter is hidden in the bonus)
-	const MIN_COLUMN = LAYOUT_UNIT * 0.9;
+	// The ladder, as big as fits: standing up left of the board's frame or lying down over it (see
+	// runeLadderLayout, which also moves the board so it has the room)
+	const ladder = $derived(context.stateGameDerived.runeLadderLayout());
 
-	// The ladder, keeping its shape, as big as fits: standing up left of the board's frame, between
-	// the top of the screen (or of the frame) and the bottom of the board, or lying down (turned a
-	// quarter clockwise) in the bonus meter's place. `x`, `y` and `scale` are for its art.
-	const ladder = $derived.by(() => {
-		const main = context.stateLayoutDerived.mainLayout();
-		const board = context.stateGameDerived.boardLayout();
-		const frame = context.stateGameDerived.boardFrameLayout().visible;
-		// the screen's top left corner in the main layout
-		const screenLeft = main.width / 2 - main.x / main.scale;
-		const screenTop = main.height / 2 - main.y / main.scale;
-		const { width, height } = LADDER_ART;
-
-		const right = frame.left - GAP;
-		const left = Math.max(screenLeft + MARGIN, right - MAX_WIDTH);
-		if (right - left >= MIN_COLUMN) {
-			const top = Math.max(screenTop + MARGIN, frame.top) + DROP;
-			const bottom = board.y + board.height / 2 + DROP;
-			const scale = Math.min((right - left) / width, (bottom - top) / height);
-			return {
-				upright: true,
-				x: (left + right - width * scale) / 2,
-				y: (top + bottom - height * scale) / 2,
-				scale,
-			};
-		}
-		const room = context.stateGameDerived.bonusMeterLayout();
-		const scale = Math.min(room.width / height, room.height / width);
+	// The powers under the pictures, all the same size, as big as the longest fits (see RuneTablet):
+	// how wide the longest power and the longest word are, in their font size (measured, with their
+	// outline; a little to spare). They change in the free spins (Fehu's multiplier, Ingwaz's spins).
+	const SPARE = 1.04;
+	const MEASURE_SIZE = 100;
+	const powerTexts = $derived(
+		RUNE_NAMES.map((name) => RUNES[name].powerText(context.stateGame.bonusType, context.stateGame)),
+	);
+	const longest = $derived.by(() => {
+		const style = new TextStyle(signTextStyle(MEASURE_SIZE));
+		const measure = (text: string) =>
+			(CanvasTextMetrics.measureText(text, style).width / MEASURE_SIZE) * SPARE;
 		return {
-			upright: false,
-			x: room.x + (room.width - height * scale) / 2,
-			y: room.y + (room.height - width * scale) / 2,
-			scale,
+			line: Math.max(...powerTexts.map(measure)),
+			word: Math.max(...powerTexts.flatMap((text) => text.split(' ')).map(measure)),
 		};
 	});
 
@@ -192,6 +170,8 @@
 				{...boxes[i]}
 				tuck={TUCK * ladder.scale}
 				{content}
+				power={powerTexts[i]}
+				{longest}
 				state={stateOf(name)}
 				offset={offsets[name]}
 				glows={name === active ? glows.map((glow) => glow.current) : []}

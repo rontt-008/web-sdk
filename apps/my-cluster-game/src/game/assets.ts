@@ -187,38 +187,6 @@ export default {
 		src: new URL('../../assets/fonts/germaniaOne/germania-one.ttf', import.meta.url).href,
 		preload: true,
 	},
-	bigwin: {
-		type: 'spine',
-		src: {
-			atlas: new URL('../../assets/spines/bigwin/big_wins.atlas', import.meta.url).href,
-			skeleton: new URL('../../assets/spines/bigwin/mm_bigwin.json', import.meta.url).href,
-			scale: 2,
-		},
-	},
-	fsIntro: {
-		type: 'spine',
-		src: {
-			atlas: new URL('../../assets/spines/fsIntro/fs_screen.atlas', import.meta.url).href,
-			skeleton: new URL('../../assets/spines/fsIntro/fs_screen.json', import.meta.url).href,
-			scale: 2,
-		},
-	},
-	fsIntroNumber: {
-		type: 'spine',
-		src: {
-			atlas: new URL('../../assets/spines/fsIntro/fs_screen.atlas', import.meta.url).href,
-			skeleton: new URL('../../assets/spines/fsIntro/fs_screen_number.json', import.meta.url).href,
-			scale: 2,
-		},
-	},
-	fsOutroNumber: {
-		type: 'spine',
-		src: {
-			atlas: new URL('../../assets/spines/fsIntro/fs_screen.atlas', import.meta.url).href,
-			skeleton: new URL('../../assets/spines/fsIntro/fs_total_number.json', import.meta.url).href,
-			scale: 2,
-		},
-	},
 	// the autumn lake behind everything, in the base game and free spins
 	background: {
 		type: 'sprite',
@@ -317,6 +285,18 @@ export default {
 		src: new URL('../../assets/sprites/fox/fox-gust.json', import.meta.url).href,
 		lazy: true,
 	},
+	// now and then it looks around, and it is surprised as a bonus starts (the user's mesh rig,
+	// kettu_look_around.blend and kettu_surprised.blend, exported by art-source/fox-spine.py): a Spine
+	// skeleton whose units are the sprite frames' px, its animations `look` and `surprised`
+	foxRig: {
+		type: 'spine',
+		src: {
+			atlas: new URL('../../assets/spines/fox/fox.atlas', import.meta.url).href,
+			skeleton: new URL('../../assets/spines/fox/fox.json', import.meta.url).href,
+			scale: 1,
+		},
+		lazy: true,
+	},
 	tumble_multiplier: {
 		type: 'spine',
 		src: {
@@ -354,4 +334,4 @@ export default {
 } as const;
 
 // loaded by Game only on wide screens, where Fox shows (see foxIdle above)
-export const FOX_ASSET_KEYS = ['foxIdle', 'foxGust'];
+export const FOX_ASSET_KEYS = ['foxIdle', 'foxGust', 'foxRig'];

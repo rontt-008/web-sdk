@@ -2,18 +2,13 @@
 	import TumbleSymbol from './TumbleSymbol.svelte';
 	import BigWild, { blockState } from './BigWild.svelte';
 	import { getContext } from '../game/context';
-	import { findWildBlocks } from '../game/utils';
 
 	const context = getContext();
 
-	// square blocks of wilds (2x2, 3x3) are drawn as one big wild each (BigWild), not cell by cell: on the board as
-	// it was before the tumble (tumbleBoardBase), where a winning block goes as a whole
-	const blocks = $derived(
-		findWildBlocks(
-			context.stateGame.tumbleBoardBase,
-			(tumbleSymbol) => tumbleSymbol.rawSymbol.name === 'W' && !tumbleSymbol.gone,
-		),
-	);
+	// square blocks of wilds (2x2, 3x3) are drawn as one big wild each (BigWild), not cell by cell: the
+	// blocks TumbleBoard found as the tumble started, while their cells move together (it lets a block
+	// go, its wilds tumbling one by one, when some of it goes or its columns fall unevenly)
+	const blocks = $derived(context.stateGame.tumbleBlocks);
 	const inBlocks = $derived(new Set(blocks.flatMap((block) => block.cells)));
 </script>
 
