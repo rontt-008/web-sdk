@@ -98,7 +98,9 @@
 		hagall:
 			superPowers.wilds === normal.wilds
 				? `Every POWER SPIN lands a ${normal.wilds}x${normal.wilds} BIG WILD.`
-				: `Every POWER SPIN lands a ${normal.wilds}x${normal.wilds} BIG WILD, ${superPowers.wilds}x${superPowers.wilds} in SUPER FREE SPINS.`,
+				: superPowers.wilds === mythicPowers.wilds
+					? `Every POWER SPIN lands a ${normal.wilds}x${normal.wilds} BIG WILD, ${superPowers.wilds}x${superPowers.wilds} in SUPER and MYTHIC FREE SPINS.`
+					: `Every POWER SPIN lands a ${normal.wilds}x${normal.wilds} BIG WILD, ${superPowers.wilds}x${superPowers.wilds} in SUPER FREE SPINS, ${mythicPowers.wilds}x${mythicPowers.wilds} in MYTHIC FREE SPINS.`,
 		ingwaz:
 			'One more POWER SPIN, and one more for every YELLOW RUNE symbol that lands in the FREE SPINS.',
 	};
