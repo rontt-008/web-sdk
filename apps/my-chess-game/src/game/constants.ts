@@ -48,9 +48,21 @@ export const PIECE_NAMES: Record<PieceKind, string> = {
 	K: 'King',
 };
 
-// how a move plays, in ms (divided by the turbo's time scale): the piece's slide, the pause after a
-// move before the next, the taken piece's burst, and how long a label (CHECK, CHECKMATE) stays up
-export const MOVE_TIMING = { slide: 420, pause: 320, burst: 260, label: 900, mate: 1500 };
+// How a move plays, in ms (divided by the turbo's time scale): the beat before a spin's first move (the
+// mover and its target pulsing), the piece's slide, the pause after a move before the next (longer
+// after a capture, so its pay is read), the taken piece's burst, how long a label (CHECK, CHECKMATE,
+// an end's reason) stays up, and the hold on the cheater spin's queen before the spots fly to her.
+export const MOVE_TIMING = {
+	firstBeat: 650,
+	slide: 550,
+	pause: 450,
+	captureHold: 350,
+	burst: 300,
+	label: 900,
+	short: 700,
+	mate: 1500,
+	queenHold: 700,
+};
 
 export const INITIAL_SYMBOL_STATE: SymbolState = 'static';
 
@@ -91,4 +103,9 @@ export const BOARD_COLOURS = {
 	lastMove: 0xf2c94c,
 	check: 0xe03b2f,
 	label: 0xe8d9b8,
+	spot: 0xffd34d,
 };
+
+// the multiplier spots and the bet modes, as the math has them
+export const SPOT_VALUES = [2, 3, 5, 10];
+export const CHEAT_SPOTS = { min: 3, max: 5 };

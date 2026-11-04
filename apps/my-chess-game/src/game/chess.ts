@@ -31,12 +31,14 @@ export const describeMove = (move: {
 	promotion?: SymbolName;
 	check: boolean;
 	mate: boolean;
+	spot?: number;
 }) => {
 	const parts = [
 		move.side === 'you' ? 'YOU' : 'THEM',
 		`${pieceKind(move.piece) ?? ''}${squareName(move.from)}→${squareName(move.to)}`,
 	];
 	if (move.captured) parts.push(`×${pieceKind(move.captured)}`);
+	if (move.spot) parts.push(`SPOT x${move.spot}`);
 	if (move.promotion) parts.push(`=${pieceKind(move.promotion)}`);
 	if (move.mate) parts.push('CHECKMATE');
 	else if (move.check) parts.push('CHECK');

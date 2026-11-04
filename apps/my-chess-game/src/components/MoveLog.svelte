@@ -18,7 +18,7 @@
 			text={line}
 			anchor={{ x: 0.5, y: 0 }}
 			x={board.x}
-			y={board.y + board.height / 2 + SYMBOL_SIZE * 0.5 + index * SYMBOL_SIZE * 0.28}
+			y={board.y + board.height / 2 + SYMBOL_SIZE * 1.15 + index * SYMBOL_SIZE * 0.25}
 			alpha={index === lines.length - 1 ? 1 : 0.55}
 			style={{
 				fontFamily: 'proxima-nova',

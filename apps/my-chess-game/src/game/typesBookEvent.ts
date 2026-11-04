@@ -12,10 +12,31 @@ type BookEventReveal = {
 	gameType: GameType;
 };
 
+// a multiplier spot on the board: taking one of the other side's pieces on it pays the capture times
+// its multiplier too, and uses it up
+export type Spot = Position & { multiplier: number };
+
+// The landed board's multiplier spots (none: no event)
+type BookEventMultiplierSpots = {
+	index: number;
+	type: 'multiplierSpots';
+	spots: Spot[];
+};
+
+// The CHEATER SPIN: your queen (at `queen`) collects every multiplier spot; the spin's multiplier is their
+// sum, `multiplier`
+type BookEventQueenCollect = {
+	index: number;
+	type: 'queenCollect';
+	queen: Position;
+	spots: Spot[];
+	multiplier: number;
+};
+
 // A move, yours ("you") or the other side's ("them"): the piece's symbol, where from and to, the symbol
-// it takes (if any), what a pawn becomes (if it promotes), whether it gives check or mate, and what it
-// pays (your captures only; in hundredths of the bet, the multiplier already in it) at the spin's
-// multiplier `multiplier`.
+// it takes (if any), what a pawn becomes (if it promotes), whether it gives check or mate, what it pays
+// (your captures only; in hundredths of the bet, the multipliers already in it) at the spin's multiplier
+// `multiplier`, and the multiplier spot it took the piece on (`spot`, if any; used up).
 type BookEventMove = {
 	index: number;
 	type: 'move';
@@ -29,6 +50,13 @@ type BookEventMove = {
 	mate: boolean;
 	win: number;
 	multiplier: number;
+	spot?: number;
+};
+
+// The position landed with your king in check: your first move must get out of it
+type BookEventInCheck = {
+	index: number;
+	type: 'inCheck';
 };
 
 // The spin's moves are over: why (see the math's sequence_end_event)
@@ -110,7 +138,10 @@ type BookEventCreateBonusSnapshot = {
 
 export type BookEvent =
 	| BookEventReveal
+	| BookEventMultiplierSpots
+	| BookEventQueenCollect
 	| BookEventMove
+	| BookEventInCheck
 	| BookEventSequenceEnd
 	| BookEventCheckmate
 	| BookEventSetTotalWin

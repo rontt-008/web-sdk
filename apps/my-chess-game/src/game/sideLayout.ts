@@ -2,31 +2,48 @@ import { stateLayoutDerived } from './stateLayout';
 import { stateGameDerived } from './stateGame.svelte';
 import { SYMBOL_SIZE } from './constants';
 
-// Where the multiplier badge (ComboMultiplier) and the side toggle (SideToggle) go, each a box
-// `width` wide: on wide screens one above the other to the right of the board; on tall and square
-// ones in a row above the board, the toggle left and the multiplier right.
+// Where the things round the board go: the multiplier badge (ComboMultiplier, a circle `size` across),
+// the side toggle (SideToggle), the spin's win (SpinWin) and whose move it is (TurnTag), the last two
+// boxes `width` by `height`. On wide screens all four in a column to the right of the board, clear of
+// the picture's gold frame round it (about a square and a half wide); on tall and square ones the toggle
+// and a smaller multiplier in a row above the board, and the turn tag and the spin win below it, under
+// the move log, left and right.
 export const sidePanelLayout = () => {
 	const board = stateGameDerived.boardLayout();
 	const layoutType = stateLayoutDerived.layoutType();
 	const width = SYMBOL_SIZE * 2.6;
 	const height = SYMBOL_SIZE * 0.8;
-	const gap = SYMBOL_SIZE * 0.7;
+	const tagHeight = SYMBOL_SIZE * 0.6;
+	const clear = SYMBOL_SIZE * 1.7;
+	const gap = SYMBOL_SIZE * 0.3;
 	const beside = layoutType === 'desktop' || layoutType === 'landscape';
 	if (beside) {
-		const x = board.x + board.width / 2 + gap + width / 2;
+		const size = SYMBOL_SIZE * 2.8;
+		const x = board.x + board.width / 2 + clear + size / 2;
 		const top = board.y - board.height / 2;
+		const toggleY = top + size + gap + height / 2;
+		const spinWinY = toggleY + height / 2 + gap + height / 2;
+		const turnY = spinWinY + height / 2 + gap + tagHeight / 2;
 		return {
 			width,
 			height,
-			multiplier: { x, y: top + height / 2 + SYMBOL_SIZE * 0.1 },
-			toggle: { x, y: top + height * 1.5 + SYMBOL_SIZE * 0.4 },
+			tagHeight,
+			multiplier: { x, y: top + size / 2, size },
+			toggle: { x, y: toggleY },
+			spinWin: { x, y: spinWinY },
+			turn: { x, y: turnY },
 		};
 	}
-	const y = board.y - board.height / 2 - gap - height / 2;
+	const size = SYMBOL_SIZE * 1.5;
+	const y = board.y - board.height / 2 - clear - height / 2;
+	const below = board.y + board.height / 2 + SYMBOL_SIZE * 2.1;
 	return {
 		width,
 		height,
-		multiplier: { x: board.x + board.width / 2 - width / 2, y },
+		tagHeight,
+		multiplier: { x: board.x + board.width / 2 - size / 2, y, size },
 		toggle: { x: board.x - board.width / 2 + width / 2, y },
+		spinWin: { x: board.x + board.width / 2 - width / 2, y: below },
+		turn: { x: board.x - board.width / 2 + width / 2, y: below },
 	};
 };

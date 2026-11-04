@@ -19,7 +19,6 @@
 	import Sound from './Sound.svelte';
 	import Background from './Background.svelte';
 	import LoadingScreen from './LoadingScreen.svelte';
-	import BoardFrame from './BoardFrame.svelte';
 	import BoardSquares from './BoardSquares.svelte';
 	import Board from './Board.svelte';
 	import PlayBoard from './PlayBoard.svelte';
@@ -27,6 +26,8 @@
 	import MoveLog from './MoveLog.svelte';
 	import MoveLabel from './MoveLabel.svelte';
 	import ComboMultiplier from './ComboMultiplier.svelte';
+	import SpinWin from './SpinWin.svelte';
+	import TurnTag from './TurnTag.svelte';
 	import SideToggle from './SideToggle.svelte';
 	import Win from './Win.svelte';
 	import FreeSpinIntro from './FreeSpinIntro.svelte';
@@ -71,10 +72,6 @@
 		<Sound />
 
 		<MainContainer>
-			<BoardFrame />
-		</MainContainer>
-
-		<MainContainer>
 			<BoardSquares />
 		</MainContainer>
 
@@ -91,6 +88,8 @@
 		<MoveLog />
 		<ComboMultiplier />
 		<SideToggle />
+		<SpinWin />
+		<TurnTag />
 
 		<UI theme={uiTheme}>
 			{#snippet gameName()}

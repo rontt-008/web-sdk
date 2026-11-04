@@ -12,6 +12,7 @@
 		symbol: SymbolName;
 		scale?: number;
 		alpha?: number;
+		tint?: number;
 		zIndex?: number;
 	};
 
@@ -32,6 +33,7 @@
 		width={size}
 		height={size}
 		alpha={props.alpha ?? 1}
+		tint={props.tint ?? 0xffffff}
 		zIndex={props.zIndex ?? 0}
 	/>
 {/if}

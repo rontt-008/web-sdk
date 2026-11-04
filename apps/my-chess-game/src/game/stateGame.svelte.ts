@@ -5,7 +5,8 @@ import { stateBet } from 'state-shared';
 import { createEnhanceBoard, createReelForCascading } from 'utils-slots';
 import { createGetWinLevelDataByWinLevelAlias } from 'utils-shared/winLevel';
 
-import type { GameType, PieceColour, Position, RawSymbol, SymbolName } from './types';
+import type { GameType, PieceColour, Position, RawSymbol, Side, SymbolName } from './types';
+import type { Spot } from './typesBookEvent';
 import { stateLayoutDerived } from './stateLayout';
 import { winLevelMap } from './winLevelMap';
 import { eventEmitter } from './eventEmitter';
@@ -81,11 +82,25 @@ export const stateGame = $state({
 	yourColour: loadColour(),
 	// the spin's multiplier: 1, one more for every piece you take (in the free spins it carries on)
 	multiplier: 1,
-	// the last move's squares, and the square of a king in check, lit on the board (BoardSquares)
+	// the last move's squares (with an arrow between them), the square a capture is about to land on
+	// (ringed while the piece slides), the square of a king in check and the line of the check, lit on
+	// the board (BoardSquares)
 	lastMove: undefined as { from: Position; to: Position } | undefined,
+	attackSquare: undefined as Position | undefined,
 	checkSquare: undefined as Position | undefined,
+	checkLine: undefined as { from: Position; to: Position } | undefined,
+	// whose move it is (TurnTag; the other side's pieces dim meanwhile), none between spins
+	turn: undefined as Side | undefined,
+	// how many of the spin's moves have been played, what the spin has won so far (SpinWin) and the
+	// multiplier spot of its last capture, if any
+	movesThisSpin: 0,
+	spinWin: 0,
+	lastSpot: undefined as number | undefined,
 	// the spin's moves in words (MoveLog)
 	moveLog: [] as string[],
+	// the multiplier spots on the board (BoardSquares), each gone when a capture on it uses it up or the
+	// cheater spin's queen collects it
+	spots: [] as Spot[],
 	scatterCounter: 0,
 });
 
@@ -108,6 +123,27 @@ const boardLayout = () => ({
 	pivot: { x: BOARD_SIZES.width / 2, y: BOARD_SIZES.height / 2 },
 	...BOARD_SIZES,
 });
+
+// The background picture (static/assets/Make_cool_2D_chessboard_*.jpg): its size and where its eight by
+// eight squares lie, in its pixels. It is drawn so that they lie exactly under the board (backgroundLayout).
+export const BACKGROUND_ART = {
+	width: 2752,
+	height: 1536,
+	board: { left: 915, top: 309, width: 926, height: 925 },
+};
+
+const backgroundLayout = () => {
+	const board = boardLayout();
+	const art = BACKGROUND_ART.board;
+	// the board's units per pixel of the picture, the same both ways (its squares are square)
+	const scale = board.width / art.width;
+	return {
+		x: board.x - (art.left + art.width / 2) * scale,
+		y: board.y - (art.top + art.height / 2) * scale,
+		width: BACKGROUND_ART.width * scale,
+		height: BACKGROUND_ART.height * scale,
+	};
+};
 
 // the middle of a square in the board's own units (the board container's), for a book's position
 const squareCentre = ({ reel, row }: Position) => ({
@@ -187,6 +223,7 @@ export const { getWinLevelDataByWinLevelAlias } = createGetWinLevelDataByWinLeve
 
 export const stateGameDerived = {
 	boardLayout,
+	backgroundLayout,
 	squareCentre,
 	cellCentre,
 	boardRaw,

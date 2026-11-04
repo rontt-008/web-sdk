@@ -1,6 +1,7 @@
 """Makes the chess pieces' pictures (static/assets/pieces/<colour><piece>.png): the filled chess glyphs of
-DejaVu Sans (the font matplotlib ships), the white pieces ivory with a dark outline, the black pieces
-charcoal with a light edge, each on a transparent square.
+Segoe UI Symbol (Windows' own font; the conventional shapes, each piece plainly its own), the white pieces
+ivory with a dark outline, the black pieces charcoal with a light edge, each on a transparent square.
+Without that font (not on Windows) it falls back to DejaVu Sans, which matplotlib ships.
 
 Run from the math-sdk folder (its Python has Pillow and matplotlib):
     .\\env\\Scripts\\python.exe ..\\web-sdk\\apps\\my-chess-game\\art-source\\pieces.py
@@ -12,7 +13,9 @@ import matplotlib
 from PIL import Image, ImageDraw, ImageFilter, ImageFont
 
 OUT = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "static", "assets", "pieces")
-FONT = os.path.join(matplotlib.get_data_path(), "fonts", "ttf", "DejaVuSans-Bold.ttf")
+SEGOE = r"C:\Windows\Fonts\seguisym.ttf"
+DEJAVU = os.path.join(matplotlib.get_data_path(), "fonts", "ttf", "DejaVuSans-Bold.ttf")
+FONT = SEGOE if os.path.exists(SEGOE) else DEJAVU
 SIZE = 256
 # the filled (black) glyphs, U+265A to U+265F: king, queen, rook, bishop, knight, pawn
 GLYPHS = {"K": "♚", "Q": "♛", "R": "♜", "B": "♝", "N": "♞", "P": "♟"}

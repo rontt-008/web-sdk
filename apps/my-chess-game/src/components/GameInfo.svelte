@@ -9,8 +9,9 @@
 		RETRIGGER_SPINS,
 		MAX_FREE_SPINS,
 		MAX_MOVES,
+		CHEAT_SPOTS,
 	} from '../game/constants';
-	import { BONUS_COST } from '../game/betModes';
+	import { BONUS_COST, BOOSTER_COST, CHEAT_COST } from '../game/betModes';
 	import type { PieceKind } from '../game/types';
 
 	// The game rules (the menu button opens them), which hold the pays too: the board, the moves, what
@@ -95,6 +96,43 @@
 	</section>
 
 	<section>
+		<h3>Multiplier spots</h3>
+		<div class="card text">
+			<p>
+				Before the pieces land, a few squares (none to three) get a multiplier spot: x2, x3, x5 or
+				x10, with or without a piece on them. Take one of the other side's pieces on a spot and the
+				capture pays its value times the spin's multiplier times the spot's, and the spot is used up.
+				A spot does nothing for the other side.
+			</p>
+		</div>
+	</section>
+
+	<section>
+		<h3>DUMB MODE</h3>
+		<div class="card text">
+			<p>
+				Switched on in the bonus menu, every spin {words.costs} {times(BOOSTER_COST)} the {words.bet}.
+				The other side plays like a beginner: any legal move, at random, so it hangs its pieces. Your
+				own moves stay at full strength, and checkmates and the CHECKMATE BONUS come about five times
+				as often. It stays on until you switch it off; its FREE SPINS are the normal ones.
+			</p>
+		</div>
+	</section>
+
+	<section>
+		<h3>CHEATER SPIN</h3>
+		<div class="card text">
+			<p>
+				One spin from the bonus menu for {times(CHEAT_COST)} the {words.bet}. Your queen always lands,
+				and the board gets {CHEAT_SPOTS.min} to {CHEAT_SPOTS.max} multiplier spots. Before the moves,
+				the queen collects every spot: their multipliers add up into the spin's multiplier (x2 + x3 +
+				x5 = x10), and the moves then play with it. A checkmate starts the CHECKMATE BONUS with that
+				multiplier already running.
+			</p>
+		</div>
+	</section>
+
+	<section>
 		<h3>CHECKMATE BONUS</h3>
 		<div class="card text">
 			<p>
@@ -137,7 +175,7 @@
 			<p>
 				The most a round can win is {times(maxWin)} the {words.bet}, in any mode: once a round
 				reaches it, it ends and pays that. The return to player is {percent(config.rtp)} in the
-				base game and with the bonus bought.
+				base game, in DUMB MODE, with the bonus bought and in the CHEATER SPIN.
 			</p>
 			<p class="note">
 				Malfunction voids all pays and plays. The game is decided by the outcome drawn from the game

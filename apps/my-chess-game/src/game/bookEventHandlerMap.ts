@@ -56,8 +56,15 @@ export const bookEventHandlerMap: BookEventHandlerMap<BookEvent, BookEventContex
 
 		stateGame.gameType = bookEvent.gameType;
 		stateGame.lastMove = undefined;
+		stateGame.attackSquare = undefined;
 		stateGame.checkSquare = undefined;
+		stateGame.checkLine = undefined;
+		stateGame.turn = undefined;
+		stateGame.movesThisSpin = 0;
+		stateGame.spinWin = 0;
+		stateGame.lastSpot = undefined;
 		stateGame.moveLog = [];
+		stateGame.spots = [];
 		// a base game spin's multiplier is its own; the free spins' carries on
 		if (bookEvent.gameType === 'basegame') stateGame.multiplier = 1;
 		eventEmitter.broadcast({ type: 'moveLabelHide' });
@@ -70,22 +77,75 @@ export const bookEventHandlerMap: BookEventHandlerMap<BookEvent, BookEventContex
 		stateGame.playBoardShown = true;
 		eventEmitter.broadcast({ type: 'boardHide' });
 	},
+	// the landed board's multiplier spots light up on their squares
+	multiplierSpots: async (bookEvent: BookEventOfType<'multiplierSpots'>) => {
+		stateGame.spots = bookEvent.spots;
+		eventEmitter.broadcast({ type: 'soundOnce', name: 'sfx_multiplier_landing' });
+		await pause(MOVE_TIMING.pause);
+	},
+	// the cheater spin: your queen draws every spot in, the multiplier adding up as they arrive
+	queenCollect: async (bookEvent: BookEventOfType<'queenCollect'>) => {
+		stateGame.moveLog = [
+			...stateGame.moveLog,
+			`QUEEN COLLECTS ${bookEvent.spots.map((spot) => `x${spot.multiplier}`).join(' + ')} = x${bookEvent.multiplier}`,
+		];
+		// a hold on the queen first, so the collecting is seen as hers
+		eventEmitter.broadcast({ type: 'moveLabel', text: 'THE QUEEN COLLECTS', kind: 'good', hold: MOVE_TIMING.queenHold });
+		await eventEmitter.broadcastAsync({ type: 'playBoardPulse', positions: [bookEvent.queen], times: 2 });
+		await eventEmitter.broadcastAsync({
+			type: 'playBoardCollect',
+			queen: bookEvent.queen,
+			spots: bookEvent.spots,
+		});
+		stateGame.spots = [];
+		stateGame.multiplier = bookEvent.multiplier;
+		eventEmitter.broadcast({ type: 'soundOnce', name: 'sfx_multiplier_win' });
+		eventEmitter.broadcast({ type: 'multiplierPulse' });
+		await pause(MOVE_TIMING.pause);
+	},
 	// a move, yours or the other side's: the piece slides over, a taken piece bursts as it arrives
-	// and its pay floats up, a check is called
+	// and its pay floats up (with the spot it was taken on, used up), a check is called
 	move: async (bookEvent: BookEventOfType<'move'>) => {
+		stateGame.turn = bookEvent.side;
+		stateGame.checkLine = undefined;
+		// a beat before the spin's first move: the mover (and what it will take) pulse, so the eye is on
+		// the right square before anything slides
+		if (stateGame.movesThisSpin === 0) {
+			await eventEmitter.broadcastAsync({
+				type: 'playBoardPulse',
+				positions: bookEvent.captured ? [bookEvent.from, bookEvent.to] : [bookEvent.from],
+				times: 2,
+			});
+		}
+		if (bookEvent.captured) stateGame.attackSquare = bookEvent.to;
 		eventEmitter.broadcast({
 			type: 'soundOnce',
 			name: bookEvent.captured ? 'sfx_multiplier_explosion_a' : 'sfx_royals_landing',
 		});
 		stateGame.moveLog = [...stateGame.moveLog, describeMove(bookEvent)];
 		await eventEmitter.broadcastAsync({ type: 'playBoardMove', move: bookEvent });
+		stateGame.attackSquare = undefined;
+		stateGame.movesThisSpin += 1;
+		if (bookEvent.spot) {
+			stateGame.spots = stateGame.spots.filter(
+				(spot) => spot.reel !== bookEvent.to.reel || spot.row !== bookEvent.to.row,
+			);
+			eventEmitter.broadcast({ type: 'soundOnce', name: 'sfx_multiplier_win' });
+		}
 		if (bookEvent.win > 0) {
+			stateGame.spinWin += bookEvent.win;
+			stateGame.lastSpot = bookEvent.spot;
 			eventEmitter.broadcast({
 				type: 'moveWinShow',
 				position: bookEvent.to,
 				amount: bookEvent.win,
 				multiplier: bookEvent.multiplier,
+				spot: bookEvent.spot,
 			});
+		}
+		if (bookEvent.promotion) {
+			eventEmitter.broadcast({ type: 'soundOnce', name: 'sfx_multiplier_up' });
+			eventEmitter.broadcast({ type: 'moveLabel', text: 'QUEEN!', kind: 'good', hold: MOVE_TIMING.short });
 		}
 		if (bookEvent.check && !bookEvent.mate) {
 			eventEmitter.broadcast({ type: 'soundOnce', name: 'sfx_scatter_stop_1' });
@@ -96,7 +156,19 @@ export const bookEventHandlerMap: BookEventHandlerMap<BookEvent, BookEventContex
 				hold: MOVE_TIMING.label,
 			});
 		}
-		await pause(MOVE_TIMING.pause);
+		await pause(bookEvent.captured ? MOVE_TIMING.pause + MOVE_TIMING.captureHold : MOVE_TIMING.pause);
+	},
+	// landed with your king in check: it is lit, and the check called, before your first move
+	inCheck: async () => {
+		stateGame.checkSquare = stateGameDerived.kingSquare('WK');
+		stateGame.moveLog = [...stateGame.moveLog, 'LANDED IN CHECK'];
+		eventEmitter.broadcast({ type: 'soundOnce', name: 'sfx_scatter_stop_1' });
+		await eventEmitter.broadcastAsync({
+			type: 'moveLabel',
+			text: 'CHECK',
+			kind: 'bad',
+			hold: MOVE_TIMING.label,
+		});
 	},
 	// the spin's multiplier after a capture
 	updateGlobalMult: async (bookEvent: BookEventOfType<'updateGlobalMult'>) => {
@@ -108,6 +180,10 @@ export const bookEventHandlerMap: BookEventHandlerMap<BookEvent, BookEventContex
 		}
 	},
 	checkmate: async (bookEvent: BookEventOfType<'checkmate'>) => {
+		stateGame.turn = undefined;
+		// the mated king flashes
+		const king = stateGameDerived.kingSquare(bookEvent.by === 'you' ? 'BK' : 'WK');
+		if (king) eventEmitter.broadcast({ type: 'playBoardPulse', positions: [king], times: 3 });
 		if (bookEvent.by === 'you') {
 			eventEmitter.broadcast({ type: 'soundOnce', name: 'sfx_scatter_win' });
 			await eventEmitter.broadcastAsync({
@@ -126,11 +202,18 @@ export const bookEventHandlerMap: BookEventHandlerMap<BookEvent, BookEventContex
 			});
 		}
 	},
+	// why the spin's moves are over (a mate has its own label): a quiet end would look like a freeze
 	sequenceEnd: async (bookEvent: BookEventOfType<'sequenceEnd'>) => {
-		const texts = { stalemate: 'STALEMATE', repetition: 'DRAW', limit: 'MOVE LIMIT' } as const;
+		stateGame.turn = undefined;
+		const texts = {
+			quiet: stateGame.movesThisSpin === 0 ? 'NO CAPTURE' : 'NO FORCING MOVE',
+			stalemate: 'STALEMATE',
+			repetition: 'DRAW',
+			limit: 'MOVE LIMIT',
+		} as const;
 		const text = texts[bookEvent.reason as keyof typeof texts];
 		if (!text) return;
-		await eventEmitter.broadcastAsync({ type: 'moveLabel', text, kind: 'info', hold: MOVE_TIMING.label });
+		await eventEmitter.broadcastAsync({ type: 'moveLabel', text, kind: 'info', hold: MOVE_TIMING.short });
 	},
 	setTotalWin: async (bookEvent: BookEventOfType<'setTotalWin'>) => {
 		stateBet.winBookEventAmount = bookEvent.amount;
@@ -148,7 +231,7 @@ export const bookEventHandlerMap: BookEventHandlerMap<BookEvent, BookEventContex
 			totalFreeSpins: bookEvent.totalFs,
 		});
 		showFreeSpinSetup(bookEvent.totalFs);
-		stateGame.multiplier = 1;
+		// the multiplier the bonus starts with comes with its updateGlobalMult (the cheater spin's carries on)
 		eventEmitter.broadcast({ type: 'freeSpinIntroHide' });
 		await eventEmitter.broadcastAsync({ type: 'uiShow' });
 		await eventEmitter.broadcastAsync({ type: 'drawerButtonShow' });
