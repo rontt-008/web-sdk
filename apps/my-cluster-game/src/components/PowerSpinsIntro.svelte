@@ -59,7 +59,7 @@
 </script>
 
 <FadeContainer {show}>
-	<FreeSpinAnimation power={0.75}>
+	<FreeSpinAnimation power={0.75} float>
 		{#snippet children()}
 			<Text
 				anchor={0.5}

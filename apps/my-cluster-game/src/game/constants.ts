@@ -8,6 +8,10 @@ export const SYMBOL_SIZE = 112;
 // the 6x6 board's symbol size, which the things around the board (the fox, the win amounts and
 // counters, the frame's margin) are sized in, so they kept their sizes when the symbols grew
 export const LAYOUT_UNIT = 93;
+// how the bonus's wooden signs float (the spins' sign, FreeSpinCounter; the power spins' panel,
+// FreeSpinAnimation), gently, as the start screen's cards do: up and down this far (main layout
+// units) and tilting this much (degrees), slowly (seconds a sway), the two out of step
+export const SIGN_FLOAT = { height: 4, period: 6.4, tilt: 0.6, tiltPeriod: 8.3 };
 
 // symbols in the middle of their column, so the lines between the reels (BoardFrame) fall in the
 // gaps between them
@@ -173,18 +177,22 @@ const TILE_FILL = 0.935;
 const TILE_SIZE = { width: TILE_FILL / TILE_FRAME.width, height: TILE_FILL / TILE_FRAME.height };
 // a little see-through, so the rune behind them shows through (see SymbolIdle)
 export const TILE_ALPHA = 0.95;
-const h1Idle = { type: 'idle', assetKey: 'blueberriesIdle', sizeRatios: TILE_SIZE };
-const h2Idle = { type: 'idle', assetKey: 'runestoneIdle', sizeRatios: TILE_SIZE };
-const h3Idle = { type: 'idle', assetKey: 'mushroomIdle', sizeRatios: TILE_SIZE };
-const h4Idle = { type: 'idle', assetKey: 'acornIdle', sizeRatios: TILE_SIZE };
+// the premium tiles' idle loops (4 s as made) played this many times as fast (the user asked for
+// them faster); the wild's plays as made
+const PREMIUM_IDLE_SPEED = 1.5;
+const TILE_IDLE = { type: 'idle', sizeRatios: TILE_SIZE, idleSpeed: PREMIUM_IDLE_SPEED };
+const h1Idle = { ...TILE_IDLE, assetKey: 'blueberriesIdle' };
+const h2Idle = { ...TILE_IDLE, assetKey: 'runestoneIdle' };
+const h3Idle = { ...TILE_IDLE, assetKey: 'mushroomIdle' };
+const h4Idle = { ...TILE_IDLE, assetKey: 'acornIdle' };
 // landing on a spin or a tumble, the tile settles softly into its cell (motion.ts landPose), its
 // idle playing on
 const h1Land = { ...h1Idle, motion: 'land' as const };
 const h2Land = { ...h2Idle, motion: 'land' as const };
 const h3Land = { ...h3Idle, motion: 'land' as const };
 const h4Land = { ...h4Idle, motion: 'land' as const };
-// idleKey: the idle loop the hit blends from and back to
-const TILE_HIT = { type: 'hit', sizeRatios: TILE_SIZE };
+// idleKey: the idle loop the hit blends from and back to (at the idle's speed)
+const TILE_HIT = { type: 'hit', sizeRatios: TILE_SIZE, idleSpeed: PREMIUM_IDLE_SPEED };
 const h1Win = { ...TILE_HIT, assetKey: 'blueberriesHit', idleKey: 'blueberriesIdle' };
 const h2Win = { ...TILE_HIT, assetKey: 'runestoneHit', idleKey: 'runestoneIdle' };
 const h3Win = { ...TILE_HIT, assetKey: 'mushroomHit', idleKey: 'mushroomIdle' };

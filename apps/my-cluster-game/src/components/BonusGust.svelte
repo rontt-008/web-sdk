@@ -19,9 +19,11 @@
 
 	// A bonus once bought: its slate comes up in the middle of the screen, its runes flare, and a gust
 	// of wind (the game's own, as the bonus starts under a gale) blows it away to the right in a burst
-	// of autumn leaves, and the bonus starts.
+	// of autumn leaves, and the bonus starts. The gust comes almost as soon as the slate is up (the
+	// user asked for it much earlier): the runes flare and the slate twitches for FLARE_MS, then it
+	// is blown away.
 	const POP_MS = 260;
-	const FLARE_MS = 520;
+	const FLARE_MS = 100;
 	const GUST_MS = 950;
 	// the bonus starts this far into the gust (the leaves go with this screen), as the last ones fade
 	const START_AT = 0.9;
@@ -118,7 +120,7 @@
 			],
 			{ duration: POP_MS, easing: 'ease-out', fill: 'backwards' },
 		);
-		// the runes flare, and the wind picks up: the slate trembles, harder and harder
+		// the runes flare, and the wind picks up: the slate twitches, then the gust takes it
 		const flaring = setTimeout(() => {
 			flare = true;
 			context.eventEmitter.broadcast({ type: 'soundOnce', name: 'sfx_scatter_reveal' });

@@ -44,11 +44,14 @@
 
 	import Celebration from './Celebration.svelte';
 	import { getContext } from '../game/context';
-	import { SYMBOL_SIZE, BOARD_DIMENSIONS } from '../game/constants';
+	import { SIGN_FLOAT, SYMBOL_SIZE, BOARD_DIMENSIONS } from '../game/constants';
 
 	type Props = {
 		// how strong the backdrop is (Celebration's power), 0 to 1
 		power?: number;
+		// once it has landed, it floats gently as the spins' sign does (SIGN_FLOAT): the power spins'
+		// panel does
+		float?: boolean;
 		children: Snippet<[{ sizes: Sizes }]>;
 	};
 
@@ -104,16 +107,43 @@
 		if (clock.current >= PANEL_DROP.fall && bursts === 0) bursts = 1;
 	});
 
+	// Floating (props.float): from where it lands, easing in over FLOAT_IN seconds (each sway starting
+	// from its rest, so nothing jumps), in seconds since it came, as the screen's clock goes (an idle
+	// motion, not quicker in turbo)
+	const FLOAT_IN = 1.5;
+	let seconds = $state(0);
+	let landsAt = 0;
+	$effect(() => {
+		const ticker = context.stateApp.pixiApplication?.ticker;
+		if (!ticker || !props.float) return;
+		const tick = () => (seconds += ticker.deltaMS / 1000);
+		ticker.add(tick);
+		return () => ticker.remove(tick);
+	});
+	const float = $derived.by(() => {
+		const t = seconds - landsAt;
+		if (!props.float || t <= 0) return { y: 0, rotation: 0 };
+		const share = Math.min(1, t / FLOAT_IN);
+		const eased = share * share * (3 - 2 * share);
+		return {
+			y: eased * SIGN_FLOAT.height * Math.sin((2 * Math.PI * t) / SIGN_FLOAT.period),
+			rotation:
+				eased *
+				((SIGN_FLOAT.tilt * Math.PI) / 180) *
+				Math.sin((2 * Math.PI * t) / SIGN_FLOAT.tiltPeriod),
+		};
+	});
+
 	onMount(() => {
-		clock.set(PANEL_DROP_TOTAL, {
-			duration: (PANEL_DROP_TOTAL * 1000) / stateBetDerived.timeScale(),
-		});
+		const timeScale = stateBetDerived.timeScale();
+		landsAt = PANEL_DROP.fall / timeScale;
+		clock.set(PANEL_DROP_TOTAL, { duration: (PANEL_DROP_TOTAL * 1000) / timeScale });
 	});
 </script>
 
 <Celebration power={props.power ?? 0.55} {bursts}>
 	<MainContainer>
-		<Container x={main.width / 2} y={top} {rotation}>
+		<Container x={main.width / 2} y={top + float.y} rotation={rotation + float.rotation}>
 			<Container y={half} scale={PANEL_SCALE}>
 				<Sprite key="screenPanel" anchor={0.5} {...SCREEN_PANEL} />
 				<Container scale={WORDS_SCALE}>

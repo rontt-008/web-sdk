@@ -30,6 +30,10 @@
 
 	const idleKey = $derived('idleKey' in props.symbolInfo ? props.symbolInfo.idleKey : undefined);
 	const speed = $derived('speed' in props.symbolInfo ? props.symbolInfo.speed : 1);
+	// the idle under it as fast as the tile's idle plays (SymbolIdle), so it carries on where it was
+	const idleSpeed = $derived(
+		'idleSpeed' in props.symbolInfo ? (props.symbolInfo.idleSpeed as number) : 1,
+	);
 	const alpha = $derived(idleKey ? TILE_ALPHA : 1);
 	const spineData = $derived(
 		context.stateApp.loadedAssets?.[props.symbolInfo.assetKey] as LoadedSpine | undefined,
@@ -77,7 +81,7 @@
 		assetKey={idleKey}
 		animation="idle"
 		loop
-		time={() => idleTime() + phase}
+		time={() => idleTime() * idleSpeed + phase}
 		x={props.x}
 		y={props.y}
 		sizeRatios={props.symbolInfo.sizeRatios}

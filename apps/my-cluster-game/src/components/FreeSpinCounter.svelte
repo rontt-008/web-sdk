@@ -8,11 +8,12 @@
 <script lang="ts">
 	import { MainContainer } from 'components-layout';
 	import { FadeContainer } from 'components-pixi';
-	import { Sprite, Text } from 'pixi-svelte';
+	import { Container, Sprite, Text } from 'pixi-svelte';
 	import { stateUi } from 'state-shared';
 
 	import { getContext } from '../game/context';
 	import { signTextStyle } from '../game/signText';
+	import { SIGN_FLOAT } from '../game/constants';
 
 	const context = getContext();
 
@@ -29,6 +30,21 @@
 	// in the planks' height
 	const TITLE_SIZE = 0.38;
 	const COUNT_SIZE = 0.52;
+	// it floats gently (SIGN_FLOAT)
+	const FLOAT = SIGN_FLOAT;
+
+	let time = $state(0);
+	$effect(() => {
+		const ticker = context.stateApp.pixiApplication?.ticker;
+		if (!ticker) return;
+		const tick = () => (time += ticker.deltaMS / 1000);
+		ticker.add(tick);
+		return () => ticker.remove(tick);
+	});
+	const float = $derived({
+		y: FLOAT.height * Math.sin((2 * Math.PI * time) / FLOAT.period),
+		rotation: ((FLOAT.tilt * Math.PI) / 180) * Math.sin((2 * Math.PI * time) / FLOAT.tiltPeriod),
+	});
 
 	const layout = $derived.by(() => {
 		const meter = context.stateGameDerived.spinSignLayout();
@@ -77,21 +93,29 @@ screen's width (phones held upright) the bar shows the count instead -->
 {#if ['desktop', 'landscape'].includes(context.stateLayoutDerived.layoutType())}
 	<MainContainer>
 		<FadeContainer {show} x={layout.x} y={layout.y}>
-			<Sprite key="spinSign" width={layout.width} height={layout.height} />
-			<Text
-				x={layout.middle.x}
-				y={layout.middle.y}
-				anchor={{ x: 0.5, y: 1 }}
-				text={title}
-				style={signTextStyle(layout.planksHeight * TITLE_SIZE)}
-			/>
-			<Text
-				x={layout.middle.x}
-				y={layout.middle.y}
-				anchor={{ x: 0.5, y: 0 }}
-				text={`${current} OF ${total}`}
-				style={signTextStyle(layout.planksHeight * COUNT_SIZE)}
-			/>
+			<!-- floating about its middle -->
+			<Container
+				x={layout.width / 2}
+				y={layout.height / 2 + float.y}
+				pivot={{ x: layout.width / 2, y: layout.height / 2 }}
+				rotation={float.rotation}
+			>
+				<Sprite key="spinSign" width={layout.width} height={layout.height} />
+				<Text
+					x={layout.middle.x}
+					y={layout.middle.y}
+					anchor={{ x: 0.5, y: 1 }}
+					text={title}
+					style={signTextStyle(layout.planksHeight * TITLE_SIZE)}
+				/>
+				<Text
+					x={layout.middle.x}
+					y={layout.middle.y}
+					anchor={{ x: 0.5, y: 0 }}
+					text={`${current} OF ${total}`}
+					style={signTextStyle(layout.planksHeight * COUNT_SIZE)}
+				/>
+			</Container>
 		</FadeContainer>
 	</MainContainer>
 {/if}
