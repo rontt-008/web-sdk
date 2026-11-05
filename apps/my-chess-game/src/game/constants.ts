@@ -28,8 +28,9 @@ export const BOARD_SIZES = {
 
 // the rules, as the math has them (math-sdk games/my_chess_game/game_config.py)
 export const FREE_SPINS = 10;
-export const RETRIGGER_SPINS = 3;
-export const MAX_FREE_SPINS = 50;
+// no more spins for a checkmate in the free spins: a bonus is its ten
+export const RETRIGGER_SPINS = 0;
+export const MAX_FREE_SPINS = 10;
 export const MAX_MOVES = 10;
 // what each of the other side's pieces pays when you take it, x the bet (then x the spin's multiplier)
 export const CAPTURE_PAYS: Record<Exclude<PieceKind, 'K'>, number> = {
@@ -104,8 +105,11 @@ export const BOARD_COLOURS = {
 	check: 0xe03b2f,
 	label: 0xe8d9b8,
 	spot: 0xffd34d,
+	// the blue of a + spot (a x spot is the gold)
+	spotAdd: 0x5cc8ff,
 };
 
-// the multiplier spots and the bet modes, as the math has them
-export const SPOT_VALUES = [2, 3, 5, 10];
-export const CHEAT_SPOTS = { min: 3, max: 5 };
+// the multiplier spots, as the math has them: a + spot adds to the spin's multiplier, a x spot multiplies it
+export const SPOT_ADD_VALUES = [1, 2, 3, 5, 10, 20, 50, 100];
+export const SPOT_MULT_VALUES = [2, 3, 4, 5, 6, 8, 10];
+export const CHEAT_SPOTS = { min: 2, max: 4 };

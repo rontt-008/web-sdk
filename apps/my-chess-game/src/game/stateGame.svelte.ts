@@ -6,7 +6,7 @@ import { createEnhanceBoard, createReelForCascading } from 'utils-slots';
 import { createGetWinLevelDataByWinLevelAlias } from 'utils-shared/winLevel';
 
 import type { GameType, PieceColour, Position, RawSymbol, Side, SymbolName } from './types';
-import type { Spot } from './typesBookEvent';
+import type { Spot, SpotValue } from './typesBookEvent';
 import { stateLayoutDerived } from './stateLayout';
 import { winLevelMap } from './winLevelMap';
 import { eventEmitter } from './eventEmitter';
@@ -80,22 +80,23 @@ export const stateGame = $state({
 	// the play board in place of the reels (between a spin's landing and the next spin)
 	playBoardShown: false,
 	yourColour: loadColour(),
-	// the spin's multiplier: 1, one more for every piece you take (in the free spins it carries on)
+	// the spin's multiplier: 1, one more for every piece you take, a spot's + or x when you take a piece
+	// on one (in the free spins it carries on)
 	multiplier: 1,
 	// the last move's squares (with an arrow between them), the square a capture is about to land on
-	// (ringed while the piece slides), the square of a king in check and the line of the check, lit on
-	// the board (BoardSquares)
+	// (ringed while the piece slides), the square of a king in check and the lines of the check (from
+	// each piece giving it: two in a double check), lit on the board (BoardSquares)
 	lastMove: undefined as { from: Position; to: Position } | undefined,
 	attackSquare: undefined as Position | undefined,
 	checkSquare: undefined as Position | undefined,
-	checkLine: undefined as { from: Position; to: Position } | undefined,
+	checkLines: [] as { from: Position; to: Position }[],
 	// whose move it is (TurnTag; the other side's pieces dim meanwhile), none between spins
 	turn: undefined as Side | undefined,
 	// how many of the spin's moves have been played, what the spin has won so far (SpinWin) and the
-	// multiplier spot of its last capture, if any
+	// multiplier spot its last capture put into the multiplier, if any
 	movesThisSpin: 0,
 	spinWin: 0,
-	lastSpot: undefined as number | undefined,
+	lastSpot: undefined as SpotValue | undefined,
 	// the spin's moves in words (MoveLog)
 	moveLog: [] as string[],
 	// the multiplier spots on the board (BoardSquares), each gone when a capture on it uses it up or the

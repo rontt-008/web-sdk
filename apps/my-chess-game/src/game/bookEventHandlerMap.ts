@@ -59,7 +59,7 @@ export const bookEventHandlerMap: BookEventHandlerMap<BookEvent, BookEventContex
 		stateGame.lastMove = undefined;
 		stateGame.attackSquare = undefined;
 		stateGame.checkSquare = undefined;
-		stateGame.checkLine = undefined;
+		stateGame.checkLines = [];
 		stateGame.turn = undefined;
 		stateGame.movesThisSpin = 0;
 		stateGame.spinWin = 0;
@@ -86,11 +86,11 @@ export const bookEventHandlerMap: BookEventHandlerMap<BookEvent, BookEventContex
 		eventEmitter.broadcast({ type: 'soundOnce', name: 'sfx_multiplier_landing' });
 		await pause(MOVE_TIMING.pause);
 	},
-	// the cheater spin: your queen draws every spot in, the multiplier adding up as they arrive
+	// CHEATER MODE: your queen draws every spot in, the multiplier adding up as they arrive
 	queenCollect: async (bookEvent: BookEventOfType<'queenCollect'>) => {
 		stateGame.moveLog = [
 			...stateGame.moveLog,
-			`QUEEN COLLECTS ${bookEvent.spots.map((spot) => `x${spot.multiplier}`).join(' + ')} = x${bookEvent.multiplier}`,
+			`QUEEN COLLECTS ${bookEvent.spots.map((spot) => `${spot.op}${spot.value}`).join(' ')} = x${bookEvent.multiplier}`,
 		];
 		// a hold on the queen first, so the collecting is seen as hers
 		eventEmitter.broadcast({ type: 'moveLabel', text: 'THE QUEEN COLLECTS', kind: 'good', hold: MOVE_TIMING.queenHold });
@@ -110,7 +110,7 @@ export const bookEventHandlerMap: BookEventHandlerMap<BookEvent, BookEventContex
 	// and its pay floats up (with the spot it was taken on, used up), a check is called
 	move: async (bookEvent: BookEventOfType<'move'>) => {
 		stateGame.turn = bookEvent.side;
-		stateGame.checkLine = undefined;
+		stateGame.checkLines = [];
 		// a beat before the spin's first move: the mover (and what it will take) pulse, so the eye is on
 		// the right square before anything slides
 		if (stateGame.movesThisSpin === 0) {

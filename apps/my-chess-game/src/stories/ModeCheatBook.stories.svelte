@@ -54,7 +54,7 @@
 	</StoryGameTemplate>
 {/snippet}
 
-<!-- a CHEATER SPIN, picked at random -->
+<!-- a CHEATER MODE spin, picked at random -->
 <Story
 	name="random"
 	args={templateArgs({
@@ -65,7 +65,7 @@
 	{template}
 />
 
-<!-- a cheater spin that checkmates: the free spins, with the collected multiplier -->
+<!-- a CHEATER MODE spin that checkmates: the free spins, with the collected multiplier -->
 <Story
 	name="checkmate"
 	args={templateArgs({

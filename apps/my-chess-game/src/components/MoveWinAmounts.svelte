@@ -1,13 +1,14 @@
 <script lang="ts" module>
 	import type { Position } from '../game/types';
+	import type { SpotValue } from '../game/typesBookEvent';
 
 	export type EmitterEventMoveWinAmounts = {
 		type: 'moveWinShow';
 		position: Position;
 		amount: number;
 		multiplier: number;
-		// the multiplier spot the piece was taken on, if any
-		spot?: number;
+		// the multiplier spot the piece was taken on (it went into the multiplier), if any
+		spot?: SpotValue;
 	};
 </script>
 
@@ -23,9 +24,9 @@
 	import { SYMBOL_SIZE, BOARD_COLOURS } from '../game/constants';
 	import CameraContainer from './CameraContainer.svelte';
 
-	// what a capture pays floats up from its square and fades, with the spot's multiplier over it when
-	// the piece was taken on one
-	type Amount = { id: number; text: string; spot?: number; x: number; y: Tween<number>; alpha: Tween<number> };
+	// what a capture pays floats up from its square and fades, with the spot over it when the piece was
+	// taken on one (a + in blue, a x in gold)
+	type Amount = { id: number; text: string; spot?: SpotValue; x: number; y: Tween<number>; alpha: Tween<number> };
 
 	const context = getContext();
 	const RISE = SYMBOL_SIZE * 1.1;
@@ -49,7 +50,8 @@
 			const duration = (spot ? DURATION * 1.3 : DURATION) / stateBetDerived.timeScale();
 			item.y.set(y - RISE, { duration, easing: cubicOut });
 			await item.alpha.set(0, { duration, delay: duration * 0.45 });
-			amounts = amounts.filter((other) => other !== item);
+			// by id: the array is state, so its items are proxies and never the item itself
+			amounts = amounts.filter((other) => other.id !== item.id);
 		},
 	});
 </script>
@@ -59,7 +61,7 @@
 	{#each amounts as item (item.id)}
 		{#if item.spot}
 			<Text
-				text={`SPOT x${item.spot}`}
+				text={`${item.spot.op}${item.spot.value} MULTI`}
 				anchor={{ x: 0.5, y: 1 }}
 				x={item.x}
 				y={item.y.current - SYMBOL_SIZE * 0.26}
@@ -68,7 +70,7 @@
 					fontFamily: 'proxima-nova',
 					fontSize: SYMBOL_SIZE * 0.26,
 					fontWeight: '800',
-					fill: BOARD_COLOURS.spot,
+					fill: item.spot.op === '+' ? BOARD_COLOURS.spotAdd : BOARD_COLOURS.spot,
 					stroke: { color: 0x1a1208, width: 4 },
 				}}
 			/>

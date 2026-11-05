@@ -32,14 +32,14 @@
 			borderWidth={4}
 		/>
 		<Text
-			text={context.stateGame.lastSpot ? `SPIN WIN  ·  SPOT x${context.stateGame.lastSpot}` : 'SPIN WIN'}
+			text={context.stateGame.lastSpot ? `SPIN WIN  ·  SPOT ${context.stateGame.lastSpot.op}${context.stateGame.lastSpot.value}` : 'SPIN WIN'}
 			anchor={{ x: 0.5, y: 0 }}
 			y={-layout.height / 2 + SYMBOL_SIZE * 0.08}
 			style={{
 				fontFamily: 'proxima-nova',
 				fontSize: SYMBOL_SIZE * 0.15,
 				fontWeight: '700',
-				fill: context.stateGame.lastSpot ? BOARD_COLOURS.spot : 0xb8b4c6,
+				fill: context.stateGame.lastSpot ? (context.stateGame.lastSpot.op === '+' ? BOARD_COLOURS.spotAdd : BOARD_COLOURS.spot) : 0xb8b4c6,
 			}}
 		/>
 		<BitmapText
