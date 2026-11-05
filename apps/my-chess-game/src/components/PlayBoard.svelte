@@ -8,7 +8,12 @@
 		// the pieces at these squares swell and settle `times` over (done when they have)
 		| { type: 'playBoardPulse'; positions: Position[]; times: number }
 		// the pieces drop off the bottom of the board, column by column (done when they have gone)
-		| { type: 'playBoardDrop' };
+		| { type: 'playBoardDrop' }
+		// the piece on this square is taken (bursts and goes): an en passant's pawn (done when it has gone)
+		| { type: 'playBoardTake'; position: Position }
+		// one piece slides to a square the way a move does (lifted, over the others), in `duration` ms;
+		// a square off the board takes it away (done when it is there)
+		| { type: 'playBoardSlide'; id: number; to: Position; duration: number; off?: boolean };
 </script>
 
 <script lang="ts">
@@ -82,6 +87,30 @@
 				),
 			);
 			context.stateGame.pieces = [];
+		},
+		playBoardTake: async ({ position }) => {
+			const piece = context.stateGameDerived.pieceAt(position);
+			if (piece) await burst(piece);
+		},
+		playBoardSlide: async ({ id, to, duration, off }) => {
+			const piece = context.stateGame.pieces.find((candidate) => candidate.id === id);
+			if (!piece) return;
+			const ms = duration / timeScale();
+			moving = piece.id;
+			if (off) piece.gone = true;
+			else {
+				piece.reel = to.reel;
+				piece.row = to.row;
+			}
+			const { x, y } = context.stateGameDerived.squareCentre(to);
+			piece.scale
+				.set(1.18, { duration: ms * 0.45, easing: cubicOut })
+				.then(() => piece.scale.set(1, { duration: ms * 0.55, easing: cubicInOut }));
+			await Promise.all([
+				piece.x.set(x, { duration: ms, easing: cubicInOut }),
+				piece.y.set(y, { duration: ms, easing: cubicInOut }),
+			]);
+			moving = undefined;
 		},
 		playBoardPulse: async ({ positions, times }) => {
 			const pieces = positions
@@ -189,7 +218,7 @@
 				scale={piece.scale.current}
 				alpha={piece.alpha.current}
 				tint={tint(piece)}
-				zIndex={piece.id === moving ? 10 : piece.gone ? 5 : 1}
+				zIndex={piece.id === moving || piece.id === context.stateGame.dragging ? 10 : piece.gone ? 5 : 1}
 			/>
 		{/each}
 		{#each flying as item (item.id)}

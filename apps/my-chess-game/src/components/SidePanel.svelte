@@ -244,32 +244,49 @@
 			<Container y={BIND}>
 			<Graphics draw={drawPanel} />
 
-			<!-- the head: the multiplier and the spin's win -->
-			<Text
-				text={context.stateGame.gameType === 'freegame' ? 'BONUS MULTIPLIER' : 'MULTIPLIER'}
-				x={PAD}
-				y={PAD - 2}
-				{resolution}
-				style={label(COLOURS.light)}
-			/>
-			<Container x={PAD} y={HEAD / 2 + 12} scale={pulse.current}>
+			<!-- the head: the multiplier and the spin's win; while the start screen's game is on, what it is -->
+			{#if context.stateGame.sandbox}
 				<Text
-					text={`x${context.stateGame.multiplier}`}
-					anchor={{ x: 0, y: 0.5 }}
-					resolution={resolution * 1.2}
-					style={text(58, COLOURS.white, { fontWeight: '800' })}
+					text="PRACTICE BOARD"
+					x={PAD}
+					y={PAD - 2}
+					{resolution}
+					style={text(22, COLOURS.white, { fontWeight: '800', letterSpacing: 1 })}
 				/>
-			</Container>
-			<Text text="SPIN WIN" anchor={{ x: 1, y: 0 }} x={sheetWidth - PAD} y={PAD - 2} {resolution} style={label(COLOURS.light)} />
-			<Text
-				text={bookEventAmountToCurrencyString(Math.round(spinWin.current))}
-				anchor={{ x: 1, y: 0.5 }}
-				x={sheetWidth - PAD}
-				y={HEAD / 2 + 12}
-				{resolution}
-				style={text(28, COLOURS.white, { fontWeight: '800' })}
-			/>
+				<Text
+					text={'FREE PLAY \u00b7 NO BETS, NO WINS\nPLAY BY MOVING YOUR PIECES'}
+					x={PAD}
+					y={PAD + 30}
+					{resolution}
+					style={text(13, COLOURS.light, { fontWeight: '800', letterSpacing: 1, lineHeight: 20, wordWrap: true, wordWrapWidth: panel.width - PAD * 2 })}
+				/>
+			{:else}
+				<Text
+					text={context.stateGame.gameType === 'freegame' ? 'BONUS MULTIPLIER' : 'MULTIPLIER'}
+					x={PAD}
+					y={PAD - 2}
+					{resolution}
+					style={label(COLOURS.light)}
+				/>
+				<Container x={PAD} y={HEAD / 2 + 12} scale={pulse.current}>
+					<Text
+						text={`x${context.stateGame.multiplier}`}
+						anchor={{ x: 0, y: 0.5 }}
+						resolution={resolution * 1.2}
+						style={text(58, COLOURS.white, { fontWeight: '800' })}
+					/>
+				</Container>
+				<Text text="SPIN WIN" anchor={{ x: 1, y: 0 }} x={sheetWidth - PAD} y={PAD - 2} {resolution} style={label(COLOURS.light)} />
+				<Text
+					text={bookEventAmountToCurrencyString(Math.round(spinWin.current))}
+					anchor={{ x: 1, y: 0.5 }}
+					x={sheetWidth - PAD}
+					y={HEAD / 2 + 12}
+					{resolution}
+					style={text(28, COLOURS.white, { fontWeight: '800' })}
+				/>
 
+			{/if}
 			<!-- whose move it is -->
 			{#if turnKing}
 				<Sprite key={turnKing} anchor={{ x: 0, y: 0.5 }} x={PAD - 2} y={HEAD + TURN / 2} width={32} height={32} />

@@ -28,6 +28,8 @@
 	import Board from './Board.svelte';
 	import PlayBoard from './PlayBoard.svelte';
 	import Sandbox from './Sandbox.svelte';
+	import BoardHints from './BoardHints.svelte';
+	import SandboxControls from './SandboxControls.svelte';
 	import MoveWinAmounts from './MoveWinAmounts.svelte';
 	import MoveLog from './MoveLog.svelte';
 	import SidePanel from './SidePanel.svelte';
@@ -113,6 +115,7 @@
 					<BoardSquares />
 					<Board />
 					<PlayBoard />
+					<BoardHints />
 					<!-- shade where the lamp's light reaches less, over the board, its frame and the pieces -->
 					<Graphics draw={drawBoardShade} />
 				</TiltedPlane>
@@ -120,6 +123,8 @@
 				<Sandbox />
 			</CameraContainer>
 		</MainContainer>
+		<!-- the start screen's game's buttons: restart, and the strength to play against -->
+		<SandboxControls />
 
 		<MoveWinAmounts />
 		<!-- on desktop the side panel right of the board has the moves (the log would be under the UI bar) -->

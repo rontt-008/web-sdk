@@ -1,0 +1,9 @@
+Lozza 11.0, a UCI chess engine in JavaScript by Colin Jenkins: https://github.com/op12no2/lozza
+Its licence, as given with it:
+
+
+Feel free to use as you like but I always appreciate an email
+telling me about your project and how you use Lozza.
+
+op12no2@gmail.com
+

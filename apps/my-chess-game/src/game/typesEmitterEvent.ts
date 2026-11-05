@@ -1,5 +1,6 @@
 import type { EmitterEventBoard } from '../components/Board.svelte';
 import type { EmitterEventPlayBoard } from '../components/PlayBoard.svelte';
+import type { EmitterEventSandbox } from '../components/Sandbox.svelte';
 import type { EmitterEventMoveWinAmounts } from '../components/MoveWinAmounts.svelte';
 import type { EmitterEventMoveLabel } from '../components/MoveLabel.svelte';
 import type { EmitterEventComboMultiplier } from '../components/ComboMultiplier.svelte';
@@ -14,6 +15,7 @@ import type { EmitterEventFistSlam } from '../components/FistSlam.svelte';
 export type EmitterEventGame =
 	| EmitterEventBoard
 	| EmitterEventPlayBoard
+	| EmitterEventSandbox
 	| EmitterEventMoveWinAmounts
 	| EmitterEventMoveLabel
 	| EmitterEventComboMultiplier

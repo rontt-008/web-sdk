@@ -23,6 +23,14 @@
 			(position) => position !== undefined,
 		),
 	);
+	// on the practice board the last move's squares go red once the engine has judged it a blunder
+	// (BLUNDER); the gold otherwise
+	const blundered = $derived(
+		context.stateGame.blunder !== undefined &&
+			context.stateGame.lastMove !== undefined &&
+			positionKey(context.stateGame.blunder) === positionKey(context.stateGame.lastMove.to),
+	);
+	const litColour = $derived(blundered ? BOARD_COLOURS.check : BOARD_COLOURS.lastMove);
 
 	// The spots as drawn: each pops in as it comes (from small and clear to its size) and fades out as it
 	// goes (taken, collected, or the spin over), so none just appears or vanishes. Kept apart from the
@@ -94,8 +102,8 @@
 			y={(position.row - 1) * SYMBOL_SIZE}
 			width={SYMBOL_SIZE}
 			height={SYMBOL_SIZE}
-			backgroundColor={BOARD_COLOURS.lastMove}
-			backgroundAlpha={0.45}
+			backgroundColor={litColour}
+			backgroundAlpha={blundered ? 0.6 : 0.45}
 		/>
 	{/each}
 	<!-- the start screen's game (Sandbox): the piece picked up and where it can go -->

@@ -21,6 +21,8 @@ import {
 	SPIN_OPTIONS_FAST,
 	INITIAL_SYMBOL_STATE,
 	BOARD_FRAME,
+	SANDBOX_LEVELS,
+	SANDBOX_DEFAULT_ELO,
 } from './constants';
 
 // The reels: the board the pieces drop onto each spin (the SDK's cascading reels, one a column). Once
@@ -66,6 +68,17 @@ export type PlayPiece = {
 };
 
 const COLOUR_KEY = 'my-chess-game:colour';
+const ELO_KEY = 'my-chess-game:elo';
+
+// the strength played against on the start screen (SANDBOX_LEVELS), kept between visits
+const loadElo = (): number => {
+	try {
+		const elo = Number(localStorage.getItem(ELO_KEY));
+		return SANDBOX_LEVELS.some((level) => level.elo === elo) ? elo : SANDBOX_DEFAULT_ELO;
+	} catch {
+		return SANDBOX_DEFAULT_ELO;
+	}
+};
 
 // the colour your pieces are drawn in, kept between visits (the toggle, SideToggle)
 const loadColour = (): PieceColour => {
@@ -110,6 +123,15 @@ export const stateGame = $state({
 	sandboxTurn: 'you' as Side,
 	selected: undefined as Position | undefined,
 	targets: [] as Position[],
+	// the piece being dragged (drawn over the others)
+	dragging: undefined as number | undefined,
+	// the strength played against (SANDBOX_LEVELS), in Elo
+	sandboxElo: loadElo(),
+	// the engine's best moves for the player, asked for with the lightbulb (BoardHints), the best first
+	hints: [] as { rank: number; from: Position; to: Position }[],
+	// the square the player's last move went to on the practice board, when the engine judged it a
+	// blunder (BLUNDER): lit red (BoardSquares)
+	blunder: undefined as Position | undefined,
 	// the engine's reasons for the spin's quiet end (SidePanel's WHY?), none until it ends so
 	analysis: undefined as Analysis | undefined,
 	// the multiplier spots on the board (BoardSquares), each gone when a capture on it uses it up or the
@@ -117,6 +139,15 @@ export const stateGame = $state({
 	spots: [] as Spot[],
 	scatterCounter: 0,
 });
+
+export const setSandboxElo = (elo: number) => {
+	stateGame.sandboxElo = elo;
+	try {
+		localStorage.setItem(ELO_KEY, String(elo));
+	} catch {
+		// nothing kept: the choice lasts the visit
+	}
+};
 
 export const setYourColour = (colour: PieceColour) => {
 	stateGame.yourColour = colour;
@@ -171,6 +202,13 @@ const boardQuad = (): Quad => {
 const boardPoint = (x: number, y: number) =>
 	squareToQuad(boardQuad())(x / BOARD_SIZES.width, y / BOARD_SIZES.height);
 
+// a point of the main layout as a point of the tilted board, in the board's own units (off the board
+// too, past its edges): where a dragged piece is drawn
+const boardPointAt = (x: number, y: number) => {
+	const { u, v } = quadToSquare(boardQuad())(x, y);
+	return { x: u * BOARD_SIZES.width, y: v * BOARD_SIZES.height };
+};
+
 // the square under a point of the main layout (the tilted board's), or none off the board
 const squareAt = (x: number, y: number): Position | undefined => {
 	const { u, v } = quadToSquare(boardQuad())(x, y);
@@ -208,6 +246,16 @@ const makePiece = (symbol: SymbolName, position: Position): PlayPiece => {
 		alpha: new Tween(1),
 		gone: false,
 	};
+};
+
+// a piece added to the play board for `position`, drawn at `at` (the board's units) to start with: a
+// missing piece coming in from the side (Sandbox)
+const addPiece = (symbol: SymbolName, position: Position, at: { x: number; y: number }): PlayPiece => {
+	const piece = makePiece(symbol, position);
+	piece.x.set(at.x, { duration: 0 });
+	piece.y.set(at.y, { duration: 0 });
+	stateGame.pieces = [...stateGame.pieces, piece];
+	return stateGame.pieces[stateGame.pieces.length - 1];
 };
 
 // the play board set from a landed board (the reveal's: reels of 10 symbols, rows 1-8 the board)
@@ -261,12 +309,14 @@ export const stateGameDerived = {
 	boardQuad,
 	boardPoint,
 	squareAt,
+	boardPointAt,
 	tablePoint,
 	squareCentre,
 	cellCentre,
 	boardRaw,
 	playBoardRaw,
 	initPlayBoard,
+	addPiece,
 	pieceAt,
 	kingSquare,
 	reelsFromPlayBoard,

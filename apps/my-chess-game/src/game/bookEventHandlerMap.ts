@@ -71,6 +71,8 @@ export const bookEventHandlerMap: BookEventHandlerMap<BookEvent, BookEventContex
 		stateGame.moveLog = [];
 		stateGame.moves = [];
 		stateGame.analysis = undefined;
+		stateGame.hints = [];
+		stateGame.blunder = undefined;
 		stateGame.spots = [];
 		// a base game spin's multiplier is its own; the free spins' carries on
 		if (bookEvent.gameType === 'basegame') stateGame.multiplier = 1;

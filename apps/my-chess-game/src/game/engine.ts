@@ -1,12 +1,16 @@
 import type { Position, SymbolName } from './types';
-import type { BoardPiece, ChessMove } from './chess';
+import { positionKey, type BoardPiece, type ChessMove, type MoveRules } from './chess';
 
 // The start screen's opponent (Sandbox): the math's own small engine (math-sdk games/my_chess_game/
 // chess_engine.py) in the client, move for move. The board is 64 squares, index row * 8 + col with row 0
 // the top as the game draws it: your pieces 1-6 (P N B R Q K), the other side's -1 to -6, 0 empty; you
 // move up the board (to lower rows). Alpha-beta search `depth` plies deep, then captures only, iterative
 // deepening within a node budget, a material and position evaluation. No castling, no en passant, a pawn
-// promotes to a queen: the game's rules.
+// promotes to a queen: the game's rules. Castling and en passant too, for the start screen's game: two
+// more slots after the squares hold the castling rights (RIGHTS, bits for each side and corner) and the
+// square a pawn has just passed with a two-square step (PASSED, the square + 1, 0 for none).
+const RIGHTS = 64;
+const PASSED = 65;
 const WHITE = 1;
 const BLACK = -1;
 const [P, N, B, R, Q, K] = [1, 2, 3, 4, 5, 6];
@@ -17,6 +21,14 @@ const LETTERS = ['', 'P', 'N', 'B', 'R', 'Q', 'K'];
 
 type Board = Int8Array;
 type Move = [number, number, number];
+
+// the castling rights' bits, and each side's king and rook squares (index row * 8 + col, row 0 the top:
+// your king on e1 is 60)
+const RIGHT = { WK: 1, WQ: 2, BK: 4, BQ: 8 };
+const CASTLING = [
+	{ side: WHITE, king: 60, rookK: 63, rookQ: 56, rightK: RIGHT.WK, rightQ: RIGHT.WQ },
+	{ side: BLACK, king: 4, rookK: 7, rookQ: 0, rightK: RIGHT.BK, rightQ: RIGHT.BQ },
+];
 
 const targets = (steps: number[][]) =>
 	Array.from({ length: 64 }, (_, sq) => {
@@ -119,13 +131,27 @@ const pseudoMoves = (board: Board, side: number): Move[] => {
 				}
 				for (const dc of [-1, 1]) {
 					const c = col + dc;
-					if (c >= 0 && c < 8 && board[fwd + dc] * side < 0) moves.push([sq, fwd + dc, promo]);
+					if (c < 0 || c >= 8) continue;
+					if (board[fwd + dc] * side < 0) moves.push([sq, fwd + dc, promo]);
+					// en passant: the pawn that has just passed the square beside this one
+					else if (board[PASSED] && board[PASSED] - 1 === fwd + dc) moves.push([sq, fwd + dc, 0]);
 				}
 			}
 		} else if (t === N) {
 			for (const to of KNIGHT_TARGETS[sq]) if (board[to] * side <= 0) moves.push([sq, to, 0]);
 		} else if (t === K) {
 			for (const to of KING_TARGETS[sq]) if (board[to] * side <= 0) moves.push([sq, to, 0]);
+			// castling: the right still held, nothing between king and rook, the king not in check and
+			// not crossing or landing on an attacked square
+			const home = CASTLING.find((c) => c.side === side)!;
+			if (sq === home.king && board[RIGHTS] & (home.rightK | home.rightQ) && !isAttacked(board, sq, -side)) {
+				if (board[RIGHTS] & home.rightK && board[home.rookK] === R * side && board[sq + 1] === 0 && board[sq + 2] === 0) {
+					if (!isAttacked(board, sq + 1, -side) && !isAttacked(board, sq + 2, -side)) moves.push([sq, sq + 2, 0]);
+				}
+				if (board[RIGHTS] & home.rightQ && board[home.rookQ] === R * side && board[sq - 1] === 0 && board[sq - 2] === 0 && board[sq - 3] === 0) {
+					if (!isAttacked(board, sq - 1, -side) && !isAttacked(board, sq - 2, -side)) moves.push([sq, sq - 2, 0]);
+				}
+			}
 		} else {
 			const lines = t === B ? BISHOP_RAYS[sq] : t === R ? ROOK_RAYS[sq] : QUEEN_RAYS[sq];
 			for (const ray of lines) {
@@ -143,10 +169,31 @@ const pseudoMoves = (board: Board, side: number): Move[] => {
 	return moves;
 };
 
+// a pawn going aside onto an empty square: the en passant capture
+const isEnPassant = (board: Board, [frm, to]: Move) =>
+	Math.abs(board[frm]) === P && frm % 8 !== to % 8 && board[to] === 0;
+
 const makeMove = (board: Board, [frm, to, promo]: Move, side: number): Board => {
 	const after = board.slice();
-	after[to] = promo ? promo * side : board[frm];
+	const piece = board[frm];
+	if (isEnPassant(board, [frm, to, promo])) after[to + 8 * side] = 0;
+	after[to] = promo ? promo * side : piece;
 	after[frm] = 0;
+	// a castling: the rook comes over
+	if (piece === K * side && Math.abs(to - frm) === 2) {
+		const rookFrom = to > frm ? frm + 3 : frm - 4;
+		const rookTo = to > frm ? frm + 1 : frm - 1;
+		after[rookTo] = after[rookFrom];
+		after[rookFrom] = 0;
+	}
+	// the rights: a king or rook moved from, or a rook taken on, its square
+	for (const c of CASTLING) {
+		if (frm === c.king || to === c.king) after[RIGHTS] &= ~(c.rightK | c.rightQ);
+		if (frm === c.rookK || to === c.rookK) after[RIGHTS] &= ~c.rightK;
+		if (frm === c.rookQ || to === c.rookQ) after[RIGHTS] &= ~c.rightQ;
+	}
+	// the square a pawn has just passed, for one move
+	after[PASSED] = Math.abs(piece) === P && Math.abs(to - frm) === 16 ? (frm + to) / 2 + 1 : 0;
 	return after;
 };
 
@@ -167,6 +214,8 @@ const evaluate = (board: Board, side: number) => {
 		if (p === 0) continue;
 		const t = Math.abs(p);
 		let value = VALUES[t];
+		// a king that has castled (or walked to its corner) is a little safer: so the engine castles
+		if (t === K && ((p > 0 && (sq === 62 || sq === 58)) || (p < 0 && (sq === 6 || sq === 2)))) value += 35;
 		if (t === N || t === B) value += 4 * CENTRE[sq];
 		else if (t === Q) value += 2 * CENTRE[sq];
 		else if (t === P) {
@@ -257,7 +306,7 @@ export class Search {
 		if (stand > alpha) alpha = stand;
 		const captures: [Move, Board][] = [];
 		for (const move of pseudoMoves(board, side)) {
-			if (board[move[1]] !== 0 || move[2]) {
+			if (board[move[1]] !== 0 || move[2] || isEnPassant(board, move)) {
 				const after = makeMove(board, move, side);
 				if (!inCheck(after, side)) captures.push([move, after]);
 			}
@@ -281,22 +330,45 @@ export class Search {
 
 // --- the game's pieces in and out ------------------------------------------------------------------
 
-const toBoard = (pieces: BoardPiece[]): Board => {
-	const board = new Int8Array(64);
+const toPosition = (sq: number): Position => ({ reel: sq % 8, row: Math.floor(sq / 8) + 1 });
+
+const toBoard = (pieces: BoardPiece[], rules?: MoveRules): Board => {
+	const board = new Int8Array(66);
 	for (const piece of pieces) {
 		const kind = LETTERS.indexOf(piece.symbol[1]);
 		board[(piece.row - 1) * 8 + piece.reel] = piece.symbol[0] === 'W' ? kind : -kind;
 	}
+	if (rules) {
+		// a right held while the king and that rook stand on their squares, never moved
+		for (const c of CASTLING) {
+			const kingHome = board[c.king] === K * c.side && !rules.moved.has(positionKey(toPosition(c.king)));
+			if (kingHome && board[c.rookK] === R * c.side && !rules.moved.has(positionKey(toPosition(c.rookK)))) board[RIGHTS] |= c.rightK;
+			if (kingHome && board[c.rookQ] === R * c.side && !rules.moved.has(positionKey(toPosition(c.rookQ)))) board[RIGHTS] |= c.rightQ;
+		}
+		if (rules.passed) board[PASSED] = (rules.passed.row - 1) * 8 + rules.passed.reel + 1;
+	}
 	return board;
 };
 
-const toPosition = (sq: number): Position => ({ reel: sq % 8, row: Math.floor(sq / 8) + 1 });
+// an engine move as the game's, with a castling's or an en passant's mark on it
+const toChessMove = (board: Board, [frm, to, promo]: Move, side: number): ChessMove => {
+	const promotion = promo ? ((side === WHITE ? 'WQ' : 'BQ') as SymbolName) : undefined;
+	const castle = board[frm] === K * side && Math.abs(to - frm) === 2 ? (to > frm ? 'K' : 'Q') : undefined;
+	const enPassant = isEnPassant(board, [frm, to, promo]) ? toPosition(to + 8 * side) : undefined;
+	return { from: toPosition(frm), to: toPosition(to), promotion, castle, enPassant };
+};
+
+// every legal move the engine sees for `side` (for checking it against the game's own rules)
+export const engineLegalMoves = (pieces: BoardPiece[], side: 'you' | 'them', rules?: MoveRules): ChessMove[] => {
+	const board = toBoard(pieces, rules);
+	const colour = side === 'you' ? WHITE : BLACK;
+	return legalMoves(board, colour).map(([move]) => toChessMove(board, move, colour));
+};
 
 // the engine's move for `side` on the game's board, or none with no legal move
-export const engineMove = (pieces: BoardPiece[], side: 'you' | 'them', depth = 3): ChessMove | undefined => {
-	const best = new Search(depth).bestMove(toBoard(pieces), side === 'you' ? WHITE : BLACK);
-	if (!best) return undefined;
-	const [[frm, to, promo]] = best;
-	const promotion = promo ? ((side === 'you' ? 'WQ' : 'BQ') as SymbolName) : undefined;
-	return { from: toPosition(frm), to: toPosition(to), promotion };
+export const engineMove = (pieces: BoardPiece[], side: 'you' | 'them', rules?: MoveRules, depth = 3): ChessMove | undefined => {
+	const board = toBoard(pieces, rules);
+	const colour = side === 'you' ? WHITE : BLACK;
+	const best = new Search(depth).bestMove(board, colour);
+	return best && toChessMove(board, best[0], colour);
 };

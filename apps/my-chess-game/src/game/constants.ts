@@ -73,8 +73,12 @@ export const MOVE_TIMING = {
 	// the last spin's pieces dropping off the board as the next starts, and the stagger between its columns
 	drop: 420,
 	dropStagger: 45,
-	// the start screen's engine's pause before it answers (Sandbox)
+	// the start screen's engine's pause before it answers (Sandbox), and how long a finished round sits
+	// still before the pieces go back to the start and the game is on again
 	engineThink: 450,
+	sandboxReturn: 10000,
+	// each piece's move on the way back to the start
+	returnMove: 320,
 };
 
 export const INITIAL_SYMBOL_STATE: SymbolState = 'static';
@@ -119,9 +123,30 @@ export const BOARD_COLOURS = {
 	spot: 0xffd34d,
 	// the blue of a + spot (a x spot is the gold)
 	spotAdd: 0x5cc8ff,
+	// the engine's hints for the player (BoardHints)
+	hint: 0x1fa65a,
 };
 
 // the multiplier spots, as the math has them: a + spot adds to the spin's multiplier, a x spot multiplies it
 export const SPOT_ADD_VALUES = [1, 2, 3, 5, 10, 20, 50, 100];
 export const SPOT_MULT_VALUES = [2, 3, 4, 5, 6, 8, 10];
 export const CHEAT_SPOTS = { min: 2, max: 4 };
+
+// The strengths to play against on the start screen (SandboxControls), as Elo the player picks from:
+// how deep Lozza looks for each, and how often it plays any legal move instead (the weaker levels'
+// blunders). The default is the middle one.
+export const SANDBOX_LEVELS = [
+	{ elo: 800, name: 'NOVICE', depth: 1, blunder: 0.3 },
+	{ elo: 1000, name: 'CASUAL', depth: 2, blunder: 0.2 },
+	{ elo: 1200, name: 'CLUB', depth: 3, blunder: 0.1 },
+	{ elo: 1500, name: 'STRONG', depth: 4, blunder: 0.03 },
+	{ elo: 1800, name: 'EXPERT', depth: 6, blunder: 0 },
+	{ elo: 2100, name: 'MASTER', depth: 8, blunder: 0 },
+	{ elo: 2400, name: 'ENGINE', depth: 12, blunder: 0 },
+];
+export const SANDBOX_DEFAULT_ELO = 1500;
+// A blunder on the practice board (Sandbox): a move of the player's this much worse than the engine's
+// best, in hundredths of a pawn, judged this deep; its squares are lit red
+export const BLUNDER = { loss: 150, depth: 8 };
+// the hint: how many of the engine's best moves to show (one), and how deep it looks for it
+export const SANDBOX_HINTS = { count: 1, depth: 8 };
