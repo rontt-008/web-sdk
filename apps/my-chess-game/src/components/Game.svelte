@@ -31,6 +31,7 @@
 	import MoveLog from './MoveLog.svelte';
 	import SidePanel from './SidePanel.svelte';
 	import MoveLabel from './MoveLabel.svelte';
+	import FistSlam from './FistSlam.svelte';
 	import ComboMultiplier from './ComboMultiplier.svelte';
 	import SpinWin from './SpinWin.svelte';
 	import TurnTag from './TurnTag.svelte';
@@ -136,6 +137,7 @@
 			{#snippet logo()}{/snippet}
 		</UI>
 		<MoveLabel />
+		<FistSlam />
 		<Win />
 		<FreeSpinIntro />
 		{#if ['desktop', 'landscape'].includes(context.stateLayoutDerived.layoutType())}
