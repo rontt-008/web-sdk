@@ -8,7 +8,7 @@ import { createGetWinLevelDataByWinLevelAlias } from 'utils-shared/winLevel';
 import type { GameType, PieceColour, Position, RawSymbol, Side, SymbolName } from './types';
 import type { Analysis, Spot, SpotValue } from './typesBookEvent';
 import type { PlayedMove } from './chess';
-import { TILT, squareToQuad, type Quad } from './tilt';
+import { TILT, squareToQuad, quadToSquare, type Quad } from './tilt';
 import { stateLayoutDerived } from './stateLayout';
 import { winLevelMap } from './winLevelMap';
 import { eventEmitter } from './eventEmitter';
@@ -103,6 +103,13 @@ export const stateGame = $state({
 	// the spin's moves in words (MoveLog), and as played (SidePanel)
 	moveLog: [] as string[],
 	moves: [] as PlayedMove[],
+	// The start screen's game of chess (Sandbox): until the first spin the player moves the pieces of the
+	// starting position about, any legal move, your side and the other side in turn. The side to move,
+	// the piece picked up and the squares it can go to.
+	sandbox: true,
+	sandboxTurn: 'you' as Side,
+	selected: undefined as Position | undefined,
+	targets: [] as Position[],
 	// the engine's reasons for the spin's quiet end (SidePanel's WHY?), none until it ends so
 	analysis: undefined as Analysis | undefined,
 	// the multiplier spots on the board (BoardSquares), each gone when a capture on it uses it up or the
@@ -163,6 +170,13 @@ const boardQuad = (): Quad => {
 
 const boardPoint = (x: number, y: number) =>
 	squareToQuad(boardQuad())(x / BOARD_SIZES.width, y / BOARD_SIZES.height);
+
+// the square under a point of the main layout (the tilted board's), or none off the board
+const squareAt = (x: number, y: number): Position | undefined => {
+	const { u, v } = quadToSquare(boardQuad())(x, y);
+	if (u < 0 || u >= 1 || v < 0 || v >= 1) return undefined;
+	return { reel: Math.floor(u * BOARD_DIMENSIONS.x), row: Math.floor(v * BOARD_DIMENSIONS.y) + 1 };
+};
 
 // where a point of the main layout is seen once the table it's on is tilted with the board (the side
 // panel lies on the table beside the board, in the same plane)
@@ -246,6 +260,7 @@ export const stateGameDerived = {
 	boardLayout,
 	boardQuad,
 	boardPoint,
+	squareAt,
 	tablePoint,
 	squareCentre,
 	cellCentre,

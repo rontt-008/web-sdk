@@ -74,6 +74,99 @@ const KING_STEPS = [[-1, -1], [-1, 0], [-1, 1], [0, -1], [0, 1], [1, -1], [1, 0]
 const BISHOP_DIRS = [[-1, -1], [-1, 1], [1, -1], [1, 1]];
 const ROOK_DIRS = [[-1, 0], [1, 0], [0, -1], [0, 1]];
 
+export type BoardPiece = { symbol: SymbolName; reel: number; row: number };
+export type ChessMove = { from: Position; to: Position; promotion?: SymbolName };
+
+const onBoard = ({ reel, row }: Position) => reel >= 0 && reel < 8 && row >= 1 && row <= 8;
+
+// Every legal move of `side` on a board of `pieces`, the rules the math plays by (chess_engine.py): no
+// castling and no en passant, pawns one step (two from their starting row: row 7 for yours, moving up to
+// lower rows; row 2 for the other side's), promoting to a queen; a move may not leave the mover's own
+// king in check.
+export const legalMoves = (pieces: BoardPiece[], side: 'you' | 'them'): ChessMove[] => {
+	const at = new Map(pieces.map((piece) => [positionKey(piece), piece]));
+	const mine = (piece: BoardPiece) => isMine(piece.symbol) === (side === 'you');
+	const moves: ChessMove[] = [];
+	const push = (from: Position, to: Position, promotion?: SymbolName) => {
+		const other = at.get(positionKey(to));
+		if (other && mine(other)) return;
+		moves.push({ from, to, promotion });
+	};
+	const slide = (from: Position, dirs: number[][]) => {
+		for (const [dReel, dRow] of dirs) {
+			let to = { reel: from.reel + dReel, row: from.row + dRow };
+			while (onBoard(to)) {
+				push(from, to);
+				if (at.has(positionKey(to))) break;
+				to = { reel: to.reel + dReel, row: to.row + dRow };
+			}
+		}
+	};
+	const step = (from: Position, list: number[][]) => {
+		for (const [dReel, dRow] of list) {
+			const to = { reel: from.reel + dReel, row: from.row + dRow };
+			if (onBoard(to)) push(from, to);
+		}
+	};
+	for (const piece of pieces) {
+		if (!mine(piece)) continue;
+		const from = { reel: piece.reel, row: piece.row };
+		switch (pieceKind(piece.symbol)) {
+			case 'P': {
+				const dRow = side === 'you' ? -1 : 1;
+				const startRow = side === 'you' ? 7 : 2;
+				const lastRow = side === 'you' ? 1 : 8;
+				const queen = (side === 'you' ? 'WQ' : 'BQ') as SymbolName;
+				const ahead = { reel: from.reel, row: from.row + dRow };
+				if (onBoard(ahead) && !at.has(positionKey(ahead))) {
+					push(from, ahead, ahead.row === lastRow ? queen : undefined);
+					const two = { reel: from.reel, row: from.row + dRow * 2 };
+					if (from.row === startRow && !at.has(positionKey(two))) push(from, two);
+				}
+				for (const dReel of [-1, 1]) {
+					const to = { reel: from.reel + dReel, row: from.row + dRow };
+					const other = onBoard(to) ? at.get(positionKey(to)) : undefined;
+					if (other && !mine(other)) push(from, to, to.row === lastRow ? queen : undefined);
+				}
+				break;
+			}
+			case 'N':
+				step(from, KNIGHT_STEPS);
+				break;
+			case 'K':
+				step(from, KING_STEPS);
+				break;
+			case 'B':
+				slide(from, BISHOP_DIRS);
+				break;
+			case 'R':
+				slide(from, ROOK_DIRS);
+				break;
+			case 'Q':
+				slide(from, [...BISHOP_DIRS, ...ROOK_DIRS]);
+				break;
+		}
+	}
+	return moves.filter((move) => !inCheck(makeMove(pieces, move), side));
+};
+
+// the board after a move (the taken piece gone, a promoted pawn a queen)
+export const makeMove = (pieces: BoardPiece[], move: ChessMove): BoardPiece[] =>
+	pieces
+		.filter((piece) => positionKey(piece) !== positionKey(move.to))
+		.map((piece) =>
+			positionKey(piece) === positionKey(move.from)
+				? { symbol: move.promotion ?? piece.symbol, reel: move.to.reel, row: move.to.row }
+				: piece,
+		);
+
+// whether `side`'s king is attacked
+export const inCheck = (pieces: BoardPiece[], side: 'you' | 'them') => {
+	const king = pieces.find((piece) => pieceKind(piece.symbol) === 'K' && isMine(piece.symbol) === (side === 'you'));
+	if (!king) return false;
+	return attackers(pieces, { reel: king.reel, row: king.row }, side === 'you' ? 'them' : 'you').length > 0;
+};
+
 export const attackers = (
 	pieces: { symbol: SymbolName; reel: number; row: number }[],
 	square: Position,

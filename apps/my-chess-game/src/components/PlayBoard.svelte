@@ -31,7 +31,7 @@
 	// bigger on the way, over the others), a taken piece swells and bursts as it arrives, a pawn that
 	// promotes changes into a queen; a king in check pulses, with the line of the check drawn
 	// (BoardSquares). The camera (camera.svelte.ts) glides in on the square the move lands on, nudges
-	// as a piece is taken, and drifts back out. The side not on the move is a little dimmed; in DUMB MODE the other side's pieces
+	// as a piece is taken, and drifts back out. In DUMB MODE the other side's pieces
 	// are greyed. In CHEATER MODE the multiplier spots fly into your queen one by one, each going into
 	// the multiplier (a + adds, a x multiplies). The reels (Board) take over again for the next spin.
 	const context = getContext();
@@ -45,12 +45,8 @@
 	let nextFlying = 1;
 
 	const dumbMode = $derived(stateBet.activeBetModeKey === BOOSTER_MODE);
-	// the side whose move it isn't fades a little, the mover never
-	const dim = (piece: PlayPiece) => {
-		const turn = context.stateGame.turn;
-		if (!turn || piece.id === moving) return 1;
-		return (turn === 'you') === isMine(piece.symbol) ? 1 : 0.72;
-	};
+	// no fading of the side not on the move: faded white pieces took the board's blue (the turn tag and
+	// the side panel say whose move it is)
 	const tint = (piece: PlayPiece) => (dumbMode && !isMine(piece.symbol) ? 0xb9bccc : 0xffffff);
 
 	const pulse = async (piece: PlayPiece, times: number, size = 1.2) => {
@@ -102,6 +98,7 @@
 			const target = move.captured ? context.stateGameDerived.pieceAt(move.to) : undefined;
 			context.stateGame.lastMove = { from: move.from, to: move.to };
 			context.stateGame.checkSquare = undefined;
+			context.stateGame.checkLines = [];
 			if (!piece) return;
 
 			piece.reel = move.to.reel;
@@ -190,7 +187,7 @@
 				y={piece.y.current}
 				symbol={piece.symbol}
 				scale={piece.scale.current}
-				alpha={piece.alpha.current * dim(piece)}
+				alpha={piece.alpha.current}
 				tint={tint(piece)}
 				zIndex={piece.id === moving ? 10 : piece.gone ? 5 : 1}
 			/>
