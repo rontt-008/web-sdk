@@ -54,14 +54,17 @@
 	// screen's. Where that would make the arm more than MAX_SCALE of the drawing (tall screens), the drawn
 	// slam plays instead. The fist lands IMPACT_X across the board if the frame's right edge allows,
 	// further right if not.
-	// - frames: the table pieces start their jump (their fist lands on their frame 4: so on this frame 9),
-	//   the hit (the thud and the camera's jolt), and the fist's shadow on the table coming and going
+	// - frames: the table pieces start their jump (their fist lands 0.1 s after they start, their frame 4
+	//   at 30 a second; at SPEED this arm takes about that from its first frame to its hit on frame 9), the
+	//   hit (the thud and the camera's jolt), and the fist's shadow on the table coming and going
 	// - shadow: under the fist, a little towards the bottom right (away from the lamp), in the frame's px
+	// Both slams play SPEED times as fast as made (the animation at 45 frames a second, not 30).
+	const SPEED = 1.5;
 	const ANIMATED = {
 		margin: 24,
 		maxScale: 1.1,
 		impactX: 0.6,
-		frames: { pieces: 6, hit: 9, shadowIn: 6, liftOff: 40, shadowOut: 46 },
+		frames: { pieces: 5, hit: 9, shadowIn: 6, liftOff: 40, shadowOut: 46 },
 		shadow: { x: 770, y: 425, rx: 210, ry: 52, alpha: 0.4 },
 	};
 	const animatedLayout = $derived.by(() => {
@@ -104,6 +107,8 @@
 			slamFrame = ARM_SLAM.sequence[0];
 			finish = resolve;
 			animating = true;
+			// what its first frame sets off (it gets no frame change of its own)
+			onSlamFrame(0);
 			// should the ticker stall (a hidden tab), it doesn't hold the bonus up
 			setTimeout(onSlamComplete, 4000);
 		});
@@ -184,7 +189,7 @@
 	const zoom = new Tween(POSE.zoom);
 	let showing = $state(false);
 
-	const ms = (duration: number) => duration / stateBetDerived.timeScale();
+	const ms = (duration: number) => duration / stateBetDerived.timeScale() / SPEED;
 	const wait = (duration: number) => new Promise((resolve) => setTimeout(resolve, ms(duration)));
 
 	context.eventEmitter.subscribeOnMount({
@@ -261,7 +266,7 @@
 				{textures}
 				play
 				loop={false}
-				animationSpeed={0.5}
+				animationSpeed={0.5 * SPEED}
 				x={animatedLayout.x}
 				y={animatedLayout.y}
 				scale={animatedLayout.scale}
