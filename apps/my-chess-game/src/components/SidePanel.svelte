@@ -14,6 +14,7 @@
 	import type { SymbolName } from '../game/types';
 	import { TABLE_EDGE } from '../game/tilt';
 	import TiltedPlane from './TiltedPlane.svelte';
+	import CameraContainer from './CameraContainer.svelte';
 
 	// The side panel to the right of the board (desktop), in the board's own colours (its light and dark
 	// squares, its frame, its coordinates' blue), flat:
@@ -22,6 +23,7 @@
 	// - the spin's moves in chess notation, a numbered turn a row, yours and the reply side by side, the
 	//   rows striped like the board (the latest at the foot; older ones scroll off the top)
 	// - what each side has taken this spin, the taken pieces' pictures in a row
+	// Seen through the camera (CameraContainer) like the table it lies on, so it zooms with the scene.
 	const context = getContext();
 	const panel = $derived(sidePanelLayout().panel);
 
@@ -120,6 +122,7 @@
 
 {#if panel}
 	<MainContainer>
+		<CameraContainer>
 		<TiltedPlane
 			size={{ width: panel.width, height: panel.height }}
 			project={(x, y) => context.stateGameDerived.tablePoint(panel.x + x, panel.y + y)}
@@ -225,5 +228,6 @@
 				{/each}
 			{/each}
 		</TiltedPlane>
+		</CameraContainer>
 	</MainContainer>
 {/if}

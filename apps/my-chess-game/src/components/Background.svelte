@@ -12,7 +12,8 @@
 	// and a blue cast over everything in the free spins.
 	// The table covers the screen with its top left corner in the screen's, so the lamp and the book are
 	// always in view and what's cut off is plain wood (right and bottom); a little more than the screen,
-	// so the camera's shake never shows its edge. A dark wood colour under it all.
+	// so the camera's zoom and shake never show its edge. A dark wood colour under it all. The whole
+	// scene is seen through the camera: the table zooms with the board and the side panel on it.
 	const context = getContext();
 	const showFeatureBackground = $derived(context.stateGame.gameType === 'freegame');
 
