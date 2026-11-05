@@ -8,6 +8,41 @@ export default {
 		type: 'sprite',
 		src: new URL('../../assets/table.webp', import.meta.url).href,
 	},
+	// the fist that slams the board as a bonus starts (FistSlam; art-source/fist.py)
+	fist: {
+		type: 'sprite',
+		src: new URL('../../assets/fist.webp', import.meta.url).href,
+	},
+	// the pieces standing on the table left of the board (Background; art-source/table-pieces.py)
+	tableKing: {
+		type: 'sprite',
+		src: new URL('../../assets/table-pieces/king.webp', import.meta.url).href,
+	},
+	tablePawn: {
+		type: 'sprite',
+		src: new URL('../../assets/table-pieces/pawn.webp', import.meta.url).href,
+	},
+	tableRook: {
+		type: 'sprite',
+		src: new URL('../../assets/table-pieces/rook.webp', import.meta.url).href,
+	},
+	// and their animations as a fist slams the table (TablePieces; art-source/table-piece-anims.py, from
+	// the user's Blender renders): loaded once the game is up, only where the pieces are shown
+	tableKingAnim: {
+		type: 'spriteSheet',
+		src: new URL('../../assets/table-pieces/king-anim.json', import.meta.url).href,
+		lazy: true,
+	},
+	tablePawnAnim: {
+		type: 'spriteSheet',
+		src: new URL('../../assets/table-pieces/pawn-anim.json', import.meta.url).href,
+		lazy: true,
+	},
+	tableRookAnim: {
+		type: 'spriteSheet',
+		src: new URL('../../assets/table-pieces/rook-anim.json', import.meta.url).href,
+		lazy: true,
+	},
 	// the board's wooden frame, flat (it's tilted with the board; art-source/board-frame.py)
 	boardFrame: {
 		type: 'sprite',

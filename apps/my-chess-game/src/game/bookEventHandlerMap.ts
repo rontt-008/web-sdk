@@ -264,6 +264,8 @@ export const bookEventHandlerMap: BookEventHandlerMap<BookEvent, BookEventContex
 	freeSpinTrigger: async (bookEvent: BookEventOfType<'freeSpinTrigger'>) => {
 		eventEmitter.broadcast({ type: 'soundOnce', name: 'sfx_superfreespin' });
 		await eventEmitter.broadcastAsync({ type: 'uiHide' });
+		// a fist slams the board (FistSlam), and the bonus comes in
+		await eventEmitter.broadcastAsync({ type: 'fistSlam' });
 		await eventEmitter.broadcastAsync({ type: 'transition' });
 		eventEmitter.broadcast({ type: 'moveLabelHide' });
 		eventEmitter.broadcast({ type: 'freeSpinIntroShow' });

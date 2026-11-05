@@ -21,6 +21,7 @@
 		detail?: number;
 		// how far the solid thing reaches out past `size` on each side (a frame round it), in its own units,
 		// for its front edge and shadow; the front edge, in the parent's units; and how dark the shadow is
+		// (0: none)
 		rim?: number;
 		edge?: { depth: number; colour: number };
 		shadow?: number;
@@ -85,6 +86,9 @@
 		}
 		const { x: sx, y: sy } = props.shadowOffset ?? { x: 0, y: 0 };
 		shadow.clear();
+		// none for what casts its own (shadow 0)
+		shadow.visible = (props.shadow ?? 0.45) > 0;
+		if (!shadow.visible) return;
 		shadow
 			.poly([
 				tl.x + sx,
