@@ -55,9 +55,7 @@
 	},
 	"src": [
 		"./assets/audio/sounds.ogg",
-		"./assets/audio/sounds.m4a",
-		"./assets/audio/sounds.mp3",
-		"./assets/audio/sounds.ac3"
+		"./assets/audio/sounds.mp3"
 	],
 	"config": {
 		"bgm_freespin": { "volume": 1 },
