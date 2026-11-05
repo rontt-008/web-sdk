@@ -6,19 +6,21 @@
 
 	import { getContext } from '../game/context';
 
-	// the picture with the board in it, drawn so its squares lie under the board (see BACKGROUND_ART in
-	// stateGame): on screens it doesn't cover, its own night blue behind it; a blue cast over everything
-	// in the free spins
+	// a plain night blue over the whole screen, the board's picture (static/assets/board.webp) on the
+	// board's squares, and a blue cast over everything in the free spins
 	const context = getContext();
-	const layout = $derived(context.stateGameDerived.backgroundLayout());
+	const board = $derived(context.stateGameDerived.boardLayout());
 	const showFeatureBackground = $derived(context.stateGame.gameType === 'freegame');
 </script>
 
 <Rectangle {...context.stateLayoutDerived.canvasSizes()} backgroundColor={0x0e1527} zIndex={-3} />
 
-<MainContainer zIndex={-2}>
-	<Sprite key="background" x={layout.x} y={layout.y} width={layout.width} height={layout.height} />
-</MainContainer>
+<!-- once the pictures are in: this is drawn under the loading screen too -->
+{#if context.stateApp.loaded}
+	<MainContainer zIndex={-2}>
+		<Sprite key="board" x={board.x} y={board.y} anchor={0.5} width={board.width} height={board.height} />
+	</MainContainer>
+{/if}
 
 <FadeContainer show={showFeatureBackground} duration={SECOND} zIndex={-1}>
 	<CanvasSizeRectangle backgroundColor={0x2a1f66} backgroundAlpha={0.22} />

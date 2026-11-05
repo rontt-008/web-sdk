@@ -4,19 +4,18 @@ import { SYMBOL_SIZE } from './constants';
 
 // Where the things round the board go: the multiplier badge (ComboMultiplier, a circle `size` across),
 // the side toggle (SideToggle), the spin's win (SpinWin) and whose move it is (TurnTag), the last two
-// boxes `width` by `height`. On wide screens all four in a column to the right of the board, clear of
-// the picture's gold frame round it (about a square and a half wide); on tall and square ones the toggle
-// and a smaller multiplier in a row above the board, and the turn tag and the spin win below it, under
-// the move log, left and right.
+// boxes `width` by `height`. On wide screens all four in a column to the right of the board, a little
+// clear of it; on tall and square ones the toggle and a smaller multiplier in a row just above the
+// board, and the turn tag and the spin win below it, under the move log, left and right.
 export const sidePanelLayout = () => {
 	const board = stateGameDerived.boardLayout();
 	const layoutType = stateLayoutDerived.layoutType();
 	const width = SYMBOL_SIZE * 2.6;
 	const height = SYMBOL_SIZE * 0.8;
 	const tagHeight = SYMBOL_SIZE * 0.6;
-	const clear = SYMBOL_SIZE * 1.7;
-	const gap = SYMBOL_SIZE * 0.3;
 	const beside = layoutType === 'desktop' || layoutType === 'landscape';
+	const clear = SYMBOL_SIZE * (beside ? 0.9 : 0.5);
+	const gap = SYMBOL_SIZE * 0.3;
 	if (beside) {
 		const size = SYMBOL_SIZE * 2.8;
 		const x = board.x + board.width / 2 + clear + size / 2;
@@ -36,7 +35,7 @@ export const sidePanelLayout = () => {
 	}
 	const size = SYMBOL_SIZE * 1.5;
 	const y = board.y - board.height / 2 - clear - height / 2;
-	const below = board.y + board.height / 2 + SYMBOL_SIZE * 2.1;
+	const below = board.y + board.height / 2 + SYMBOL_SIZE * 1.75;
 	return {
 		width,
 		height,

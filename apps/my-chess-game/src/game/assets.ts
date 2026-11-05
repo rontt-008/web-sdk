@@ -3,10 +3,10 @@
 const piece = (href: string) => ({ type: 'sprite', src: href }) as const;
 
 export default {
-	// the background picture with the board in it (Background; BACKGROUND_ART says where the squares are)
-	background: {
+	// the board's eight by eight squares, edge to edge (Background; art-source/board.py)
+	board: {
 		type: 'sprite',
-		src: new URL('../../assets/Make_cool_2D_chessboard_1aa06110_2K.jpg', import.meta.url).href,
+		src: new URL('../../assets/board.webp', import.meta.url).href,
 	},
 	// the multiplier badge's frame (ComboMultiplier): the user's astrology circle, see art-source
 	multiplierFrame: {

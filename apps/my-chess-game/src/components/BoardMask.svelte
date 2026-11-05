@@ -1,14 +1,9 @@
 <script lang="ts">
 	import { Rectangle } from 'pixi-svelte';
 
-	import { getContext } from '../game/context';
+	import { BOARD_SIZES } from '../game/constants';
 
-	// the pieces falling in and out are only seen on the board
-	const context = getContext();
+	// the pieces falling in and out are only seen on the board (in the board container's own units)
 </script>
 
-<Rectangle
-	isMask
-	width={context.stateGameDerived.boardLayout().width}
-	height={context.stateGameDerived.boardLayout().height}
-/>
+<Rectangle isMask width={BOARD_SIZES.width} height={BOARD_SIZES.height} />

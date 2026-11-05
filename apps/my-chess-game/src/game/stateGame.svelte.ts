@@ -113,35 +113,25 @@ export const setYourColour = (colour: PieceColour) => {
 	}
 };
 
-// how far above the middle of the screen the board sits, so its frame clears the UI under it
-const BOARD_RAISE = { desktop: 28, landscape: 40, tablet: 50, portrait: 70 };
+// How big the board is drawn on each kind of screen (its own units, BOARD_SIZES, are SYMBOL_SIZE a
+// square, scaled up by this: 640 across on desktop and portrait), and how far above the middle of the
+// screen it sits, so it clears the UI under it. On phones held sideways the UI's buttons come in close at
+// both sides of its bottom corners, so it stays 560 there. Its width and height here are the drawn ones;
+// its pivot is in its own units.
+const BOARD_SCALE = { desktop: 8 / 7, landscape: 1, tablet: 15 / 14, portrait: 8 / 7 };
+const BOARD_RAISE = { desktop: 50, landscape: 40, tablet: 54, portrait: 200 };
 
-const boardLayout = () => ({
-	x: stateLayoutDerived.mainLayout().width * 0.5,
-	y: stateLayoutDerived.mainLayout().height * 0.5 - BOARD_RAISE[stateLayoutDerived.layoutType()],
-	anchor: { x: 0.5, y: 0.5 },
-	pivot: { x: BOARD_SIZES.width / 2, y: BOARD_SIZES.height / 2 },
-	...BOARD_SIZES,
-});
-
-// The background picture (static/assets/Make_cool_2D_chessboard_*.jpg): its size and where its eight by
-// eight squares lie, in its pixels. It is drawn so that they lie exactly under the board (backgroundLayout).
-export const BACKGROUND_ART = {
-	width: 2752,
-	height: 1536,
-	board: { left: 915, top: 309, width: 926, height: 925 },
-};
-
-const backgroundLayout = () => {
-	const board = boardLayout();
-	const art = BACKGROUND_ART.board;
-	// the board's units per pixel of the picture, the same both ways (its squares are square)
-	const scale = board.width / art.width;
+const boardLayout = () => {
+	const layoutType = stateLayoutDerived.layoutType();
+	const scale = BOARD_SCALE[layoutType];
 	return {
-		x: board.x - (art.left + art.width / 2) * scale,
-		y: board.y - (art.top + art.height / 2) * scale,
-		width: BACKGROUND_ART.width * scale,
-		height: BACKGROUND_ART.height * scale,
+		x: stateLayoutDerived.mainLayout().width * 0.5,
+		y: stateLayoutDerived.mainLayout().height * 0.5 - BOARD_RAISE[layoutType],
+		anchor: { x: 0.5, y: 0.5 },
+		pivot: { x: BOARD_SIZES.width / 2, y: BOARD_SIZES.height / 2 },
+		scale,
+		width: BOARD_SIZES.width * scale,
+		height: BOARD_SIZES.height * scale,
 	};
 };
 
@@ -155,7 +145,10 @@ const squareCentre = ({ reel, row }: Position) => ({
 const cellCentre = (position: Position) => {
 	const layout = boardLayout();
 	const local = squareCentre(position);
-	return { x: layout.x - layout.width / 2 + local.x, y: layout.y - layout.height / 2 + local.y };
+	return {
+		x: layout.x + (local.x - layout.pivot.x) * layout.scale,
+		y: layout.y + (local.y - layout.pivot.y) * layout.scale,
+	};
 };
 
 let nextPieceId = 1;
@@ -223,7 +216,6 @@ export const { getWinLevelDataByWinLevelAlias } = createGetWinLevelDataByWinLeve
 
 export const stateGameDerived = {
 	boardLayout,
-	backgroundLayout,
 	squareCentre,
 	cellCentre,
 	boardRaw,

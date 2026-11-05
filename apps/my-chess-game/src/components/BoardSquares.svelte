@@ -8,7 +8,7 @@
 	import type { Position } from '../game/types';
 	import BoardContainer from './BoardContainer.svelte';
 
-	// Over the background picture's board (Background), under the pieces: the multiplier spots on their
+	// Over the board's picture (Background), under the pieces: the multiplier spots on their
 	// squares, the last move's two squares lit gold with an arrow between them (bright as the move is
 	// made, then faded to a trail), a ring round the square a capture is about to land on, a king in
 	// check lit red with the line of the check drawn to it.
