@@ -18,7 +18,7 @@
 
 	import { getContext } from '../game/context';
 	import { MOVE_TIMING, SYMBOL_SIZE, BOARD_COLOURS } from '../game/constants';
-	import { isMine } from '../game/chess';
+	import { attackers, isMine } from '../game/chess';
 	import { BOOSTER_MODE } from '../game/betModes';
 	import type { PlayPiece } from '../game/stateGame.svelte';
 	import { cameraDerived } from '../game/camera.svelte';
@@ -30,13 +30,13 @@
 	// promotes changes into a queen; a king in check pulses, with the line of the check drawn
 	// (BoardSquares). The camera (camera.svelte.ts) glides in on the square the move lands on, nudges
 	// as a piece is taken, and drifts back out. The side not on the move is a little dimmed; in DUMB MODE the other side's pieces
-	// are greyed. In the cheater spin the multiplier spots fly into your queen one by one, the
-	// multiplier adding up. The reels (Board) take over again for the next spin.
+	// are greyed. In CHEATER MODE the multiplier spots fly into your queen one by one, each going into
+	// the multiplier (a + adds, a x multiplies). The reels (Board) take over again for the next spin.
 	const context = getContext();
 	const timeScale = () => stateBetDerived.timeScale();
 
 	// a spot on its way to the queen
-	type Flying = { id: number; text: string; x: Tween<number>; y: Tween<number>; scale: Tween<number> };
+	type Flying = { id: number; text: string; colour: number; x: Tween<number>; y: Tween<number>; scale: Tween<number> };
 
 	let moving = $state<number | undefined>(undefined);
 	let flying = $state<Flying[]>([]);
@@ -64,7 +64,7 @@
 		const duration = MOVE_TIMING.burst / timeScale();
 		piece.scale.set(1.6, { duration, easing: cubicOut });
 		await piece.alpha.set(0, { duration, easing: cubicOut });
-		context.stateGame.pieces = context.stateGame.pieces.filter((other) => other !== piece);
+		context.stateGame.pieces = context.stateGame.pieces.filter((other) => other.id !== piece.id);
 	};
 
 	context.eventEmitter.subscribeOnMount({
@@ -112,7 +112,9 @@
 				const king = context.stateGameDerived.kingSquare(move.side === 'you' ? 'BK' : 'WK');
 				context.stateGame.checkSquare = king;
 				if (king) {
-					context.stateGame.checkLine = { from: move.to, to: king };
+					// the line from each piece giving the check: the mover, or the piece it uncovered
+					const from = attackers(context.stateGame.pieces.filter((piece) => !piece.gone), king, move.side);
+					context.stateGame.checkLines = (from.length ? from : [move.to]).map((square) => ({ from: square, to: king }));
 					const kingPiece = context.stateGameDerived.pieceAt(king);
 					if (kingPiece) pulse(kingPiece, move.mate ? 3 : 2, move.mate ? 1.3 : 1.2);
 				}
@@ -122,14 +124,15 @@
 		playBoardCollect: async ({ queen, spots }) => {
 			const target = context.stateGameDerived.squareCentre(queen);
 			const queenPiece = context.stateGameDerived.pieceAt(queen);
-			let total = 0;
-			context.stateGame.multiplier = 0;
+			let total = 1;
+			context.stateGame.multiplier = 1;
 			cameraDerived.zoomTo(queen, cameraDerived.ZOOM.collect);
 			for (const spot of spots) {
 				const from = context.stateGameDerived.squareCentre(spot);
 				const item: Flying = {
 					id: nextFlying++,
-					text: `x${spot.multiplier}`,
+					text: `${spot.op}${spot.value}`,
+					colour: spot.op === '+' ? BOARD_COLOURS.spotAdd : BOARD_COLOURS.spot,
 					x: new Tween(from.x),
 					y: new Tween(from.y),
 					scale: new Tween(1),
@@ -144,8 +147,9 @@
 					item.x.set(target.x, { duration, easing: cubicIn }),
 					item.y.set(target.y, { duration, easing: cubicIn }),
 				]);
-				flying = flying.filter((other) => other !== item);
-				total += spot.multiplier;
+				// by id: the array is state, so its items are proxies and never the item itself
+				flying = flying.filter((other) => other.id !== item.id);
+				total = spot.op === '+' ? total + spot.value : total * spot.value;
 				context.stateGame.multiplier = total;
 				context.eventEmitter.broadcast({ type: 'soundOnce', name: 'sfx_multiplier_up' });
 				context.eventEmitter.broadcast({ type: 'multiplierPulse' });
@@ -184,7 +188,7 @@
 					fontFamily: 'proxima-nova',
 					fontSize: SYMBOL_SIZE * 0.4,
 					fontWeight: '800',
-					fill: BOARD_COLOURS.spot,
+					fill: item.colour,
 					stroke: { color: 0x1a1208, width: 5 },
 				}}
 			/>

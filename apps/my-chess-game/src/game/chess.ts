@@ -55,6 +55,59 @@ export const pairMoves = (moves: PlayedMove[]) => {
 	return turns;
 };
 
+// The pieces of `side` that attack `square` on a board of `pieces` (your pieces move up the board, to
+// lower rows; the other side's down): the piece giving check, which is not always the piece that moved
+// (a discovered check: the mover steps out of a line), and both of them in a double check.
+const KNIGHT_STEPS = [[-2, -1], [-2, 1], [-1, -2], [-1, 2], [1, -2], [1, 2], [2, -1], [2, 1]];
+const KING_STEPS = [[-1, -1], [-1, 0], [-1, 1], [0, -1], [0, 1], [1, -1], [1, 0], [1, 1]];
+const BISHOP_DIRS = [[-1, -1], [-1, 1], [1, -1], [1, 1]];
+const ROOK_DIRS = [[-1, 0], [1, 0], [0, -1], [0, 1]];
+
+export const attackers = (
+	pieces: { symbol: SymbolName; reel: number; row: number }[],
+	square: Position,
+	side: 'you' | 'them',
+): Position[] => {
+	const occupied = new Set(pieces.map(positionKey));
+	// a sliding piece reaches the square if nothing stands between
+	const clearLine = (from: Position, dirs: number[][]) =>
+		dirs.some(([dReel, dRow]) => {
+			let reel = from.reel + dReel;
+			let row = from.row + dRow;
+			while (reel >= 0 && reel < 8 && row >= 1 && row <= 8) {
+				if (reel === square.reel && row === square.row) return true;
+				if (occupied.has(positionKey({ reel, row }))) return false;
+				reel += dReel;
+				row += dRow;
+			}
+			return false;
+		});
+	const steps = (from: Position, list: number[][]) =>
+		list.some(([dReel, dRow]) => from.reel + dReel === square.reel && from.row + dRow === square.row);
+	return pieces
+		.filter((piece) => isMine(piece.symbol) === (side === 'you'))
+		.filter((piece) => {
+			const from = { reel: piece.reel, row: piece.row };
+			switch (pieceKind(piece.symbol)) {
+				case 'P':
+					return steps(from, side === 'you' ? [[-1, -1], [1, -1]] : [[-1, 1], [1, 1]]);
+				case 'N':
+					return steps(from, KNIGHT_STEPS);
+				case 'K':
+					return steps(from, KING_STEPS);
+				case 'B':
+					return clearLine(from, BISHOP_DIRS);
+				case 'R':
+					return clearLine(from, ROOK_DIRS);
+				case 'Q':
+					return clearLine(from, [...BISHOP_DIRS, ...ROOK_DIRS]);
+				default:
+					return false;
+			}
+		})
+		.map((piece) => ({ reel: piece.reel, row: piece.row }));
+};
+
 // a move in words, for the move log: "YOU  Qd1→h5 ×P  CHECK"
 export const describeMove = (move: {
 	side: 'you' | 'them';
@@ -65,14 +118,14 @@ export const describeMove = (move: {
 	promotion?: SymbolName;
 	check: boolean;
 	mate: boolean;
-	spot?: number;
+	spot?: { op: '+' | 'x'; value: number };
 }) => {
 	const parts = [
 		move.side === 'you' ? 'YOU' : 'THEM',
 		`${pieceKind(move.piece) ?? ''}${squareName(move.from)}→${squareName(move.to)}`,
 	];
 	if (move.captured) parts.push(`×${pieceKind(move.captured)}`);
-	if (move.spot) parts.push(`SPOT x${move.spot}`);
+	if (move.spot) parts.push(`SPOT ${move.spot.op}${move.spot.value}`);
 	if (move.promotion) parts.push(`=${pieceKind(move.promotion)}`);
 	if (move.mate) parts.push('CHECKMATE');
 	else if (move.check) parts.push('CHECK');

@@ -12,9 +12,11 @@ type BookEventReveal = {
 	gameType: GameType;
 };
 
-// a multiplier spot on the board: taking one of the other side's pieces on it pays the capture times
-// its multiplier too, and uses it up
-export type Spot = Position & { multiplier: number };
+// a multiplier spot on the board: taking one of the other side's pieces on it puts it into the spin's
+// multiplier (a + adds its value, a x multiplies by it) before the capture pays, and uses it up
+export type SpotOp = '+' | 'x';
+export type SpotValue = { op: SpotOp; value: number };
+export type Spot = Position & SpotValue;
 
 // The landed board's multiplier spots (none: no event)
 type BookEventMultiplierSpots = {
@@ -23,8 +25,8 @@ type BookEventMultiplierSpots = {
 	spots: Spot[];
 };
 
-// The CHEATER SPIN: your queen (at `queen`) collects every multiplier spot; the spin's multiplier is their
-// sum, `multiplier`
+// CHEATER MODE: your queen (at `queen`) collects every multiplier spot, in the order given (every + first,
+// then every x); the spin's multiplier is `multiplier` after them
 type BookEventQueenCollect = {
 	index: number;
 	type: 'queenCollect';
@@ -35,8 +37,8 @@ type BookEventQueenCollect = {
 
 // A move, yours ("you") or the other side's ("them"): the piece's symbol, where from and to, the symbol
 // it takes (if any), what a pawn becomes (if it promotes), whether it gives check or mate, what it pays
-// (your captures only; in hundredths of the bet, the multipliers already in it) at the spin's multiplier
-// `multiplier`, and the multiplier spot it took the piece on (`spot`, if any; used up).
+// (your captures only; in hundredths of the bet, the multiplier already in it) at the spin's multiplier
+// `multiplier`, with the multiplier spot it took the piece on (`spot`, if any; used up) already in it.
 type BookEventMove = {
 	index: number;
 	type: 'move';
@@ -50,7 +52,7 @@ type BookEventMove = {
 	mate: boolean;
 	win: number;
 	multiplier: number;
-	spot?: number;
+	spot?: SpotValue;
 };
 
 // The position landed with your king in check: your first move must get out of it

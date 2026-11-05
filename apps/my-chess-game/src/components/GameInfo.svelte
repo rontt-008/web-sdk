@@ -6,10 +6,10 @@
 		CAPTURE_PAYS,
 		PIECE_NAMES,
 		FREE_SPINS,
-		RETRIGGER_SPINS,
-		MAX_FREE_SPINS,
 		MAX_MOVES,
 		CHEAT_SPOTS,
+		SPOT_ADD_VALUES,
+		SPOT_MULT_VALUES,
 	} from '../game/constants';
 	import { BONUS_COST, BOOSTER_COST, CHEAT_COST } from '../game/betModes';
 	import type { PieceKind } from '../game/types';
@@ -90,7 +90,8 @@
 			<p>
 				A spin starts at a 1x multiplier. Every piece you take pays its value times the multiplier,
 				and then the multiplier grows by 1: the second capture of a combination pays 2x, the third 3x,
-				and so on. In the base game the multiplier resets with every spin.
+				and so on. A multiplier spot the piece is taken on goes into the multiplier too. In the base
+				game the multiplier resets with every spin.
 			</p>
 		</div>
 	</section>
@@ -99,10 +100,14 @@
 		<h3>Multiplier spots</h3>
 		<div class="card text">
 			<p>
-				Before the pieces land, a few squares (none to three) get a multiplier spot: x2, x3, x5 or
-				x10, with or without a piece on them. Take one of the other side's pieces on a spot and the
-				capture pays its value times the spin's multiplier times the spot's, and the spot is used up.
-				A spot does nothing for the other side.
+				Before the pieces land, a few squares (none to three, mostly under the other side's pieces)
+				get a multiplier spot. A blue + spot adds its value to the spin's multiplier: {SPOT_ADD_VALUES.map(
+					(value) => `+${value}`,
+				).join(', ')}. A gold x spot multiplies the spin's multiplier: {SPOT_MULT_VALUES.map(
+					(value) => `x${value}`,
+				).join(', ')}. Take one of the other side's pieces on a spot and the spot goes into the
+				multiplier first, so that capture and every one after it pay at the bigger multiplier; the
+				spot is used up. A spot does nothing for the other side.
 			</p>
 		</div>
 	</section>
@@ -120,14 +125,15 @@
 	</section>
 
 	<section>
-		<h3>CHEATER SPIN</h3>
+		<h3>CHEATER MODE</h3>
 		<div class="card text">
 			<p>
-				One spin from the bonus menu for {times(CHEAT_COST)} the {words.bet}. Your queen always lands,
-				and the board gets {CHEAT_SPOTS.min} to {CHEAT_SPOTS.max} multiplier spots. Before the moves,
-				the queen collects every spot: their multipliers add up into the spin's multiplier (x2 + x3 +
-				x5 = x10), and the moves then play with it. A checkmate starts the CHECKMATE BONUS with that
-				multiplier already running.
+				Switched on in the bonus menu, every spin {words.costs} {times(CHEAT_COST)} the {words.bet}.
+				Your queen always lands, and the board gets {CHEAT_SPOTS.min} to {CHEAT_SPOTS.max} multiplier
+				spots. Before the moves, the queen collects every spot into the spin's multiplier, every +
+				first and then every x (+3, +5 and x2 make (1 + 3 + 5) x 2 = x18), and the moves then play
+				with it. A checkmate starts the CHECKMATE BONUS with that multiplier already running. It stays
+				on until you switch it off.
 			</p>
 		</div>
 	</section>
@@ -137,12 +143,13 @@
 		<div class="card text">
 			<p>
 				Checkmate the other side's king in a spin and the CHECKMATE BONUS starts: {FREE_SPINS} FREE
-				SPINS on boards with more pieces, and heavier ones. In the FREE SPINS the multiplier never
-				resets: it carries on growing from spin to spin, with every piece you take.
+				SPINS on boards with more pieces, heavier ones and more multiplier spots. In the FREE SPINS
+				the multiplier never resets: it carries on growing from spin to spin, with every piece you
+				take and every spot you take one on.
 			</p>
 			<p>
-				Every checkmate in the FREE SPINS gives {RETRIGGER_SPINS} more spins, up to {MAX_FREE_SPINS}
-				spins in a bonus. Being checkmated, a stalemate or a draw only ends the spin.
+				A bonus is its {FREE_SPINS} spins: a checkmate in them wins its captures, and no more spins.
+				Being checkmated, a stalemate or a draw only ends the spin.
 			</p>
 		</div>
 		<div class="card text">
@@ -175,7 +182,7 @@
 			<p>
 				The most a round can win is {times(maxWin)} the {words.bet}, in any mode: once a round
 				reaches it, it ends and pays that. The return to player is {percent(config.rtp)} in the
-				base game, in DUMB MODE, with the bonus bought and in the CHEATER SPIN.
+				base game, in DUMB MODE, in CHEATER MODE and with the bonus bought.
 			</p>
 			<p class="note">
 				Malfunction voids all pays and plays. The game is decided by the outcome drawn from the game

@@ -11,7 +11,7 @@
 	// Over the board's picture (Background), under the pieces: the multiplier spots on their
 	// squares, the last move's two squares lit gold with an arrow between them (bright as the move is
 	// made, then faded to a trail), a ring round the square a capture is about to land on, a king in
-	// check lit red with the line of the check drawn to it.
+	// check lit red with the line of the check drawn to it from each piece giving it.
 	const context = getContext();
 	const lit = $derived(
 		[context.stateGame.lastMove?.from, context.stateGame.lastMove?.to].filter(
@@ -73,10 +73,10 @@
 		drawArrow(graphics, move.from, move.to, BOARD_COLOURS.lastMove, arrowAlpha.current);
 	};
 
-	const drawCheckLine = (graphics: PIXI.Graphics) => {
-		const line = context.stateGame.checkLine;
-		if (!line) return;
-		drawArrow(graphics, line.from, line.to, BOARD_COLOURS.check, 0.8);
+	const drawCheckLines = (graphics: PIXI.Graphics) => {
+		for (const line of context.stateGame.checkLines) {
+			drawArrow(graphics, line.from, line.to, BOARD_COLOURS.check, 0.8);
+		}
 	};
 </script>
 
@@ -101,22 +101,23 @@
 			backgroundAlpha={0.6}
 		/>
 	{/if}
-	<!-- a spot: a gold ring round its square with its multiplier in the top left corner, clear of the
-	piece on it -->
+	<!-- a spot: a ring round its square (blue for a +, gold for a x) with its value in the top left
+	corner, clear of the piece on it -->
 	{#each context.stateGame.spots as spot (`${spot.reel}:${spot.row}`)}
+		{@const colour = spot.op === '+' ? BOARD_COLOURS.spotAdd : BOARD_COLOURS.spot}
 		<Rectangle
 			x={spot.reel * SYMBOL_SIZE + 3}
 			y={(spot.row - 1) * SYMBOL_SIZE + 3}
 			width={SYMBOL_SIZE - 6}
 			height={SYMBOL_SIZE - 6}
 			borderRadius={6}
-			backgroundColor={BOARD_COLOURS.spot}
+			backgroundColor={colour}
 			backgroundAlpha={0.22}
-			borderColor={BOARD_COLOURS.spot}
+			borderColor={colour}
 			borderWidth={3}
 		/>
 		<Text
-			text={`x${spot.multiplier}`}
+			text={`${spot.op}${spot.value}`}
 			anchor={{ x: 0, y: 0 }}
 			x={spot.reel * SYMBOL_SIZE + 7}
 			y={(spot.row - 1) * SYMBOL_SIZE + 4}
@@ -124,7 +125,7 @@
 				fontFamily: 'proxima-nova',
 				fontSize: SYMBOL_SIZE * 0.26,
 				fontWeight: '800',
-				fill: BOARD_COLOURS.spot,
+				fill: colour,
 				stroke: { color: 0x1a1208, width: 4 },
 			}}
 		/>
@@ -144,5 +145,5 @@
 		/>
 	{/if}
 	<Graphics draw={drawMoveArrow} />
-	<Graphics draw={drawCheckLine} />
+	<Graphics draw={drawCheckLines} />
 </BoardContainer>
