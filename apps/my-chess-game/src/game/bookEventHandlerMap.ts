@@ -38,6 +38,10 @@ const winLevelSoundsStop = () => {
 
 const pause = (ms: number) => waitForTimeout(ms / stateBetDerived.timeScale());
 
+// the spin's multiplier spots are put on the board before its pieces drop (the reveal looks ahead to
+// its multiplierSpots event), so the spots' own event has nothing left to show
+let spotsShownEarly = false;
+
 // the free spins' sign, counter and multiplier put up as a bonus starts (or is resumed)
 const showFreeSpinSetup = (totalFs: number) => {
 	stateGame.gameType = 'freegame';
@@ -66,14 +70,26 @@ export const bookEventHandlerMap: BookEventHandlerMap<BookEvent, BookEventContex
 		stateGame.lastSpot = undefined;
 		stateGame.moveLog = [];
 		stateGame.moves = [];
+		stateGame.analysis = undefined;
 		stateGame.spots = [];
 		// a base game spin's multiplier is its own; the free spins' carries on
 		if (bookEvent.gameType === 'basegame') stateGame.multiplier = 1;
 		eventEmitter.broadcast({ type: 'moveLabelHide' });
 		// the camera backs out for the spin
 		cameraDerived.reset(400, 0);
+		// the last spin's pieces have dropped off the board as the spin started (actor.ts); a resumed
+		// round's are still on it, so the reels take over from them
 		stateGameDerived.reelsFromPlayBoard();
 		eventEmitter.broadcast({ type: 'boardShow' });
+		// the spin's spots land on the empty board first, a beat before the pieces drop
+		const following = bookEvents.slice(bookEvents.indexOf(bookEvent) + 1);
+		const spotsEvent = following.find((event) => event.type === 'reveal' || event.type === 'multiplierSpots');
+		spotsShownEarly = spotsEvent?.type === 'multiplierSpots';
+		if (spotsEvent?.type === 'multiplierSpots') {
+			stateGame.spots = spotsEvent.spots;
+			eventEmitter.broadcast({ type: 'soundOnce', name: 'sfx_multiplier_landing' });
+			await pause(MOVE_TIMING.pause);
+		}
 		await stateGameDerived.enhancedBoard.spin({ revealEvent: bookEvent });
 		// the last pieces to land settle before anything moves
 		await pause(150);
@@ -81,8 +97,13 @@ export const bookEventHandlerMap: BookEventHandlerMap<BookEvent, BookEventContex
 		stateGame.playBoardShown = true;
 		eventEmitter.broadcast({ type: 'boardHide' });
 	},
-	// the landed board's multiplier spots light up on their squares
+	// the spin's multiplier spots: already on the board since before the pieces landed (the reveal put
+	// them there); otherwise (a book resumed mid-way) they light up now
 	multiplierSpots: async (bookEvent: BookEventOfType<'multiplierSpots'>) => {
+		if (spotsShownEarly) {
+			spotsShownEarly = false;
+			return;
+		}
 		stateGame.spots = bookEvent.spots;
 		eventEmitter.broadcast({ type: 'soundOnce', name: 'sfx_multiplier_landing' });
 		await pause(MOVE_TIMING.pause);
@@ -226,6 +247,7 @@ export const bookEventHandlerMap: BookEventHandlerMap<BookEvent, BookEventContex
 	// why the spin's moves are over (a mate has its own label): a quiet end would look like a freeze
 	sequenceEnd: async (bookEvent: BookEventOfType<'sequenceEnd'>) => {
 		stateGame.turn = undefined;
+		stateGame.analysis = bookEvent.analysis;
 		const texts = {
 			quiet: stateGame.movesThisSpin === 0 ? 'NO CAPTURE' : 'NO FORCING MOVE',
 			stalemate: 'STALEMATE',

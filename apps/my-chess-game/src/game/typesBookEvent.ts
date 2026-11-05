@@ -61,11 +61,32 @@ type BookEventInCheck = {
 	type: 'inCheck';
 };
 
-// The spin's moves are over: why (see the math's sequence_end_event)
+// a move in the engine's analysis: the squares, the piece, what it takes (if anything), whether it
+// gives check or mate, and (yours) the score after it, in hundredths of a pawn from your side, a mate
+// far above any material (100000 less the plies to it)
+export type AnalysedMove = {
+	from: Position;
+	to: Position;
+	piece: SymbolName;
+	captured?: SymbolName | '';
+	check: boolean;
+	mate: boolean;
+};
+export type Analysis = {
+	// the engine's move, the quiet one it ends the spin on
+	best: AnalysedMove & { score: number };
+	// the best capture or check it passed over, with the other side's best reply to it and the score
+	// after that reply; none when no capture or check was possible
+	forcing?: AnalysedMove & { score: number; reply?: AnalysedMove };
+};
+
+// The spin's moves are over: why (see the math's sequence_end_event); a quiet end comes with the
+// engine's analysis of why
 type BookEventSequenceEnd = {
 	index: number;
 	type: 'sequenceEnd';
 	reason: 'quiet' | 'mate' | 'mated' | 'stalemate' | 'repetition' | 'limit';
+	analysis?: Analysis;
 };
 
 // Checkmate, by you (the free spins follow, or more of them) or by the other side

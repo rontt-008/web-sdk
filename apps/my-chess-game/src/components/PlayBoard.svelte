@@ -6,7 +6,9 @@
 		| { type: 'playBoardMove'; move: BookEventOfType<'move'> }
 		| { type: 'playBoardCollect'; queen: Position; spots: Spot[] }
 		// the pieces at these squares swell and settle `times` over (done when they have)
-		| { type: 'playBoardPulse'; positions: Position[]; times: number };
+		| { type: 'playBoardPulse'; positions: Position[]; times: number }
+		// the pieces drop off the bottom of the board, column by column (done when they have gone)
+		| { type: 'playBoardDrop' };
 </script>
 
 <script lang="ts">
@@ -17,7 +19,7 @@
 	import { waitForTimeout } from 'utils-shared/wait';
 
 	import { getContext } from '../game/context';
-	import { MOVE_TIMING, SYMBOL_SIZE, BOARD_COLOURS } from '../game/constants';
+	import { MOVE_TIMING, SYMBOL_SIZE, BOARD_COLOURS, BOARD_SIZES } from '../game/constants';
 	import { attackers, isMine } from '../game/chess';
 	import { BOOSTER_MODE } from '../game/betModes';
 	import type { PlayPiece } from '../game/stateGame.svelte';
@@ -68,6 +70,23 @@
 	};
 
 	context.eventEmitter.subscribeOnMount({
+		// as the next spin starts, the last spin's pieces fall off the bottom of the board, the columns
+		// one after another from the left, each piece gathering speed; then the reels drop the new ones in
+		playBoardDrop: async () => {
+			const pieces = context.stateGame.pieces.filter((piece) => !piece.gone);
+			if (!pieces.length) return;
+			const scale = timeScale();
+			await Promise.all(
+				pieces.map((piece) =>
+					piece.y.set(BOARD_SIZES.height + SYMBOL_SIZE * 1.5, {
+						duration: MOVE_TIMING.drop / scale,
+						delay: (piece.reel * MOVE_TIMING.dropStagger + (8 - piece.row) * 12) / scale,
+						easing: cubicIn,
+					}),
+				),
+			);
+			context.stateGame.pieces = [];
+		},
 		playBoardPulse: async ({ positions, times }) => {
 			const pieces = positions
 				.map((position) => context.stateGameDerived.pieceAt(position))

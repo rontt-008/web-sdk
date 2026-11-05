@@ -6,7 +6,7 @@ import { createEnhanceBoard, createReelForCascading } from 'utils-slots';
 import { createGetWinLevelDataByWinLevelAlias } from 'utils-shared/winLevel';
 
 import type { GameType, PieceColour, Position, RawSymbol, Side, SymbolName } from './types';
-import type { Spot, SpotValue } from './typesBookEvent';
+import type { Analysis, Spot, SpotValue } from './typesBookEvent';
 import type { PlayedMove } from './chess';
 import { TILT, squareToQuad, type Quad } from './tilt';
 import { stateLayoutDerived } from './stateLayout';
@@ -103,6 +103,8 @@ export const stateGame = $state({
 	// the spin's moves in words (MoveLog), and as played (SidePanel)
 	moveLog: [] as string[],
 	moves: [] as PlayedMove[],
+	// the engine's reasons for the spin's quiet end (SidePanel's WHY?), none until it ends so
+	analysis: undefined as Analysis | undefined,
 	// the multiplier spots on the board (BoardSquares), each gone when a capture on it uses it up or the
 	// cheater spin's queen collects it
 	spots: [] as Spot[],

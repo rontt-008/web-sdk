@@ -36,9 +36,8 @@ export const BOARD_FRAME = {
 
 // the rules, as the math has them (math-sdk games/my_chess_game/game_config.py)
 export const FREE_SPINS = 10;
-// no more spins for a checkmate in the free spins: a bonus is its ten
-export const RETRIGGER_SPINS = 0;
-export const MAX_FREE_SPINS = 10;
+export const RETRIGGER_SPINS = 3;
+export const MAX_FREE_SPINS = 25;
 export const MAX_MOVES = 10;
 // what each of the other side's pieces pays when you take it, x the bet (then x the spin's multiplier)
 export const CAPTURE_PAYS: Record<Exclude<PieceKind, 'K'>, number> = {
@@ -71,6 +70,9 @@ export const MOVE_TIMING = {
 	short: 700,
 	mate: 1500,
 	queenHold: 700,
+	// the last spin's pieces dropping off the board as the next starts, and the stagger between its columns
+	drop: 420,
+	dropStagger: 45,
 };
 
 export const INITIAL_SYMBOL_STATE: SymbolState = 'static';

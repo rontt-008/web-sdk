@@ -43,6 +43,17 @@ export const moveNotation = (move: PlayedMove) => {
 	return `${piece}${move.captured ? 'x' : ''}${squareName(move.to)}${promotion}${check}`;
 };
 
+// an engine score in words, from your side: +1.5, -0.3, mate in 3, mated in 2 (the math's scores are in
+// hundredths of a pawn, a mate 100000 less the plies to it)
+export const scoreText = (score: number) => {
+	if (Math.abs(score) >= 90000) {
+		const moves = Math.ceil((100000 - Math.abs(score)) / 2);
+		return score > 0 ? `mate in ${moves}` : `mated in ${moves}`;
+	}
+	const pawns = score / 100;
+	return `${pawns > 0 ? '+' : ''}${pawns.toFixed(1)}`;
+};
+
 // the spin's moves paired up as numbered turns (yours first, as you always move first); a turn whose
 // reply hasn't come yet has none
 export const pairMoves = (moves: PlayedMove[]) => {
