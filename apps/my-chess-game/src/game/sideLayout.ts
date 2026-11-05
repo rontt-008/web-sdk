@@ -22,18 +22,21 @@ export const sidePanelLayout = () => {
 	const height = SYMBOL_SIZE * 0.8;
 	const tagHeight = SYMBOL_SIZE * 0.6;
 	const gap = SYMBOL_SIZE * 0.3;
-	const top = board.y - board.height / 2;
-	const bottom = board.y + board.height / 2;
+	// the board's edges with its wooden frame round it
+	const top = board.y - board.height / 2 - board.frame;
+	const bottom = board.y + board.height / 2 + board.frame;
+	const left = board.x - board.width / 2 - board.frame;
+	const right = board.x + board.width / 2 + board.frame;
 
 	if (layoutType === 'desktop') {
-		const clear = SYMBOL_SIZE * 0.5;
-		const x = board.x + board.width / 2 + clear;
+		const clear = SYMBOL_SIZE * 0.4;
+		const x = right + clear;
 		const panelWidth = Math.min(stateLayoutDerived.mainLayout().width - x - clear, SYMBOL_SIZE * 5);
 		return {
 			width,
 			height,
 			tagHeight,
-			panel: { x, y: top, width: panelWidth, height: board.height - TOGGLE_HEIGHT - gap },
+			panel: { x, y: top, width: panelWidth, height: bottom - top - TOGGLE_HEIGHT - gap },
 			multiplier: undefined,
 			toggle: { x: x + panelWidth / 2, y: bottom - TOGGLE_HEIGHT / 2 },
 			spinWin: undefined,
@@ -42,9 +45,9 @@ export const sidePanelLayout = () => {
 	}
 
 	if (layoutType === 'landscape') {
-		const clear = SYMBOL_SIZE * 0.9;
+		const clear = SYMBOL_SIZE * 0.6;
 		const size = SYMBOL_SIZE * 2.8;
-		const x = board.x + board.width / 2 + clear + size / 2;
+		const x = right + clear + size / 2;
 		const toggleY = top + size + gap + height / 2;
 		const spinWinY = toggleY + height / 2 + gap + height / 2;
 		const turnY = spinWinY + height / 2 + gap + tagHeight / 2;
@@ -69,9 +72,9 @@ export const sidePanelLayout = () => {
 		height,
 		tagHeight,
 		panel: undefined,
-		multiplier: { x: board.x + board.width / 2 - size / 2, y, size },
-		toggle: { x: board.x - board.width / 2 + width / 2, y },
-		spinWin: { x: board.x + board.width / 2 - width / 2, y: below },
-		turn: { x: board.x - board.width / 2 + width / 2, y: below },
+		multiplier: { x: right - size / 2, y, size },
+		toggle: { x: left + width / 2, y },
+		spinWin: { x: right - width / 2, y: below },
+		turn: { x: left + width / 2, y: below },
 	};
 };

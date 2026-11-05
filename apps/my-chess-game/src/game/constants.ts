@@ -26,6 +26,14 @@ export const BOARD_SIZES = {
 	height: SYMBOL_SIZE * BOARD_DIMENSIONS.y,
 };
 
+// The board's wooden frame (static/assets/board-frame.webp, art-source/board-frame.py: its opening 1024
+// px, the board's width, with 69 px round it): how far its picture reaches out past the board on each
+// side, and how far the wood itself does, in the board's units (for its shadow on the table)
+export const BOARD_FRAME = {
+	margin: (69 / 1024) * BOARD_SIZES.width,
+	reach: 35,
+};
+
 // the rules, as the math has them (math-sdk games/my_chess_game/game_config.py)
 export const FREE_SPINS = 10;
 export const RETRIGGER_SPINS = 3;

@@ -8,6 +8,11 @@ export default {
 		type: 'sprite',
 		src: new URL('../../assets/table.webp', import.meta.url).href,
 	},
+	// the board's wooden frame, flat (it's tilted with the board; art-source/board-frame.py)
+	boardFrame: {
+		type: 'sprite',
+		src: new URL('../../assets/board-frame.webp', import.meta.url).href,
+	},
 	// the board's eight by eight squares, edge to edge (Background; art-source/board.py)
 	board: {
 		type: 'sprite',

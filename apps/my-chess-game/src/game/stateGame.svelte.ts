@@ -20,6 +20,7 @@ import {
 	SPIN_OPTIONS_DEFAULT,
 	SPIN_OPTIONS_FAST,
 	INITIAL_SYMBOL_STATE,
+	BOARD_FRAME,
 } from './constants';
 
 // The reels: the board the pieces drop onto each spin (the SDK's cascading reels, one a column). Once
@@ -127,12 +128,13 @@ export const setYourColour = (colour: PieceColour) => {
 };
 
 // How big the board is drawn on each kind of screen (its own units, BOARD_SIZES, are SYMBOL_SIZE a
-// square, scaled up by this: 640 across on desktop and portrait), and how far above the middle of the
-// screen it sits, so it clears the UI under it. On phones held sideways the UI's buttons come in close at
-// both sides of its bottom corners, so it stays 560 there. Its width and height here are the drawn ones;
+// square, scaled up by this: 600 across on desktop, 640 on tall screens), and how far above the middle of
+// the screen it sits, so it and its wooden frame clear the UI under it. On phones held sideways the UI's
+// buttons come in close at both sides of its bottom corners, so it's smaller there. Its width and height
+// here are the drawn ones, without the frame (`frame`: how far the frame reaches out past each side);
 // its pivot is in its own units.
-const BOARD_SCALE = { desktop: 8 / 7, landscape: 1, tablet: 15 / 14, portrait: 8 / 7 };
-const BOARD_RAISE = { desktop: 50, landscape: 40, tablet: 54, portrait: 200 };
+const BOARD_SCALE = { desktop: 15 / 14, landscape: 0.92, tablet: 0.95, portrait: 8 / 7 };
+const BOARD_RAISE = { desktop: 69, landscape: 52, tablet: 62, portrait: 200 };
 
 const boardLayout = () => {
 	const layoutType = stateLayoutDerived.layoutType();
@@ -145,6 +147,7 @@ const boardLayout = () => {
 		scale,
 		width: BOARD_SIZES.width * scale,
 		height: BOARD_SIZES.height * scale,
+		frame: BOARD_FRAME.reach * scale,
 	};
 };
 
