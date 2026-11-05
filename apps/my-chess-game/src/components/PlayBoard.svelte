@@ -21,13 +21,15 @@
 	import { isMine } from '../game/chess';
 	import { BOOSTER_MODE } from '../game/betModes';
 	import type { PlayPiece } from '../game/stateGame.svelte';
+	import { cameraDerived } from '../game/camera.svelte';
 	import BoardContainer from './BoardContainer.svelte';
 	import Piece from './Piece.svelte';
 
 	// The pieces once landed, moved about by the spin's moves: the piece slides to its square (a little
 	// bigger on the way, over the others), a taken piece swells and bursts as it arrives, a pawn that
 	// promotes changes into a queen; a king in check pulses, with the line of the check drawn
-	// (BoardSquares). The side not on the move is a little dimmed; in DUMB MODE the other side's pieces
+	// (BoardSquares). The camera (camera.svelte.ts) glides in on the square the move lands on, nudges
+	// as a piece is taken, and drifts back out. The side not on the move is a little dimmed; in DUMB MODE the other side's pieces
 	// are greyed. In the cheater spin the multiplier spots fly into your queen one by one, the
 	// multiplier adding up. The reels (Board) take over again for the next spin.
 	const context = getContext();
@@ -58,6 +60,7 @@
 
 	const burst = async (piece: PlayPiece) => {
 		piece.gone = true;
+		cameraDerived.nudge(SYMBOL_SIZE * 0.06);
 		const duration = MOVE_TIMING.burst / timeScale();
 		piece.scale.set(1.6, { duration, easing: cubicOut });
 		await piece.alpha.set(0, { duration, easing: cubicOut });
@@ -87,6 +90,7 @@
 			moving = piece.id;
 			const { x, y } = context.stateGameDerived.squareCentre(move.to);
 			const duration = MOVE_TIMING.slide / timeScale();
+			cameraDerived.zoomTo(move.to, move.captured ? cameraDerived.ZOOM.capture : cameraDerived.ZOOM.move);
 			piece.scale
 				.set(1.18, { duration: duration * 0.45, easing: cubicOut })
 				.then(() => piece.scale.set(1, { duration: duration * 0.55, easing: cubicInOut }));
@@ -96,9 +100,14 @@
 				piece.x.set(x, { duration, easing: cubicInOut }),
 				piece.y.set(y, { duration, easing: cubicInOut }),
 			]);
-			if (move.promotion) piece.symbol = move.promotion;
+			if (move.promotion) {
+				piece.symbol = move.promotion;
+				cameraDerived.nudge(SYMBOL_SIZE * 0.03, 0.02);
+			}
 			if (target) await burst(target);
 			moving = undefined;
+			// the camera stays on a mate for its label (the checkmate handler lets it go)
+			if (!move.mate) cameraDerived.reset();
 			if (move.check) {
 				const king = context.stateGameDerived.kingSquare(move.side === 'you' ? 'BK' : 'WK');
 				context.stateGame.checkSquare = king;
@@ -115,6 +124,7 @@
 			const queenPiece = context.stateGameDerived.pieceAt(queen);
 			let total = 0;
 			context.stateGame.multiplier = 0;
+			cameraDerived.zoomTo(queen, cameraDerived.ZOOM.collect);
 			for (const spot of spots) {
 				const from = context.stateGameDerived.squareCentre(spot);
 				const item: Flying = {
@@ -139,10 +149,12 @@
 				context.stateGame.multiplier = total;
 				context.eventEmitter.broadcast({ type: 'soundOnce', name: 'sfx_multiplier_up' });
 				context.eventEmitter.broadcast({ type: 'multiplierPulse' });
+				cameraDerived.nudge(SYMBOL_SIZE * 0.025, 0.015);
 				if (queenPiece) {
 					queenPiece.scale.set(1.25, { duration: 90 / timeScale() }).then(() => queenPiece.scale.set(1, { duration: 220 / timeScale(), easing: cubicOut }));
 				}
 			}
+			cameraDerived.reset();
 		},
 	});
 </script>

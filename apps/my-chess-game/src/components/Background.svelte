@@ -5,6 +5,7 @@
 	import { SECOND } from 'constants-shared/time';
 
 	import { getContext } from '../game/context';
+	import CameraContainer from './CameraContainer.svelte';
 
 	// a plain night blue over the whole screen, the board's picture (static/assets/board.webp) on the
 	// board's squares, and a blue cast over everything in the free spins
@@ -15,10 +16,13 @@
 
 <Rectangle {...context.stateLayoutDerived.canvasSizes()} backgroundColor={0x0e1527} zIndex={-3} />
 
-<!-- once the pictures are in: this is drawn under the loading screen too -->
+<!-- once the pictures are in: this is drawn under the loading screen too. Seen through the camera
+     (CameraContainer), so it zooms with the squares and pieces -->
 {#if context.stateApp.loaded}
 	<MainContainer zIndex={-2}>
-		<Sprite key="board" x={board.x} y={board.y} anchor={0.5} width={board.width} height={board.height} />
+		<CameraContainer>
+			<Sprite key="board" x={board.x} y={board.y} anchor={0.5} width={board.width} height={board.height} />
+		</CameraContainer>
 	</MainContainer>
 {/if}
 

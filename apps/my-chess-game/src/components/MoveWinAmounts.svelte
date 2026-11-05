@@ -21,6 +21,7 @@
 
 	import { getContext } from '../game/context';
 	import { SYMBOL_SIZE, BOARD_COLOURS } from '../game/constants';
+	import CameraContainer from './CameraContainer.svelte';
 
 	// what a capture pays floats up from its square and fades, with the spot's multiplier over it when
 	// the piece was taken on one
@@ -54,6 +55,7 @@
 </script>
 
 <MainContainer>
+	<CameraContainer>
 	{#each amounts as item (item.id)}
 		{#if item.spot}
 			<Text
@@ -80,4 +82,5 @@
 			style={{ fontFamily: 'gold', fontSize: SYMBOL_SIZE * 0.42, fontWeight: 'bold' }}
 		/>
 	{/each}
+	</CameraContainer>
 </MainContainer>
