@@ -9,10 +9,10 @@
 
 	import { getContext } from '../game/context';
 	import { sidePanelLayout } from '../game/sideLayout';
+	import { LAMP_SHADOW, lampShade } from '../game/tilt';
 	import { BOOSTER_MODE } from '../game/betModes';
 	import { moveNotation, pairMoves, pieceAssetKey } from '../game/chess';
 	import type { SymbolName } from '../game/types';
-	import { TABLE_EDGE } from '../game/tilt';
 	import TiltedPlane from './TiltedPlane.svelte';
 	import CameraContainer from './CameraContainer.svelte';
 
@@ -83,9 +83,24 @@
 				: 'PRESS SPIN TO PLAY',
 	);
 
+	// The pad it is: the top sheet, its top band (BIND, blue like the head under it) punched for the wire
+	// binding that comes up through it and over its top edge, in pairs of loops; and the sheets under
+	// it, each peeking out a little further to the left and lower (STACK in all both ways; the top sheet
+	// sits STACK in from the left), so it reads as a pad of paper. What's written on the sheet starts under the band (in a container at BIND), so
+	// the positions below are from there.
+	const BIND = 24;
+	const STACK = 6;
+	const SHEETS = [
+		{ dx: 6, dy: 6, colour: 0xb7c8d4 },
+		{ dx: 3, dy: 3, colour: 0xcbd9e3 },
+	];
+	const WIRE = { pair: 21, gap: 5.5, hole: 12, rise: 12, colour: 0x1d1f22, shine: 0x8c9096 };
+	const sheetWidth = $derived(panel ? panel.width - STACK : 0);
+	const sheetHeight = $derived(panel ? panel.height - STACK : 0);
+
 	// the moves: as many of the latest turns as there's room for
 	const movesTop = HEAD + TURN;
-	const takenTop = $derived(panel ? panel.height - TAKEN_ROW * 2 : 0);
+	const takenTop = $derived(panel ? sheetHeight - BIND - TAKEN_ROW * 2 : 0);
 	const rowsRoom = $derived(Math.max(1, Math.floor((takenTop - movesTop - MOVES_HEAD - 6) / ROW)));
 	const turns = $derived(pairMoves(context.stateGame.moves).slice(-rowsRoom));
 
@@ -103,11 +118,10 @@
 	const PIECE = 36;
 
 	// over the marble (the sprites under it): the moves' rows striped, a faint wash of the dark squares'
-	// blue so the marble shows through; the rules between the parts; and a thin frame in the board
-	// edge's colour, square cornered like the board
+	// blue so the marble shows through; and the rules between the parts
 	const drawPanel = (graphics: PIXI.Graphics) => {
 		if (!panel) return;
-		const { width, height } = panel;
+		const width = sheetWidth;
 		turns.forEach((_, index) => {
 			if (index % 2 === 1) {
 				graphics.rect(0, movesTop + MOVES_HEAD + index * ROW, width, ROW).fill({ color: COLOURS.dark, alpha: 0.12 });
@@ -116,7 +130,66 @@
 		for (const y of [movesTop, takenTop, takenTop + TAKEN_ROW]) {
 			graphics.moveTo(0, y).lineTo(width, y).stroke({ color: COLOURS.dark, width: 1.5, alpha: 0.5 });
 		}
-		graphics.rect(0, 0, width, height).stroke({ color: COLOURS.frame, width: 2, alignment: 0 });
+	};
+
+	// the sheets under the top one, the furthest first
+	const drawSheetsUnder = (graphics: PIXI.Graphics) => {
+		if (!panel) return;
+		for (const sheet of SHEETS) {
+			graphics
+				.rect(STACK - sheet.dx, sheet.dy, sheetWidth, sheetHeight)
+				.fill(sheet.colour)
+				.stroke({ color: COLOURS.frame, width: 1.2, alpha: 0.75, alignment: 0 });
+		}
+	};
+
+	// Shade where the lamp's light reaches less (lampShade, tilt.ts), laid over the whole pad, the top
+	// sheet and the sheets under it, along their stepped outline so none falls on the table.
+	const SHADE = lampShade(0.32);
+
+	// the pad's outline: the top sheet and the sheets under it, stepping down to the left
+	const padOutline = () => {
+		const corners = [{ x: STACK, y: 0 }, ...[...SHEETS].reverse().map((sheet) => ({ x: STACK - sheet.dx, y: sheet.dy }))];
+		const points: number[] = [corners[0].x, corners[0].y, corners[0].x + sheetWidth, corners[0].y];
+		corners.forEach((corner, index) => {
+			points.push(corner.x + sheetWidth, corner.y + sheetHeight);
+			const next = corners[index + 1];
+			if (next) points.push(next.x + sheetWidth, corner.y + sheetHeight);
+		});
+		const last = corners[corners.length - 1];
+		points.push(last.x, last.y + sheetHeight);
+		for (let index = corners.length - 1; index > 0; index--) {
+			points.push(corners[index].x, corners[index].y, corners[index - 1].x, corners[index].y);
+		}
+		return points;
+	};
+
+	const drawShade = (graphics: PIXI.Graphics) => {
+		if (panel) graphics.poly(padOutline()).fill(SHADE);
+	};
+
+	// the top sheet's thin frame, and the wire binding: through each hole a loop comes up over the
+	// sheet's top edge and down behind it, two loops a pair, the pairs spread evenly across the top
+	const drawBinding = (graphics: PIXI.Graphics) => {
+		if (!panel) return;
+		const width = sheetWidth;
+		graphics.rect(0, 0, width, sheetHeight).stroke({ color: COLOURS.frame, width: 2, alignment: 0 });
+		const pairs = Math.floor((width - 24) / WIRE.pair) + 1;
+		const first = (width - (pairs - 1) * WIRE.pair - WIRE.gap) / 2;
+		for (let pair = 0; pair < pairs; pair++) {
+			for (const offset of [0, WIRE.gap]) {
+				const x = first + pair * WIRE.pair + offset;
+				graphics.roundRect(x - 1.8, WIRE.hole - 3, 3.6, 6, 1.8).fill(COLOURS.frame);
+				const loop = () =>
+					graphics
+						.moveTo(x, WIRE.hole)
+						.lineTo(x, -2)
+						.bezierCurveTo(x, -WIRE.rise, x + 3.6, -WIRE.rise, x + 3.6, -2)
+						.lineTo(x + 3.6, 0.5);
+				loop().stroke({ color: WIRE.colour, width: 2.6, cap: 'round', join: 'round' });
+				loop().stroke({ color: WIRE.shine, width: 0.8, cap: 'round', join: 'round', alpha: 0.8 });
+			}
+		}
 	};
 </script>
 
@@ -126,12 +199,17 @@
 		<TiltedPlane
 			size={{ width: panel.width, height: panel.height }}
 			project={(x, y) => context.stateGameDerived.tablePoint(panel.x + x, panel.y + y)}
-			pad={6}
-			edge={{ depth: 5, colour: TABLE_EDGE }}
-			shadow={0.4}
+			pad={16}
+			shadow={LAMP_SHADOW.alpha}
+			shadowOffset={LAMP_SHADOW.offset}
 		>
-			<Sprite key="panelLight" width={panel.width} height={panel.height} />
-			<Sprite key="panelDark" width={panel.width} height={HEAD} />
+			<Graphics draw={drawSheetsUnder} />
+			<!-- the top sheet, in from the left so the sheets under it show there -->
+			<Container x={STACK}>
+			<Sprite key="panelLight" width={sheetWidth} height={sheetHeight} />
+			<!-- the blue head, from the very top (the binding's band too) -->
+			<Sprite key="panelDark" width={sheetWidth} height={BIND + HEAD} />
+			<Container y={BIND}>
 			<Graphics draw={drawPanel} />
 
 			<!-- the head: the multiplier and the spin's win -->
@@ -150,11 +228,11 @@
 					style={text(58, COLOURS.white, { fontWeight: '800' })}
 				/>
 			</Container>
-			<Text text="SPIN WIN" anchor={{ x: 1, y: 0 }} x={panel.width - PAD} y={PAD - 2} {resolution} style={label(COLOURS.light)} />
+			<Text text="SPIN WIN" anchor={{ x: 1, y: 0 }} x={sheetWidth - PAD} y={PAD - 2} {resolution} style={label(COLOURS.light)} />
 			<Text
 				text={bookEventAmountToCurrencyString(Math.round(spinWin.current))}
 				anchor={{ x: 1, y: 0.5 }}
-				x={panel.width - PAD}
+				x={sheetWidth - PAD}
 				y={HEAD / 2 + 12}
 				{resolution}
 				style={text(28, COLOURS.white, { fontWeight: '800' })}
@@ -176,7 +254,7 @@
 			<!-- the moves -->
 			<Text text="#" anchor={{ x: 1, y: 0 }} x={PAD + 26} y={movesTop + 11} {resolution} style={label(COLOURS.label)} />
 			<Text text="YOU" x={PAD + 40} y={movesTop + 11} {resolution} style={label(COLOURS.label)} />
-			<Text text="THEM" x={panel.width / 2 + 22} y={movesTop + 11} {resolution} style={label(COLOURS.label)} />
+			<Text text="THEM" x={sheetWidth / 2 + 22} y={movesTop + 11} {resolution} style={label(COLOURS.label)} />
 			{#if turns.length}
 				{#each turns as row, index}
 					{@const y = movesTop + MOVES_HEAD + index * ROW + ROW / 2}
@@ -200,7 +278,7 @@
 						<Text
 							text={moveNotation(row.them)}
 							anchor={{ x: 0, y: 0.5 }}
-							x={panel.width / 2 + 22}
+							x={sheetWidth / 2 + 22}
 							y={y}
 							{resolution}
 							style={text(17, COLOURS.reply)}
@@ -221,12 +299,16 @@
 			<!-- what each side has taken -->
 			{#each takenRows as row, index}
 				{@const y = takenTop + index * TAKEN_ROW + TAKEN_ROW / 2}
-				{@const step = Math.min(PIECE, row.pieces.length ? (panel.width - PAD - PIECES_LEFT) / row.pieces.length : PIECE)}
+				{@const step = Math.min(PIECE, row.pieces.length ? (sheetWidth - PAD - PIECES_LEFT) / row.pieces.length : PIECE)}
 				<Text text={row.label} anchor={{ x: 0, y: 0.5 }} x={PAD} y={y} {resolution} style={label(COLOURS.label)} />
 				{#each row.pieces as key, pieceIndex}
 					<Sprite {key} anchor={{ x: 0, y: 0.5 }} x={PIECES_LEFT + pieceIndex * step} y={y - 1} width={PIECE} height={PIECE} />
 				{/each}
 			{/each}
+			</Container>
+			<Graphics draw={drawBinding} />
+			</Container>
+			<Graphics draw={drawShade} />
 		</TiltedPlane>
 		</CameraContainer>
 	</MainContainer>

@@ -1,12 +1,29 @@
+import * as PIXI from 'pixi.js';
+
 // The board lies on the table tipped away from you: its far edge narrower than its near one, and its
 // depth shortened, as a flat board seen from in front and above. TiltedPlane draws it so; the squares'
 // places on screen come through the same projection (stateGameDerived.boardPoint).
 // - near, far: the near and far edges' widths, of the board's width
 // - depth: how tall it looks, of its width; the near edge stays where the flat board's bottom was
-export const TILT = { near: 1.01, far: 0.91, depth: 0.94 };
-// the colour of the front edge of what lies tilted on the table (TiltedPlane: the board, the side panel)
-export const TABLE_EDGE = 0x2e3b44;
+export const TILT = { near: 1.005, far: 0.94, depth: 0.96 };
 
+// The lamp is up at the table's top left. What lies on the table casts its shadow away from it (down
+// and to the right; TiltedPlane's shadowOffset), and is shaded where its light reaches less: a fill laid
+// over it, none on its top left, deepening across it to its far corner (bottom right), `darkest` there.
+export const LAMP_SHADOW = { alpha: 0.55, offset: { x: 9, y: 8 } };
+export const lampShade = (darkest: number) =>
+	new PIXI.FillGradient({
+		type: 'linear',
+		start: { x: 0, y: 0 },
+		end: { x: 1, y: 1 },
+		colorStops: [
+			{ offset: 0, color: 'rgba(24, 14, 8, 0)' },
+			{ offset: 0.35, color: 'rgba(24, 14, 8, 0)' },
+			{ offset: 0.7, color: `rgba(24, 14, 8, ${darkest * 0.375})` },
+			{ offset: 1, color: `rgba(24, 14, 8, ${darkest})` },
+		],
+		textureSpace: 'local',
+	});
 export type Quad = [number, number, number, number, number, number, number, number];
 
 // The projective map of the unit square onto a quad (corners top left, top right, bottom right, bottom

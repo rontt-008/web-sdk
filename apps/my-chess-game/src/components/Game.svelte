@@ -4,7 +4,8 @@
 	import { EnablePixiExtension } from 'components-pixi';
 	import { EnableHotkey } from 'components-shared';
 	import { MainContainer } from 'components-layout';
-	import { App, Sprite } from 'pixi-svelte';
+	import type * as PIXI from 'pixi.js';
+	import { App, Graphics, Sprite } from 'pixi-svelte';
 	import { stateModal } from 'state-shared';
 
 	import { UI, UiGameName } from 'components-ui-pixi';
@@ -20,8 +21,8 @@
 	import Background from './Background.svelte';
 	import CameraContainer from './CameraContainer.svelte';
 	import TiltedPlane from './TiltedPlane.svelte';
-	import { BOARD_SIZES, SYMBOL_SIZE } from '../game/constants';
-	import { TABLE_EDGE } from '../game/tilt';
+	import { BOARD_SIZES, BOARD_FRAME, SYMBOL_SIZE } from '../game/constants';
+	import { LAMP_SHADOW, lampShade } from '../game/tilt';
 	import LoadingScreen from './LoadingScreen.svelte';
 	import BoardSquares from './BoardSquares.svelte';
 	import Board from './Board.svelte';
@@ -47,6 +48,14 @@
 	setBetModeMeta();
 
 	onMount(() => (context.stateLayout.showLoadingScreen = true));
+
+	// the board's shade from the lamp (lampShade, tilt.ts): over it and its wooden frame, a little lighter
+	// than the notepad's so the pieces and the squares' lights stay clear
+	const BOARD_SHADE = lampShade(0.24);
+	const drawBoardShade = (graphics: PIXI.Graphics) => {
+		const rim = BOARD_FRAME.reach;
+		graphics.rect(-rim, -rim, BOARD_SIZES.width + rim * 2, BOARD_SIZES.height + rim * 2).fill(BOARD_SHADE);
+	};
 
 	context.eventEmitter.subscribeOnMount({
 		buyBonusConfirm: () => {
@@ -84,17 +93,26 @@
 				<TiltedPlane
 					size={BOARD_SIZES}
 					project={context.stateGameDerived.boardPoint}
-					pad={SYMBOL_SIZE * 0.5}
+					pad={BOARD_FRAME.margin + SYMBOL_SIZE * 0.15}
 					detail={context.stateGameDerived.boardLayout().scale * 1.3}
-					edge={{
-						depth: SYMBOL_SIZE * 0.13 * context.stateGameDerived.boardLayout().scale,
-						colour: TABLE_EDGE,
-					}}
+					rim={BOARD_FRAME.reach}
+					shadow={LAMP_SHADOW.alpha}
+					shadowOffset={LAMP_SHADOW.offset}
 				>
 					<Sprite key="board" width={BOARD_SIZES.width} height={BOARD_SIZES.height} />
+					<!-- the wooden frame round it, under the squares' lights and the pieces -->
+					<Sprite
+						key="boardFrame"
+						x={-BOARD_FRAME.margin}
+						y={-BOARD_FRAME.margin}
+						width={BOARD_SIZES.width + BOARD_FRAME.margin * 2}
+						height={BOARD_SIZES.height + BOARD_FRAME.margin * 2}
+					/>
 					<BoardSquares />
 					<Board />
 					<PlayBoard />
+					<!-- shade where the lamp's light reaches less, over the board, its frame and the pieces -->
+					<Graphics draw={drawBoardShade} />
 				</TiltedPlane>
 			</CameraContainer>
 		</MainContainer>

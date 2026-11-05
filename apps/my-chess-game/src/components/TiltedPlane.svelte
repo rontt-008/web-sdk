@@ -19,9 +19,13 @@
 		pad?: number;
 		// how many times the main layout's scale it's seen at, at most (the camera's zoom), for its detail
 		detail?: number;
-		// the front edge, in the parent's units, and how dark the shadow is
+		// how far the solid thing reaches out past `size` on each side (a frame round it), in its own units,
+		// for its front edge and shadow; the front edge, in the parent's units; and how dark the shadow is
+		rim?: number;
 		edge?: { depth: number; colour: number };
 		shadow?: number;
+		// how far the shadow falls from under it (away from the light), in the parent's units
+		shadowOffset?: { x: number; y: number };
 	};
 
 	const props: Props = $props();
@@ -69,18 +73,29 @@
 		].flatMap(({ x, y }) => [x, y]);
 		mesh.setCorners(...(corners as [number, number, number, number, number, number, number, number]));
 
-		const tl = props.project(0, 0);
-		const tr = props.project(width, 0);
-		const br = props.project(width, height);
-		const bl = props.project(0, height);
+		const rim = props.rim ?? 0;
+		const tl = props.project(-rim, -rim);
+		const tr = props.project(width + rim, -rim);
+		const br = props.project(width + rim, height + rim);
+		const bl = props.project(-rim, height + rim);
 		const depth = props.edge?.depth ?? 0;
 		edge.clear();
 		if (props.edge) {
 			edge.poly([bl.x, bl.y, br.x, br.y, br.x, br.y + depth, bl.x, bl.y + depth]).fill(props.edge.colour);
 		}
+		const { x: sx, y: sy } = props.shadowOffset ?? { x: 0, y: 0 };
 		shadow.clear();
 		shadow
-			.poly([tl.x, tl.y + 6, tr.x, tr.y + 6, br.x + 4, br.y + depth + 10, bl.x - 4, bl.y + depth + 10])
+			.poly([
+				tl.x + sx,
+				tl.y + 6 + sy,
+				tr.x + sx,
+				tr.y + 6 + sy,
+				br.x + 4 + sx,
+				br.y + depth + 10 + sy,
+				bl.x - 4 + sx,
+				bl.y + depth + 10 + sy,
+			])
 			.fill({ color: 0x000000, alpha: props.shadow ?? 0.45 });
 	});
 
