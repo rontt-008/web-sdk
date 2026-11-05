@@ -29,13 +29,13 @@
 	// the pieces' pictures (static/assets/pieces), each path written out as assets.ts does: Vite
 	// leaves a fixed path to the static folder alone, but can't resolve one built from a variable
 	const PICTURES = {
-		wK: new URL('../../assets/pieces/wK.png', import.meta.url).href,
-		bK: new URL('../../assets/pieces/bK.png', import.meta.url).href,
-		bQ: new URL('../../assets/pieces/bQ.png', import.meta.url).href,
-		bR: new URL('../../assets/pieces/bR.png', import.meta.url).href,
-		bB: new URL('../../assets/pieces/bB.png', import.meta.url).href,
-		bN: new URL('../../assets/pieces/bN.png', import.meta.url).href,
-		bP: new URL('../../assets/pieces/bP.png', import.meta.url).href,
+		wK: new URL('../../assets/pieces/wK.webp', import.meta.url).href,
+		bK: new URL('../../assets/pieces/bK.webp', import.meta.url).href,
+		bQ: new URL('../../assets/pieces/bQ.webp', import.meta.url).href,
+		bR: new URL('../../assets/pieces/bR.webp', import.meta.url).href,
+		bB: new URL('../../assets/pieces/bB.webp', import.meta.url).href,
+		bN: new URL('../../assets/pieces/bN.webp', import.meta.url).href,
+		bP: new URL('../../assets/pieces/bP.webp', import.meta.url).href,
 	};
 
 	// the pieces you can take, the most valuable first

@@ -1,4 +1,4 @@
-"""Makes the chess pieces' pictures (static/assets/pieces/<colour><piece>.png) from the user's drawings:
+"""Makes the chess pieces' pictures (static/assets/pieces/<colour><piece>.webp) from the user's drawings:
 art-source/pieces/white/<piece>.png (white with black lines) and art-source/pieces/black/<piece>.png
 (black with a white edge and white inner lines), each on transparency, 1254 px square, drawn filling it.
 
@@ -116,5 +116,5 @@ if __name__ == "__main__":
             rgb, alpha = read(os.path.join(SOURCES, folder, f"{piece}.png"))
             if (folder, piece) in THICKEN:
                 rgb, alpha = thicken(rgb, alpha, THICKEN[(folder, piece)])
-            write(place(rgb, alpha, piece), os.path.join(OUT, f"{prefix}{piece}.png"))
-            print(f"wrote pieces/{prefix}{piece}.png")
+            write(place(rgb, alpha, piece), os.path.join(OUT, f"{prefix}{piece}.webp"))
+            print(f"wrote pieces/{prefix}{piece}.webp")
