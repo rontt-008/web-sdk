@@ -8,6 +8,7 @@ import { eventEmitter } from './eventEmitter';
 import { playBookEvent } from './utils';
 import { winLevelMap, type WinLevel, type WinLevelData } from './winLevelMap';
 import { stateGame, stateGameDerived } from './stateGame.svelte';
+import { cameraDerived } from './camera.svelte';
 import { MOVE_TIMING } from './constants';
 import { describeMove } from './chess';
 import type { BookEvent, BookEventOfType, BookEventContext } from './typesBookEvent';
@@ -68,6 +69,8 @@ export const bookEventHandlerMap: BookEventHandlerMap<BookEvent, BookEventContex
 		// a base game spin's multiplier is its own; the free spins' carries on
 		if (bookEvent.gameType === 'basegame') stateGame.multiplier = 1;
 		eventEmitter.broadcast({ type: 'moveLabelHide' });
+		// the camera backs out for the spin
+		cameraDerived.reset(400, 0);
 		stateGameDerived.reelsFromPlayBoard();
 		eventEmitter.broadcast({ type: 'boardShow' });
 		await stateGameDerived.enhancedBoard.spin({ revealEvent: bookEvent });
@@ -181,9 +184,12 @@ export const bookEventHandlerMap: BookEventHandlerMap<BookEvent, BookEventContex
 	},
 	checkmate: async (bookEvent: BookEventOfType<'checkmate'>) => {
 		stateGame.turn = undefined;
-		// the mated king flashes
+		// the mated king flashes, the camera closing in on him
 		const king = stateGameDerived.kingSquare(bookEvent.by === 'you' ? 'BK' : 'WK');
-		if (king) eventEmitter.broadcast({ type: 'playBoardPulse', positions: [king], times: 3 });
+		if (king) {
+			eventEmitter.broadcast({ type: 'playBoardPulse', positions: [king], times: 3 });
+			cameraDerived.zoomTo(king, cameraDerived.ZOOM.mate, cameraDerived.TIMING.zoomIn * 1.4);
+		}
 		if (bookEvent.by === 'you') {
 			eventEmitter.broadcast({ type: 'soundOnce', name: 'sfx_scatter_win' });
 			await eventEmitter.broadcastAsync({
@@ -201,6 +207,7 @@ export const bookEventHandlerMap: BookEventHandlerMap<BookEvent, BookEventContex
 				hold: MOVE_TIMING.label,
 			});
 		}
+		cameraDerived.reset();
 	},
 	// why the spin's moves are over (a mate has its own label): a quiet end would look like a freeze
 	sequenceEnd: async (bookEvent: BookEventOfType<'sequenceEnd'>) => {

@@ -18,6 +18,7 @@
 	import ResumeBet from './ResumeBet.svelte';
 	import Sound from './Sound.svelte';
 	import Background from './Background.svelte';
+	import CameraContainer from './CameraContainer.svelte';
 	import LoadingScreen from './LoadingScreen.svelte';
 	import BoardSquares from './BoardSquares.svelte';
 	import Board from './Board.svelte';
@@ -71,17 +72,24 @@
 		-->
 		<Sound />
 
+		<!-- the board scene is seen through the camera (CameraContainer), which zooms in on the moves -->
 		<MainContainer>
-			<BoardSquares />
+			<CameraContainer>
+				<BoardSquares />
+			</CameraContainer>
 		</MainContainer>
 
 		<!-- the reels the pieces drop onto, and the play board that takes over once they have landed -->
 		<MainContainer>
-			<Board />
+			<CameraContainer>
+				<Board />
+			</CameraContainer>
 		</MainContainer>
 
 		<MainContainer>
-			<PlayBoard />
+			<CameraContainer>
+				<PlayBoard />
+			</CameraContainer>
 		</MainContainer>
 
 		<MoveWinAmounts />
