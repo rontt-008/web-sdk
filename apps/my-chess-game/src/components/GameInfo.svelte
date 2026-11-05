@@ -6,6 +6,8 @@
 		CAPTURE_PAYS,
 		PIECE_NAMES,
 		FREE_SPINS,
+		RETRIGGER_SPINS,
+		MAX_FREE_SPINS,
 		MAX_MOVES,
 		CHEAT_SPOTS,
 		SPOT_ADD_VALUES,
@@ -66,6 +68,16 @@
 				When your best move does neither, the spin is over. Only legal chess moves are played: no
 				castling and no en passant, as the positions have no history. A pawn that reaches the far
 				side becomes a queen.
+			</p>
+		</div>
+		<div class="card text">
+			<h3>Why a piece is not taken</h3>
+			<p>
+				Your pieces are played by a chess engine, and it plays to win the game, not to grab pieces.
+				It captures when the capture is its best move. If taking a piece would walk into a bigger
+				loss, such as a recapture or a pawn promoting with check, it plays the safe move instead,
+				and the spin ends. After a spin that ends this way, the side panel shows the capture it turned
+				down, what would have happened, and the move it played instead.
 			</p>
 		</div>
 	</section>
@@ -143,12 +155,13 @@
 		<div class="card text">
 			<p>
 				Checkmate the other side's king in a spin and the CHECKMATE BONUS starts: {FREE_SPINS} FREE
-				SPINS on boards with more pieces, heavier ones and more multiplier spots. In the FREE SPINS
+				SPINS on boards with more pieces, heavier ones and only + spots. In the FREE SPINS
 				the multiplier never resets: it carries on growing from spin to spin, with every piece you
 				take and every spot you take one on.
 			</p>
 			<p>
-				A bonus is its {FREE_SPINS} spins: a checkmate in them wins its captures, and no more spins.
+				Every checkmate in the FREE SPINS gives {RETRIGGER_SPINS} more spins, up to {MAX_FREE_SPINS}
+				spins in a bonus.
 				Being checkmated, a stalemate or a draw only ends the spin.
 			</p>
 		</div>

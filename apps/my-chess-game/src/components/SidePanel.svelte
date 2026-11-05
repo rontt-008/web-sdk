@@ -10,8 +10,8 @@
 	import { getContext } from '../game/context';
 	import { sidePanelLayout } from '../game/sideLayout';
 	import { BOOSTER_MODE } from '../game/betModes';
-	import { moveNotation, pairMoves, pieceAssetKey } from '../game/chess';
-	import type { SymbolName } from '../game/types';
+	import { moveNotation, pairMoves, pieceAssetKey, scoreText } from '../game/chess';
+	import type { Position, SymbolName } from '../game/types';
 	import { TABLE_EDGE } from '../game/tilt';
 	import TiltedPlane from './TiltedPlane.svelte';
 	import CameraContainer from './CameraContainer.svelte';
@@ -23,6 +23,8 @@
 	// - the spin's moves in chess notation, a numbered turn a row, yours and the reply side by side, the
 	//   rows striped like the board (the latest at the foot; older ones scroll off the top)
 	// - what each side has taken this spin, the taken pieces' pictures in a row
+	// - when a spin ends before any move, the engine's reasons in the moves' place, as they come: the
+	//   capture or check it passed over, with the reply that answers it, and the move it played instead
 	// Seen through the camera (CameraContainer) like the table it lies on, so it zooms with the scene.
 	const context = getContext();
 	const panel = $derived(sidePanelLayout().panel);
@@ -88,6 +90,36 @@
 	const takenTop = $derived(panel ? panel.height - TAKEN_ROW * 2 : 0);
 	const rowsRoom = $derived(Math.max(1, Math.floor((takenTop - movesTop - MOVES_HEAD - 6) / ROW)));
 	const turns = $derived(pairMoves(context.stateGame.moves).slice(-rowsRoom));
+
+	// the engine's reasons for the quiet end, in words, once the spin is over
+	const analysis = $derived(context.stateGame.analysis);
+	const notation = (move: { from: Position; to: Position; piece: SymbolName; captured?: SymbolName | ''; check: boolean; mate: boolean }) =>
+		moveNotation({ side: 'you', ...move, captured: move.captured || undefined });
+	// the capture first (it's what the player saw), then the move played instead
+	const whyLines = $derived.by(() => {
+		if (!analysis) return [];
+		const lines: string[] = [];
+		const forcing = analysis.forcing;
+		const played = `${notation(analysis.best)} (${scoreText(analysis.best.score)})`;
+		if (!forcing) {
+			lines.push('No capture or check was possible.');
+			lines.push(`The engine played ${played}, a quiet move, so the spin ended.`);
+		} else {
+			const what = forcing.captured ? notation(forcing) : `the check ${notation(forcing)}`;
+			const after = scoreText(forcing.score);
+			// the two are scored a ply apart, so a close call can even read the other way
+			const gap = (analysis.best.score - forcing.score) / 100;
+			if (gap < 0.5) {
+				lines.push(`${what} was possible (${after}), but the engine rated the two about the same.`);
+			} else if (forcing.reply) {
+				lines.push(`${what} would lose to ${notation(forcing.reply)} (${after}).`);
+			} else {
+				lines.push(`${what} would leave you at ${after}.`);
+			}
+			lines.push(`The engine played ${played} instead, a quiet move, so the spin ended.`);
+		}
+		return lines;
+	});
 
 	// what each side has taken this spin
 	const taken = (side: 'you' | 'them') =>
@@ -173,7 +205,17 @@
 				style={text(15, turn ? COLOURS.ink : COLOURS.label, { fontWeight: '800', letterSpacing: 1 })}
 			/>
 
-			<!-- the moves -->
+			<!-- the moves, or, for a spin that ended before any, the engine's reasons in their place -->
+			{#if whyLines.length}
+				<Text text={analysis?.forcing ? 'WHY NO CAPTURE' : 'NOTHING TO TAKE'} x={PAD} y={movesTop + 11} {resolution} style={label(COLOURS.label)} />
+				<Text
+					text={whyLines.join('\n\n')}
+					x={PAD}
+					y={movesTop + MOVES_HEAD + 4}
+					{resolution}
+					style={text(14, COLOURS.ink, { fontWeight: '600', wordWrap: true, wordWrapWidth: panel.width - PAD * 2, lineHeight: 19 })}
+				/>
+			{:else}
 			<Text text="#" anchor={{ x: 1, y: 0 }} x={PAD + 26} y={movesTop + 11} {resolution} style={label(COLOURS.label)} />
 			<Text text="YOU" x={PAD + 40} y={movesTop + 11} {resolution} style={label(COLOURS.label)} />
 			<Text text="THEM" x={panel.width / 2 + 22} y={movesTop + 11} {resolution} style={label(COLOURS.label)} />
@@ -216,6 +258,7 @@
 					{resolution}
 					style={text(15, COLOURS.label, { fontWeight: '600', fontStyle: 'italic' })}
 				/>
+			{/if}
 			{/if}
 
 			<!-- what each side has taken -->

@@ -2,7 +2,7 @@ import { stateMeta, stateUrlDerived, type BetModeMeta } from 'state-shared';
 import { DEFAULT_BET_MODE_META } from 'state-shared/src/constants';
 
 import config from './config';
-import { FREE_SPINS, CHEAT_SPOTS } from './constants';
+import { FREE_SPINS, RETRIGGER_SPINS, CHEAT_SPOTS } from './constants';
 
 // Bet mode keys sent to the RGS with each spin. They must match the bet modes in the math (config.ts
 // betModes; the mock RGS in the stories takes them lowercased).
@@ -52,7 +52,7 @@ export const setBetModeMeta = () => {
 				...samples.BONUS.text,
 				title: 'CHECKMATE BONUS',
 				button: buyButton,
-				dialog: `Go straight to the CHECKMATE BONUS for ${BONUS_COST}x ${yourBet}, as a checkmate gives it: ${FREE_SPINS} FREE SPINS on bigger boards, with more multiplier spots and the multiplier never resetting.`,
+				dialog: `Go straight to the CHECKMATE BONUS for ${BONUS_COST}x ${yourBet}, as a checkmate gives it: ${FREE_SPINS} FREE SPINS on bigger boards, the multiplier never resetting, and every checkmate +${RETRIGGER_SPINS} spins.`,
 				description: `${FREE_SPINS} FREE SPINS: bigger boards, a multiplier that never resets.`,
 				tickerSpin: 'CHECKMATE BONUS ACTIVATED',
 			},

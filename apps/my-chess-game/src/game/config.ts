@@ -1,5 +1,5 @@
 // The game's settings, as the math's config_fe_my_chess_game.json (math-sdk games/my_chess_game): the
-// bet modes at their prices (the base game, DUMB MODE for 3x a spin, the bonus buy, CHEATER MODE for 50x a spin),
+// bet modes at their prices (the base game, DUMB MODE for 3x a spin, the bonus buy, CHEATER MODE for 30x a spin),
 // and the symbols: your pieces (W, white in the math, where you always move first), the other side's (B)
 // and the empty square. Only the other side's pieces pay, when you take them (one capture: the
 // paytable's "1").
@@ -16,28 +16,28 @@ export default {
 			feature: true,
 			buyBonus: false,
 			rtp: 0.967,
-			max_win: 2500.0,
+			max_win: 25000.0,
 		},
 		booster: {
 			cost: 3.0,
 			feature: true,
 			buyBonus: false,
 			rtp: 0.967,
-			max_win: 2500.0,
+			max_win: 25000.0,
 		},
 		bonus: {
 			cost: 100.0,
 			feature: false,
 			buyBonus: true,
 			rtp: 0.967,
-			max_win: 2500.0,
+			max_win: 25000.0,
 		},
 		cheat: {
-			cost: 50.0,
+			cost: 30.0,
 			feature: true,
 			buyBonus: false,
 			rtp: 0.967,
-			max_win: 2500.0,
+			max_win: 25000.0,
 		},
 	},
 	symbols: {

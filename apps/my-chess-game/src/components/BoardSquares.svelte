@@ -1,11 +1,15 @@
 <script lang="ts">
 	import * as PIXI from 'pixi.js';
 	import { Tween } from 'svelte/motion';
-	import { Graphics, Rectangle, Text } from 'pixi-svelte';
+	import { backOut, cubicOut } from 'svelte/easing';
+	import { Container, Graphics, Rectangle, Text } from 'pixi-svelte';
+	import { stateBetDerived } from 'state-shared';
 
 	import { getContext } from '../game/context';
 	import { SYMBOL_SIZE, BOARD_COLOURS } from '../game/constants';
 	import type { Position } from '../game/types';
+	import type { Spot } from '../game/typesBookEvent';
+	import { positionKey } from '../game/chess';
 	import BoardContainer from './BoardContainer.svelte';
 
 	// Over the board's picture (Background), under the pieces: the multiplier spots on their
@@ -18,6 +22,40 @@
 			(position) => position !== undefined,
 		),
 	);
+
+	// The spots as drawn: each pops in as it comes (from small and clear to its size) and fades out as it
+	// goes (taken, collected, or the spin over), so none just appears or vanishes. Kept apart from the
+	// game's list, which changes at once; matched to it by square.
+	type ShownSpot = { key: string; spot: Spot; alpha: Tween<number>; scale: Tween<number>; leaving: boolean };
+	let shownSpots = $state<ShownSpot[]>([]);
+	$effect(() => {
+		const wanted = new Map(context.stateGame.spots.map((spot) => [positionKey(spot), spot]));
+		const timeScale = stateBetDerived.timeScale();
+		for (const [key, spot] of wanted) {
+			const shown = shownSpots.find((item) => item.key === key);
+			if (shown && !shown.leaving) continue;
+			if (shown) shownSpots = shownSpots.filter((item) => item.key !== key);
+			const item: ShownSpot = { key, spot, alpha: new Tween(0), scale: new Tween(0.4), leaving: false };
+			shownSpots = [...shownSpots, item];
+			item.alpha.set(1, { duration: 260 / timeScale, easing: cubicOut });
+			item.scale.set(1, { duration: 420 / timeScale, easing: backOut });
+		}
+		for (const shown of shownSpots) {
+			if (wanted.has(shown.key) || shown.leaving) continue;
+			shown.leaving = true;
+			shown.scale.set(0.7, { duration: 300 / timeScale, easing: cubicOut });
+			shown.alpha.set(0, { duration: 300 / timeScale, easing: cubicOut }).then(() => {
+				shownSpots = shownSpots.filter((item) => item.key !== shown.key);
+			});
+		}
+	});
+
+	// the spots' colours: the frame and badge, the badge's shadow under it, the ink on it
+	const SPOT_LOOK = {
+		mult: { colour: 0xf2c14e, shadow: 0xa8811f, ink: 0x2a1d00 },
+		add: { colour: BOARD_COLOURS.spotAdd, shadow: 0x2a7fb0, ink: 0x062033 },
+	};
+	const BADGE = { height: SYMBOL_SIZE * 0.26, fontSize: SYMBOL_SIZE * 0.19, pad: 6 };
 
 	const centre = ({ reel, row }: Position) => ({
 		x: (reel + 0.5) * SYMBOL_SIZE,
@@ -35,26 +73,38 @@
 		arrowAlpha.set(0.35, { duration: 1000 });
 	});
 
-	// an arrow from the middle of one square to the middle of another: a shaft and a head
+	// an arrow from the middle of one square to the middle of another: a shaft and a head. A knight's
+	// move (two squares one way, one the other: no other piece moves so) is drawn as its L, the long
+	// leg first and the head on the short one.
 	const drawArrow = (graphics: PIXI.Graphics, from: Position, to: Position, color: number, alpha: number) => {
-		const a = centre(from);
-		const b = centre(to);
-		const dx = b.x - a.x;
-		const dy = b.y - a.y;
-		const length = Math.hypot(dx, dy);
-		if (length < 1) return;
-		const ux = dx / length;
-		const uy = dy / length;
+		const dReel = to.reel - from.reel;
+		const dRow = to.row - from.row;
+		const knight = (Math.abs(dReel) === 2 && Math.abs(dRow) === 1) || (Math.abs(dReel) === 1 && Math.abs(dRow) === 2);
+		const corner = Math.abs(dReel) === 2 ? { reel: to.reel, row: from.row } : { reel: from.reel, row: to.row };
+		const points = (knight ? [from, corner, to] : [from, to]).map(centre);
 		const head = SYMBOL_SIZE * 0.32;
 		const width = SYMBOL_SIZE * 0.13;
-		// the shaft stops short of the target square's middle, where the head is
-		const startX = a.x + ux * SYMBOL_SIZE * 0.18;
-		const startY = a.y + uy * SYMBOL_SIZE * 0.18;
-		const tipX = b.x - ux * SYMBOL_SIZE * 0.12;
-		const tipY = b.y - uy * SYMBOL_SIZE * 0.12;
+		// the shaft starts a little out of the first square's middle and stops short of the target
+		// square's middle, where the head is
+		const first = points[0];
+		const second = points[1];
+		const last = points[points.length - 1];
+		const before = points[points.length - 2];
+		const startLength = Math.hypot(second.x - first.x, second.y - first.y);
+		const endLength = Math.hypot(last.x - before.x, last.y - before.y);
+		if (startLength < 1 || endLength < 1) return;
+		const sx = (second.x - first.x) / startLength;
+		const sy = (second.y - first.y) / startLength;
+		const ux = (last.x - before.x) / endLength;
+		const uy = (last.y - before.y) / endLength;
+		const start = { x: first.x + sx * SYMBOL_SIZE * 0.18, y: first.y + sy * SYMBOL_SIZE * 0.18 };
+		const tipX = last.x - ux * SYMBOL_SIZE * 0.12;
+		const tipY = last.y - uy * SYMBOL_SIZE * 0.12;
 		const baseX = tipX - ux * head;
 		const baseY = tipY - uy * head;
-		graphics.moveTo(startX, startY).lineTo(baseX, baseY).stroke({ color, width, alpha, cap: 'round' });
+		graphics.moveTo(start.x, start.y);
+		for (const point of points.slice(1, -1)) graphics.lineTo(point.x, point.y);
+		graphics.lineTo(baseX, baseY).stroke({ color, width, alpha, cap: 'round', join: 'round' });
 		graphics
 			.poly([
 				tipX,
@@ -101,34 +151,44 @@
 			backgroundAlpha={0.6}
 		/>
 	{/if}
-	<!-- a spot: a ring round its square (blue for a +, gold for a x) with its value in the top left
-	corner, clear of the piece on it -->
-	{#each context.stateGame.spots as spot (`${spot.reel}:${spot.row}`)}
-		{@const colour = spot.op === '+' ? BOARD_COLOURS.spotAdd : BOARD_COLOURS.spot}
-		<Rectangle
-			x={spot.reel * SYMBOL_SIZE + 3}
-			y={(spot.row - 1) * SYMBOL_SIZE + 3}
-			width={SYMBOL_SIZE - 6}
-			height={SYMBOL_SIZE - 6}
-			borderRadius={6}
-			backgroundColor={colour}
-			backgroundAlpha={0.22}
-			borderColor={colour}
-			borderWidth={3}
-		/>
-		<Text
-			text={`${spot.op}${spot.value}`}
-			anchor={{ x: 0, y: 0 }}
-			x={spot.reel * SYMBOL_SIZE + 7}
-			y={(spot.row - 1) * SYMBOL_SIZE + 4}
-			style={{
-				fontFamily: 'proxima-nova',
-				fontSize: SYMBOL_SIZE * 0.26,
-				fontWeight: '800',
-				fill: colour,
-				stroke: { color: 0x1a1208, width: 4 },
-			}}
-		/>
+	<!-- a spot: a frame just inside its square (gold for a x, blue for a +) over a faint dark wash, and
+	its value on a little badge in the top right corner, raised on a darker shadow; popping in as it
+	comes and fading as it goes, about its square's middle -->
+	{#each shownSpots as shown (shown.key)}
+		{@const spot = shown.spot}
+		{@const look = spot.op === '+' ? SPOT_LOOK.add : SPOT_LOOK.mult}
+		{@const middle = centre(spot)}
+		{@const text = `${spot.op === 'x' ? '×' : '+'}${spot.value}`}
+		{@const badgeWidth = BADGE.pad * 2 + text.length * BADGE.fontSize * 0.5}
+		<Container x={middle.x} y={middle.y} scale={shown.scale.current} alpha={shown.alpha.current}>
+			<Rectangle
+				x={-SYMBOL_SIZE / 2 + 3}
+				y={-SYMBOL_SIZE / 2 + 3}
+				width={SYMBOL_SIZE - 6}
+				height={SYMBOL_SIZE - 6}
+				borderRadius={6}
+				backgroundColor={0x1e322d}
+				backgroundAlpha={0.35}
+				borderColor={look.colour}
+				borderWidth={3}
+			/>
+			<Container x={SYMBOL_SIZE / 2 - 7 - badgeWidth} y={-SYMBOL_SIZE / 2 + 7}>
+				<Rectangle y={2} width={badgeWidth} height={BADGE.height} borderRadius={5} backgroundColor={look.shadow} />
+				<Rectangle width={badgeWidth} height={BADGE.height} borderRadius={5} backgroundColor={look.colour} />
+				<Text
+					{text}
+					anchor={0.5}
+					x={badgeWidth / 2}
+					y={BADGE.height / 2}
+					style={{
+						fontFamily: ['Barlow Condensed', 'proxima-nova', 'sans-serif'],
+						fontSize: BADGE.fontSize,
+						fontWeight: '800',
+						fill: look.ink,
+					}}
+				/>
+			</Container>
+		</Container>
 	{/each}
 	<!-- the square a capture is about to land on -->
 	{#if context.stateGame.attackSquare}
