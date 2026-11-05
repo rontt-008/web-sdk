@@ -1,0 +1,293 @@
+{
+	"frames": {
+		"arm_005": {
+			"frame": {
+				"x": 180,
+				"y": 357,
+				"w": 10,
+				"h": 102
+			},
+			"rotated": false,
+			"trimmed": true,
+			"spriteSourceSize": {
+				"x": 700,
+				"y": 0,
+				"w": 10,
+				"h": 102
+			},
+			"sourceSize": {
+				"w": 710,
+				"h": 355
+			}
+		},
+		"arm_006": {
+			"frame": {
+				"x": 3902,
+				"y": 0,
+				"w": 76,
+				"h": 310
+			},
+			"rotated": false,
+			"trimmed": true,
+			"spriteSourceSize": {
+				"x": 634,
+				"y": 0,
+				"w": 76,
+				"h": 310
+			},
+			"sourceSize": {
+				"w": 710,
+				"h": 355
+			}
+		},
+		"arm_007": {
+			"frame": {
+				"x": 0,
+				"y": 0,
+				"w": 194,
+				"h": 355
+			},
+			"rotated": false,
+			"trimmed": true,
+			"spriteSourceSize": {
+				"x": 516,
+				"y": 0,
+				"w": 194,
+				"h": 355
+			},
+			"sourceSize": {
+				"w": 710,
+				"h": 355
+			}
+		},
+		"arm_008": {
+			"frame": {
+				"x": 196,
+				"y": 0,
+				"w": 422,
+				"h": 355
+			},
+			"rotated": false,
+			"trimmed": true,
+			"spriteSourceSize": {
+				"x": 288,
+				"y": 0,
+				"w": 422,
+				"h": 355
+			},
+			"sourceSize": {
+				"w": 710,
+				"h": 355
+			}
+		},
+		"arm_042": {
+			"frame": {
+				"x": 3411,
+				"y": 0,
+				"w": 489,
+				"h": 352
+			},
+			"rotated": false,
+			"trimmed": true,
+			"spriteSourceSize": {
+				"x": 221,
+				"y": 3,
+				"w": 489,
+				"h": 352
+			},
+			"sourceSize": {
+				"w": 710,
+				"h": 355
+			}
+		},
+		"arm_043": {
+			"frame": {
+				"x": 620,
+				"y": 0,
+				"w": 479,
+				"h": 355
+			},
+			"rotated": false,
+			"trimmed": true,
+			"spriteSourceSize": {
+				"x": 231,
+				"y": 0,
+				"w": 479,
+				"h": 355
+			},
+			"sourceSize": {
+				"w": 710,
+				"h": 355
+			}
+		},
+		"arm_044": {
+			"frame": {
+				"x": 1101,
+				"y": 0,
+				"w": 463,
+				"h": 355
+			},
+			"rotated": false,
+			"trimmed": true,
+			"spriteSourceSize": {
+				"x": 247,
+				"y": 0,
+				"w": 463,
+				"h": 355
+			},
+			"sourceSize": {
+				"w": 710,
+				"h": 355
+			}
+		},
+		"arm_045": {
+			"frame": {
+				"x": 1566,
+				"y": 0,
+				"w": 441,
+				"h": 355
+			},
+			"rotated": false,
+			"trimmed": true,
+			"spriteSourceSize": {
+				"x": 269,
+				"y": 0,
+				"w": 441,
+				"h": 355
+			},
+			"sourceSize": {
+				"w": 710,
+				"h": 355
+			}
+		},
+		"arm_046": {
+			"frame": {
+				"x": 2009,
+				"y": 0,
+				"w": 414,
+				"h": 355
+			},
+			"rotated": false,
+			"trimmed": true,
+			"spriteSourceSize": {
+				"x": 296,
+				"y": 0,
+				"w": 414,
+				"h": 355
+			},
+			"sourceSize": {
+				"w": 710,
+				"h": 355
+			}
+		},
+		"arm_047": {
+			"frame": {
+				"x": 2425,
+				"y": 0,
+				"w": 380,
+				"h": 355
+			},
+			"rotated": false,
+			"trimmed": true,
+			"spriteSourceSize": {
+				"x": 330,
+				"y": 0,
+				"w": 380,
+				"h": 355
+			},
+			"sourceSize": {
+				"w": 710,
+				"h": 355
+			}
+		},
+		"arm_048": {
+			"frame": {
+				"x": 2807,
+				"y": 0,
+				"w": 340,
+				"h": 355
+			},
+			"rotated": false,
+			"trimmed": true,
+			"spriteSourceSize": {
+				"x": 370,
+				"y": 0,
+				"w": 340,
+				"h": 355
+			},
+			"sourceSize": {
+				"w": 710,
+				"h": 355
+			}
+		},
+		"arm_049": {
+			"frame": {
+				"x": 3149,
+				"y": 0,
+				"w": 260,
+				"h": 355
+			},
+			"rotated": false,
+			"trimmed": true,
+			"spriteSourceSize": {
+				"x": 450,
+				"y": 0,
+				"w": 260,
+				"h": 355
+			},
+			"sourceSize": {
+				"w": 710,
+				"h": 355
+			}
+		},
+		"arm_050": {
+			"frame": {
+				"x": 0,
+				"y": 357,
+				"w": 128,
+				"h": 282
+			},
+			"rotated": false,
+			"trimmed": true,
+			"spriteSourceSize": {
+				"x": 582,
+				"y": 0,
+				"w": 128,
+				"h": 282
+			},
+			"sourceSize": {
+				"w": 710,
+				"h": 355
+			}
+		},
+		"arm_051": {
+			"frame": {
+				"x": 130,
+				"y": 357,
+				"w": 48,
+				"h": 120
+			},
+			"rotated": false,
+			"trimmed": true,
+			"spriteSourceSize": {
+				"x": 662,
+				"y": 0,
+				"w": 48,
+				"h": 120
+			},
+			"sourceSize": {
+				"w": 710,
+				"h": 355
+			}
+		}
+	},
+	"meta": {
+		"image": "arm-slam-1.webp",
+		"format": "RGBA8888",
+		"size": {
+			"w": 3978,
+			"h": 639
+		},
+		"scale": "0.4"
+	}
+}

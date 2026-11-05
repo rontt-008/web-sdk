@@ -6,13 +6,15 @@
 
 	import { getContext } from '../game/context';
 	import { squareToQuad } from '../game/tilt';
+	import { tableLayout } from '../game/tableLayout';
 	import TiltedPlane from './TiltedPlane.svelte';
 
 	// Three pieces standing on the table between the lamp and the board (desktop only, see Background:
 	// elsewhere the board covers that part of the table), in a small group: the pawn at the back, the rook
 	// beside it, the king in front to the right, each a little to the side of the others. Each is set by
-	// the middle of its foot, `gap` left of the board's frame, `at` down the board's height (frame
-	// included), `height` tall; `aspect` is its still picture's width over its height
+	// the middle of its foot, `gap` left of the board's frame, `at` px down the table's picture (all on the
+	// plank between the gaps at 296 and 484 px, art-source/table.png, so none stands in a gap whatever the
+	// screen's shape), `height` tall; `aspect` is its still picture's width over its height
 	// (art-source/table-pieces.py). The nearer (lower) ones are drawn over the further. Each casts a soft
 	// shadow away from the lamp (down and to the right).
 	//
@@ -42,7 +44,7 @@
 			aspect: 0.628,
 			height: 92,
 			gap: 140,
-			at: 0.52,
+			at: 370,
 			anim: { key: 'tablePawnAnim', anchor: { x: 0.4976, y: 0.9893 }, standing: 161, frame: { w: 102, h: 175 } },
 		},
 		{
@@ -51,7 +53,7 @@
 			aspect: 0.463,
 			height: 140,
 			gap: 88,
-			at: 0.645,
+			at: 458,
 			anim: { key: 'tableKingAnim', anchor: { x: 0.4969, y: 0.9953 }, standing: 245, frame: { w: 115, h: 257 } },
 		},
 		{
@@ -60,7 +62,7 @@
 			aspect: 0.659,
 			height: 108,
 			gap: 190,
-			at: 0.6,
+			at: 420,
 			anim: { key: 'tableRookAnim', anchor: { x: 0.7899, y: 0.9957 }, standing: 189, frame: { w: 303, h: 217 } },
 		},
 	];
@@ -81,12 +83,11 @@
 	const pieces = $derived.by(() => {
 		const board = context.stateGameDerived.boardLayout();
 		const left = board.x - board.width / 2 - board.frame;
-		const top = board.y - board.height / 2 - board.frame;
-		const height = board.height + board.frame * 2;
+		const table = tableLayout();
 		return PIECES.map((piece) => {
 			const width = piece.height * piece.aspect;
 			const x = left - piece.gap;
-			const y = top + height * piece.at;
+			const y = table.y + piece.at * table.scale;
 			// its animation's frame on the table (the foot at its anchor): the plane it's drawn on
 			const scale = piece.height / piece.anim.standing;
 			const frame = { width: piece.anim.frame.w * scale, height: piece.anim.frame.h * scale };

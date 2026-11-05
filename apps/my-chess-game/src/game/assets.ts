@@ -2,7 +2,11 @@
 // Vite rewrites these URLs as it bundles, and can't resolve one built from a variable
 const piece = (href: string) => ({ type: 'sprite', src: href }) as const;
 
+import { ARM_SLAM_ASSETS } from './armSlamAssets';
+
 export default {
+	// the arm slamming its fist on the table as a bonus starts (FistSlam; art-source/arm-slam.py)
+	...ARM_SLAM_ASSETS,
 	// the wooden table the board lies on, the lamp and the book at its left (Background; art-source/table.py)
 	table: {
 		type: 'sprite',
