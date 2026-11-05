@@ -38,7 +38,7 @@ export const setBetModeMeta = () => {
 			text: {
 				...samples.ANTE.text,
 				title: 'DUMB MODE',
-				dialog: `The other side plays like a beginner (any legal move, at random): it hangs its pieces, and checkmates and the CHECKMATE BONUS come about five times as often. Each spin ${costs} ${BOOSTER_COST}x ${yourBet} while DUMB MODE is on. It stays on until you turn it off.`,
+				dialog: `The other side plays like a beginner (any legal move, at random): it hangs its pieces, and checkmates and the CHECKMATE BONUS come about four times as often. Each spin ${costs} ${BOOSTER_COST}x ${yourBet} while DUMB MODE is on. It stays on until you turn it off.`,
 				description: 'The other side plays like a beginner: far more checkmates.',
 				betAmountLabel: 'DUMB MODE',
 				tickerIdle: 'DUMB MODE IS ON',

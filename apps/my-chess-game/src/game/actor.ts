@@ -21,6 +21,11 @@ const primaryMachines = createPrimaryMachines<Bet>({
 		if (lastRevealEvent) stateGameDerived.enhancedBoard.settle(lastRevealEvent.board);
 	},
 	onNewGameStart: async () => {
+		// the start screen's game of chess is over
+		stateGame.sandbox = false;
+		stateGame.selected = undefined;
+		stateGame.targets = [];
+		stateGame.turn = undefined;
 		stateGame.lastMove = undefined;
 		stateGame.checkSquare = undefined;
 		// the last spin's pieces drop off the board (PlayBoard), then the reels take over the empty

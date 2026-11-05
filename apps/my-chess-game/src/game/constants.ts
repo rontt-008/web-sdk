@@ -65,6 +65,8 @@ export const MOVE_TIMING = {
 	// the last spin's pieces dropping off the board as the next starts, and the stagger between its columns
 	drop: 420,
 	dropStagger: 45,
+	// the start screen's engine's pause before it answers (Sandbox)
+	engineThink: 450,
 };
 
 export const INITIAL_SYMBOL_STATE: SymbolState = 'static';

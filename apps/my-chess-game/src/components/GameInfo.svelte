@@ -130,7 +130,7 @@
 			<p>
 				Switched on in the bonus menu, every spin {words.costs} {times(BOOSTER_COST)} the {words.bet}.
 				The other side plays like a beginner: any legal move, at random, so it hangs its pieces. Your
-				own moves stay at full strength, and checkmates and the CHECKMATE BONUS come about five times
+				own moves stay at full strength, and checkmates and the CHECKMATE BONUS come about four times
 				as often. It stays on until you switch it off; its FREE SPINS are the normal ones.
 			</p>
 		</div>

@@ -26,6 +26,7 @@
 	import BoardSquares from './BoardSquares.svelte';
 	import Board from './Board.svelte';
 	import PlayBoard from './PlayBoard.svelte';
+	import Sandbox from './Sandbox.svelte';
 	import MoveWinAmounts from './MoveWinAmounts.svelte';
 	import MoveLog from './MoveLog.svelte';
 	import SidePanel from './SidePanel.svelte';
@@ -96,6 +97,8 @@
 					<Board />
 					<PlayBoard />
 				</TiltedPlane>
+				<!-- the start screen's game of chess: the clicks, taken flat over the tilted board -->
+				<Sandbox />
 			</CameraContainer>
 		</MainContainer>
 
