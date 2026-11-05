@@ -19,6 +19,8 @@
 	});
 </script>
 
+<!-- none where the side panel shows the spin's win (desktop) -->
+{#if layout.spinWin}
 <MainContainer>
 	<Container x={layout.spinWin.x} y={layout.spinWin.y}>
 		<Rectangle
@@ -50,3 +52,4 @@
 		/>
 	</Container>
 </MainContainer>
+{/if}

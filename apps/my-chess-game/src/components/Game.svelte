@@ -4,7 +4,7 @@
 	import { EnablePixiExtension } from 'components-pixi';
 	import { EnableHotkey } from 'components-shared';
 	import { MainContainer } from 'components-layout';
-	import { App } from 'pixi-svelte';
+	import { App, Sprite } from 'pixi-svelte';
 	import { stateModal } from 'state-shared';
 
 	import { UI, UiGameName } from 'components-ui-pixi';
@@ -19,12 +19,16 @@
 	import Sound from './Sound.svelte';
 	import Background from './Background.svelte';
 	import CameraContainer from './CameraContainer.svelte';
+	import TiltedPlane from './TiltedPlane.svelte';
+	import { BOARD_SIZES, SYMBOL_SIZE } from '../game/constants';
+	import { TABLE_EDGE } from '../game/tilt';
 	import LoadingScreen from './LoadingScreen.svelte';
 	import BoardSquares from './BoardSquares.svelte';
 	import Board from './Board.svelte';
 	import PlayBoard from './PlayBoard.svelte';
 	import MoveWinAmounts from './MoveWinAmounts.svelte';
 	import MoveLog from './MoveLog.svelte';
+	import SidePanel from './SidePanel.svelte';
 	import MoveLabel from './MoveLabel.svelte';
 	import ComboMultiplier from './ComboMultiplier.svelte';
 	import SpinWin from './SpinWin.svelte';
@@ -72,28 +76,36 @@
 		-->
 		<Sound />
 
-		<!-- the board scene is seen through the camera (CameraContainer), which zooms in on the moves -->
+		<!-- the board scene, lying tilted on the table (TiltedPlane), seen through the camera
+		     (CameraContainer), which zooms in on the moves: the board's picture, its squares' lights, the
+		     reels the pieces drop onto, and the play board that takes over once they have landed -->
 		<MainContainer>
 			<CameraContainer>
-				<BoardSquares />
-			</CameraContainer>
-		</MainContainer>
-
-		<!-- the reels the pieces drop onto, and the play board that takes over once they have landed -->
-		<MainContainer>
-			<CameraContainer>
-				<Board />
-			</CameraContainer>
-		</MainContainer>
-
-		<MainContainer>
-			<CameraContainer>
-				<PlayBoard />
+				<TiltedPlane
+					size={BOARD_SIZES}
+					project={context.stateGameDerived.boardPoint}
+					pad={SYMBOL_SIZE * 0.5}
+					detail={context.stateGameDerived.boardLayout().scale * 1.3}
+					edge={{
+						depth: SYMBOL_SIZE * 0.13 * context.stateGameDerived.boardLayout().scale,
+						colour: TABLE_EDGE,
+					}}
+				>
+					<Sprite key="board" width={BOARD_SIZES.width} height={BOARD_SIZES.height} />
+					<BoardSquares />
+					<Board />
+					<PlayBoard />
+				</TiltedPlane>
 			</CameraContainer>
 		</MainContainer>
 
 		<MoveWinAmounts />
-		<MoveLog />
+		<!-- on desktop the side panel right of the board has the moves (the log would be under the UI bar) -->
+		{#if context.stateLayoutDerived.layoutType() === 'desktop'}
+			<SidePanel />
+		{:else}
+			<MoveLog />
+		{/if}
 		<ComboMultiplier />
 		<SideToggle />
 		<SpinWin />

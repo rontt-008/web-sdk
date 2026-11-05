@@ -21,6 +21,40 @@ export const squareName = ({ reel, row }: Position) =>
 
 export const positionKey = ({ reel, row }: Position) => `${reel}:${row}`;
 
+// a move played this spin, as the side panel (SidePanel) keeps it
+export type PlayedMove = {
+	side: 'you' | 'them';
+	piece: SymbolName;
+	from: Position;
+	to: Position;
+	captured?: SymbolName;
+	promotion?: SymbolName;
+	check: boolean;
+	mate: boolean;
+};
+
+// a move in chess notation: Nxe5, exd5, e8=Q+, Qh5#. No disambiguation (Nbd2): the panel has no board
+// to tell two knights apart, and it reads fine without.
+export const moveNotation = (move: PlayedMove) => {
+	const kind = pieceKind(move.piece);
+	const piece = kind === 'P' ? (move.captured ? squareName(move.from)[0] : '') : (kind ?? '');
+	const promotion = move.promotion ? `=${pieceKind(move.promotion)}` : '';
+	const check = move.mate ? '#' : move.check ? '+' : '';
+	return `${piece}${move.captured ? 'x' : ''}${squareName(move.to)}${promotion}${check}`;
+};
+
+// the spin's moves paired up as numbered turns (yours first, as you always move first); a turn whose
+// reply hasn't come yet has none
+export const pairMoves = (moves: PlayedMove[]) => {
+	const turns: { number: number; you?: PlayedMove; them?: PlayedMove }[] = [];
+	for (const move of moves) {
+		const last = turns[turns.length - 1];
+		if (move.side === 'you' || !last || last.them) turns.push({ number: turns.length + 1, [move.side]: move });
+		else last.them = move;
+	}
+	return turns;
+};
+
 // a move in words, for the move log: "YOU  Qd1→h5 ×P  CHECK"
 export const describeMove = (move: {
 	side: 'you' | 'them';

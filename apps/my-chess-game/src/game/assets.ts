@@ -3,10 +3,25 @@
 const piece = (href: string) => ({ type: 'sprite', src: href }) as const;
 
 export default {
+	// the wooden table the board lies on, the lamp and the book at its left (Background; art-source/table.py)
+	table: {
+		type: 'sprite',
+		src: new URL('../../assets/table.webp', import.meta.url).href,
+	},
 	// the board's eight by eight squares, edge to edge (Background; art-source/board.py)
 	board: {
 		type: 'sprite',
 		src: new URL('../../assets/board.webp', import.meta.url).href,
+	},
+	// the side panel's marble, the board's own (SidePanel; art-source/panel-texture.py): its page the light
+	// squares', its head the dark squares'
+	panelLight: {
+		type: 'sprite',
+		src: new URL('../../assets/panel-light.webp', import.meta.url).href,
+	},
+	panelDark: {
+		type: 'sprite',
+		src: new URL('../../assets/panel-dark.webp', import.meta.url).href,
 	},
 	// the multiplier badge's frame (ComboMultiplier): the user's astrology circle, see art-source
 	multiplierFrame: {

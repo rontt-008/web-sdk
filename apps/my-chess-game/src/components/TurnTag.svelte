@@ -21,6 +21,8 @@
 	const INK = 0x151a26;
 </script>
 
+<!-- none where the side panel shows whose move it is (desktop) -->
+{#if layout.turn}
 <MainContainer>
 	<FadeContainer show={turn !== undefined} duration={200}>
 		<Container x={layout.turn.x} y={layout.turn.y}>
@@ -58,3 +60,4 @@
 		</Container>
 	</FadeContainer>
 </MainContainer>
+{/if}

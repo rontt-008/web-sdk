@@ -18,8 +18,10 @@
 	const context = getContext();
 	const layout = $derived(sidePanelLayout());
 	const pulse = new Tween(1);
-	// the number fits the circle's clear middle (about 0.6 of the picture across)
-	const fontSize = $derived(layout.multiplier.size * (String(context.stateGame.multiplier).length > 2 ? 0.26 : 0.36));
+	// the number fits the circle's clear middle (about 0.6 of the picture across); none where the side
+	// panel shows the multiplier (desktop)
+	const size = $derived(layout.multiplier?.size ?? 0);
+	const fontSize = $derived(size * (String(context.stateGame.multiplier).length > 2 ? 0.26 : 0.36));
 
 	context.eventEmitter.subscribeOnMount({
 		multiplierPulse: () => {
@@ -29,14 +31,10 @@
 	});
 </script>
 
+{#if layout.multiplier}
 <MainContainer>
 	<Container x={layout.multiplier.x} y={layout.multiplier.y} scale={pulse.current}>
-		<Sprite
-			key="multiplierFrame"
-			anchor={0.5}
-			width={layout.multiplier.size}
-			height={layout.multiplier.size}
-		/>
+		<Sprite key="multiplierFrame" anchor={0.5} width={size} height={size} />
 		<Text
 			text={`x${context.stateGame.multiplier}`}
 			anchor={0.5}
@@ -50,3 +48,4 @@
 		/>
 	</Container>
 </MainContainer>
+{/if}

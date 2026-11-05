@@ -3,24 +3,16 @@
 
 	import { Container } from 'pixi-svelte';
 
-	import { getContext } from '../game/context';
-
+	// a layer of the board scene, in the board's own units (SYMBOL_SIZE a square, its top left corner at
+	// 0, 0): put inside TiltedPlane, which places the scene on the table
 	type Props = {
 		children: Snippet;
 		sortableChildren?: boolean;
 	};
 
 	const props: Props = $props();
-
-	const context = getContext();
 </script>
 
-<Container
-	x={context.stateGameDerived.boardLayout().x}
-	y={context.stateGameDerived.boardLayout().y}
-	pivot={context.stateGameDerived.boardLayout().pivot}
-	scale={context.stateGameDerived.boardLayout().scale}
-	sortableChildren={props.sortableChildren}
->
+<Container sortableChildren={props.sortableChildren}>
 	{@render props.children()}
 </Container>

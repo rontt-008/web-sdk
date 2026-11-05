@@ -65,6 +65,7 @@ export const bookEventHandlerMap: BookEventHandlerMap<BookEvent, BookEventContex
 		stateGame.spinWin = 0;
 		stateGame.lastSpot = undefined;
 		stateGame.moveLog = [];
+		stateGame.moves = [];
 		stateGame.spots = [];
 		// a base game spin's multiplier is its own; the free spins' carries on
 		if (bookEvent.gameType === 'basegame') stateGame.multiplier = 1;
@@ -126,6 +127,19 @@ export const bookEventHandlerMap: BookEventHandlerMap<BookEvent, BookEventContex
 			name: bookEvent.captured ? 'sfx_multiplier_explosion_a' : 'sfx_royals_landing',
 		});
 		stateGame.moveLog = [...stateGame.moveLog, describeMove(bookEvent)];
+		stateGame.moves = [
+			...stateGame.moves,
+			{
+				side: bookEvent.side,
+				piece: bookEvent.piece,
+				from: bookEvent.from,
+				to: bookEvent.to,
+				captured: bookEvent.captured,
+				promotion: bookEvent.promotion,
+				check: bookEvent.check,
+				mate: bookEvent.mate,
+			},
+		];
 		await eventEmitter.broadcastAsync({ type: 'playBoardMove', move: bookEvent });
 		stateGame.attackSquare = undefined;
 		stateGame.movesThisSpin += 1;

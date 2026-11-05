@@ -7,6 +7,8 @@ import { createGetWinLevelDataByWinLevelAlias } from 'utils-shared/winLevel';
 
 import type { GameType, PieceColour, Position, RawSymbol, Side, SymbolName } from './types';
 import type { Spot } from './typesBookEvent';
+import type { PlayedMove } from './chess';
+import { TILT, squareToQuad, type Quad } from './tilt';
 import { stateLayoutDerived } from './stateLayout';
 import { winLevelMap } from './winLevelMap';
 import { eventEmitter } from './eventEmitter';
@@ -96,8 +98,9 @@ export const stateGame = $state({
 	movesThisSpin: 0,
 	spinWin: 0,
 	lastSpot: undefined as number | undefined,
-	// the spin's moves in words (MoveLog)
+	// the spin's moves in words (MoveLog), and as played (SidePanel)
 	moveLog: [] as string[],
+	moves: [] as PlayedMove[],
 	// the multiplier spots on the board (BoardSquares), each gone when a capture on it uses it up or the
 	// cheater spin's queen collects it
 	spots: [] as Spot[],
@@ -141,14 +144,33 @@ const squareCentre = ({ reel, row }: Position) => ({
 	y: (row - 0.5) * SYMBOL_SIZE,
 });
 
-// the same in the main layout
-const cellCentre = (position: Position) => {
+// The board as it lies tilted on the table (TILT), in the main layout: its corners (top left, top right,
+// bottom right, bottom left), and where a point of the board (in its own units) is seen
+const boardQuad = (): Quad => {
 	const layout = boardLayout();
+	const bottom = layout.y + layout.height / 2;
+	const top = bottom - layout.height * TILT.depth;
+	const far = (layout.width * TILT.far) / 2;
+	const near = (layout.width * TILT.near) / 2;
+	return [layout.x - far, top, layout.x + far, top, layout.x + near, bottom, layout.x - near, bottom];
+};
+
+const boardPoint = (x: number, y: number) =>
+	squareToQuad(boardQuad())(x / BOARD_SIZES.width, y / BOARD_SIZES.height);
+
+// where a point of the main layout is seen once the table it's on is tilted with the board (the side
+// panel lies on the table beside the board, in the same plane)
+const tablePoint = (x: number, y: number) => {
+	const layout = boardLayout();
+	const left = layout.x - layout.width / 2;
+	const top = layout.y - layout.height / 2;
+	return boardPoint((x - left) / layout.scale, (y - top) / layout.scale);
+};
+
+// the middle of a square in the main layout, as seen on the tilted board
+const cellCentre = (position: Position) => {
 	const local = squareCentre(position);
-	return {
-		x: layout.x + (local.x - layout.pivot.x) * layout.scale,
-		y: layout.y + (local.y - layout.pivot.y) * layout.scale,
-	};
+	return boardPoint(local.x, local.y);
 };
 
 let nextPieceId = 1;
@@ -216,6 +238,9 @@ export const { getWinLevelDataByWinLevelAlias } = createGetWinLevelDataByWinLeve
 
 export const stateGameDerived = {
 	boardLayout,
+	boardQuad,
+	boardPoint,
+	tablePoint,
 	squareCentre,
 	cellCentre,
 	boardRaw,
