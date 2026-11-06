@@ -53,7 +53,29 @@ export type SoundEffectName =
 	| 'tumble_win_1'
 	| 'tumble_win_2'
 	| 'tumble_win_3'
-	| 'tumble_win_4';
+	| 'tumble_win_4'
+	| ChessSoundName;
+
+// the chess game's own sounds (scripts/generate-sounds.mjs; played through chessSounds.ts): each kind
+// of piece's move in three takes, a capture of each kind (yours with a chime, or yours lost), check,
+// mate, a promotion, castling, a piece picked up and put back, the pieces sliding off the board as a
+// spin starts and each column of the next landing
+type ChessKind = 'p' | 'n' | 'b' | 'r' | 'q' | 'k';
+type TakenKind = Exclude<ChessKind, 'k'>;
+export type ChessSoundName =
+	| `sfx_chess_move_${ChessKind}_${1 | 2 | 3}`
+	| `sfx_chess_take_${TakenKind}`
+	| `sfx_chess_taken_${TakenKind}`
+	| `sfx_chess_drop_${1 | 2 | 3 | 4 | 5 | 6 | 7 | 8}`
+	| 'sfx_chess_check'
+	| 'sfx_chess_checked'
+	| 'sfx_chess_mate'
+	| 'sfx_chess_mated'
+	| 'sfx_chess_promote'
+	| 'sfx_chess_castle'
+	| 'sfx_chess_pick'
+	| 'sfx_chess_back'
+	| 'sfx_chess_off';
 
 export type SoundName = MusicName | SoundEffectName;
 

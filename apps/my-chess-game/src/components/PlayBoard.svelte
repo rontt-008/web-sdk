@@ -12,8 +12,9 @@
 		// the piece on this square is taken (bursts and goes): an en passant's pawn (done when it has gone)
 		| { type: 'playBoardTake'; position: Position }
 		// one piece slides to a square the way a move does (lifted, over the others), in `duration` ms;
-		// a square off the board takes it away (done when it is there)
-		| { type: 'playBoardSlide'; id: number; to: Position; duration: number; off?: boolean };
+		// a square off the board takes it away (done when it is there). It lands with its own move's
+		// sound, or `sound` instead (castling's rook)
+		| { type: 'playBoardSlide'; id: number; to: Position; duration: number; off?: boolean; sound?: 'castle' };
 </script>
 
 <script lang="ts">
@@ -29,6 +30,7 @@
 	import { BOOSTER_MODE } from '../game/betModes';
 	import type { PlayPiece } from '../game/stateGame.svelte';
 	import { cameraDerived } from '../game/camera.svelte';
+	import { chessSound } from '../game/chessSounds';
 	import BoardContainer from './BoardContainer.svelte';
 	import Piece from './Piece.svelte';
 
@@ -76,6 +78,7 @@
 		playBoardDrop: async () => {
 			const pieces = context.stateGame.pieces.filter((piece) => !piece.gone);
 			if (!pieces.length) return;
+			// silent (the user's wish): the spin is heard in the next pieces landing
 			const scale = timeScale();
 			await Promise.all(
 				pieces.map((piece) =>
@@ -92,11 +95,13 @@
 			const piece = context.stateGameDerived.pieceAt(position);
 			if (piece) await burst(piece);
 		},
-		playBoardSlide: async ({ id, to, duration, off }) => {
+		playBoardSlide: async ({ id, to, duration, off, sound }) => {
 			const piece = context.stateGame.pieces.find((candidate) => candidate.id === id);
 			if (!piece) return;
 			const ms = duration / timeScale();
 			moving = piece.id;
+			// one going off is picked up and taken away; it never lands
+			if (off) chessSound.pick();
 			if (off) piece.gone = true;
 			else {
 				piece.reel = to.reel;
@@ -110,6 +115,8 @@
 				piece.x.set(x, { duration: ms, easing: cubicInOut }),
 				piece.y.set(y, { duration: ms, easing: cubicInOut }),
 			]);
+			if (sound === 'castle') chessSound.castle();
+			else if (!off) chessSound.move(piece.symbol);
 			moving = undefined;
 		},
 		playBoardPulse: async ({ positions, times }) => {
@@ -145,8 +152,12 @@
 				piece.x.set(x, { duration, easing: cubicInOut }),
 				piece.y.set(y, { duration, easing: cubicInOut }),
 			]);
+			// it lands: its own sound, the clack of the piece it takes over it
+			chessSound.move(piece.symbol);
+			if (target) chessSound.take(target.symbol, move.side);
 			if (move.promotion) {
 				piece.symbol = move.promotion;
+				chessSound.promote();
 				cameraDerived.nudge(SYMBOL_SIZE * 0.03, 0.02);
 			}
 			if (target) await burst(target);
@@ -154,6 +165,8 @@
 			// the camera stays on a mate for its label (the checkmate handler lets it go)
 			if (!move.mate) cameraDerived.reset();
 			if (move.check) {
+				// a mate has its own sound, with its label (the checkmate event, or the start screen's)
+				if (!move.mate) chessSound.check(move.side);
 				const king = context.stateGameDerived.kingSquare(move.side === 'you' ? 'BK' : 'WK');
 				context.stateGame.checkSquare = king;
 				if (king) {

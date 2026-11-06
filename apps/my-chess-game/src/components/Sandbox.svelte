@@ -19,6 +19,7 @@
 	import { engineMove } from '../game/engine';
 	import { lozzaAnalyse, lozzaBestMove, lozzaPrepare, lozzaTopMoves } from '../game/lozza';
 	import { bookMoves } from '../game/openings';
+	import { chessSound } from '../game/chessSounds';
 	import type { Position } from '../game/types';
 	import type { PlayPiece } from '../game/stateGame.svelte';
 	import type { BookEventOfType } from '../game/typesBookEvent';
@@ -240,8 +241,8 @@
 			}
 			return undefined;
 		};
+		// each step lands with the piece's own sound (the play board's)
 		const slide = async (piece: (typeof onBoard)[number], to: Position, off = false) => {
-			context.eventEmitter.broadcast({ type: 'soundOnce', name: 'sfx_royals_landing' });
 			await context.eventEmitter.broadcastAsync({ type: 'playBoardSlide', id: piece.id, to, duration: MOVE_TIMING.returnMove, off });
 		};
 		let waiting = moves;
@@ -288,7 +289,6 @@
 				const { y } = context.stateGameDerived.squareCentre(square);
 				const fromX = isMine(symbol) ? -SYMBOL_SIZE * 1.5 : BOARD_SIZES.width + SYMBOL_SIZE * 1.5;
 				const piece = context.stateGameDerived.addPiece(symbol, square, { x: fromX, y });
-				context.eventEmitter.broadcast({ type: 'soundOnce', name: 'sfx_royals_landing' });
 				await context.eventEmitter.broadcastAsync({ type: 'playBoardSlide', id: piece.id, to: square, duration: MOVE_TIMING.returnMove });
 			}
 		}
@@ -353,16 +353,16 @@
 			multiplier: 1,
 		};
 		context.stateGame.turn = turn;
-		context.eventEmitter.broadcast({ type: 'soundOnce', name: taken ? 'sfx_multiplier_explosion_a' : 'sfx_royals_landing' });
+		// the move's sounds are the play board's, as the piece lands
 		await context.eventEmitter.broadcastAsync({ type: 'playBoardMove', move: event });
 		// a castling's rook comes over; an en passant's pawn, passed, is taken
 		if (move.castle) {
 			const rook = castlingRook(move);
 			const rookPiece = context.stateGameDerived.pieceAt(rook.from);
-			if (rookPiece) await context.eventEmitter.broadcastAsync({ type: 'playBoardSlide', id: rookPiece.id, to: rook.to, duration: MOVE_TIMING.slide });
+			if (rookPiece) await context.eventEmitter.broadcastAsync({ type: 'playBoardSlide', id: rookPiece.id, to: rook.to, duration: MOVE_TIMING.slide, sound: 'castle' }); // prettier-ignore
 		}
 		if (move.enPassant) {
-			context.eventEmitter.broadcast({ type: 'soundOnce', name: 'sfx_multiplier_explosion_a' });
+			if (taken) chessSound.take(taken.symbol, turn);
 			await context.eventEmitter.broadcastAsync({ type: 'playBoardTake', position: move.enPassant });
 		}
 		rules = rulesNext;
@@ -380,6 +380,7 @@
 		context.stateGame.sandboxTurn = other;
 		context.stateGame.turn = mate ? undefined : other;
 		if (mate) {
+			chessSound.mate(turn);
 			context.eventEmitter.broadcast({ type: 'moveLabel', text: 'CHECKMATE', kind: 'info', hold: MOVE_TIMING.mate });
 		} else if (check) {
 			context.eventEmitter.broadcast({ type: 'moveLabel', text: 'CHECK', kind: 'info', hold: MOVE_TIMING.label });
@@ -398,8 +399,9 @@
 		}
 	};
 
-	// a piece held under the pointer: it follows the pointer, lifted, and is dropped on a square
-	let drag: { piece: PlayPiece; from: Position } | undefined;
+	// a piece held under the pointer: it follows the pointer, lifted, and is dropped on a square;
+	// `away` once it has been taken off its square (a click alone doesn't)
+	let drag: { piece: PlayPiece; from: Position; away: boolean } | undefined;
 	const isTarget = (square: Position | undefined) =>
 		square !== undefined && context.stateGame.targets.some((target) => positionKey(target) === positionKey(square));
 
@@ -415,7 +417,8 @@
 		select(square);
 		const piece = context.stateGame.selected && context.stateGameDerived.pieceAt(context.stateGame.selected);
 		if (!piece || !square) return;
-		drag = { piece, from: square };
+		drag = { piece, from: square, away: false };
+		chessSound.pick();
 		context.stateGame.dragging = piece.id;
 		piece.scale.set(1.18, { duration: 120 / stateBetDerived.timeScale() });
 	};
@@ -423,12 +426,14 @@
 		if (!drag) return;
 		const local = event.currentTarget.toLocal(event.global);
 		const at = context.stateGameDerived.boardPointAt(local.x, local.y);
+		const home = context.stateGameDerived.squareCentre(drag.from);
+		if (Math.hypot(at.x - home.x, at.y - home.y) > SYMBOL_SIZE * 0.35) drag.away = true;
 		drag.piece.x.set(at.x, { duration: 0 });
 		drag.piece.y.set(at.y, { duration: 0 });
 	};
 	const up = (event: PIXI.FederatedPointerEvent) => {
 		if (!drag) return;
-		const { piece, from } = drag;
+		const { piece, from, away } = drag;
 		drag = undefined;
 		context.stateGame.dragging = undefined;
 		const ms = 150 / stateBetDerived.timeScale();
@@ -439,10 +444,12 @@
 			play(from, square!);
 			return;
 		}
-		// back onto its square, still picked up
+		// back onto its square, still picked up (set down softly, once it lands, if it was taken off it)
 		const home = context.stateGameDerived.squareCentre(from);
 		piece.x.set(home.x, { duration: ms });
-		piece.y.set(home.y, { duration: ms });
+		piece.y.set(home.y, { duration: ms }).then(() => {
+			if (away) chessSound.back();
+		});
 	};
 </script>
 

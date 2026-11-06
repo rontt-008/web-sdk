@@ -11,6 +11,7 @@ import { stateGame, stateGameDerived } from './stateGame.svelte';
 import { cameraDerived } from './camera.svelte';
 import { MOVE_TIMING } from './constants';
 import { describeMove } from './chess';
+import { chessSound } from './chessSounds';
 import type { BookEvent, BookEventOfType, BookEventContext } from './typesBookEvent';
 
 const winLevelSoundsPlay = ({ winLevelData }: { winLevelData: WinLevelData }) => {
@@ -145,10 +146,8 @@ export const bookEventHandlerMap: BookEventHandlerMap<BookEvent, BookEventContex
 			});
 		}
 		if (bookEvent.captured) stateGame.attackSquare = bookEvent.to;
-		eventEmitter.broadcast({
-			type: 'soundOnce',
-			name: bookEvent.captured ? 'sfx_multiplier_explosion_a' : 'sfx_royals_landing',
-		});
+		// the move's sounds (the piece landing, a capture, a promotion, a check) are the play board's,
+		// each as it happens
 		stateGame.moveLog = [...stateGame.moveLog, describeMove(bookEvent)];
 		stateGame.moves = [
 			...stateGame.moves,
@@ -184,11 +183,9 @@ export const bookEventHandlerMap: BookEventHandlerMap<BookEvent, BookEventContex
 			});
 		}
 		if (bookEvent.promotion) {
-			eventEmitter.broadcast({ type: 'soundOnce', name: 'sfx_multiplier_up' });
 			eventEmitter.broadcast({ type: 'moveLabel', text: 'QUEEN!', kind: 'good', hold: MOVE_TIMING.short });
 		}
 		if (bookEvent.check && !bookEvent.mate) {
-			eventEmitter.broadcast({ type: 'soundOnce', name: 'sfx_scatter_stop_1' });
 			eventEmitter.broadcast({
 				type: 'moveLabel',
 				text: 'CHECK',
@@ -202,7 +199,7 @@ export const bookEventHandlerMap: BookEventHandlerMap<BookEvent, BookEventContex
 	inCheck: async () => {
 		stateGame.checkSquare = stateGameDerived.kingSquare('WK');
 		stateGame.moveLog = [...stateGame.moveLog, 'LANDED IN CHECK'];
-		eventEmitter.broadcast({ type: 'soundOnce', name: 'sfx_scatter_stop_1' });
+		chessSound.check('them');
 		await eventEmitter.broadcastAsync({
 			type: 'moveLabel',
 			text: 'CHECK',
@@ -227,8 +224,8 @@ export const bookEventHandlerMap: BookEventHandlerMap<BookEvent, BookEventContex
 			eventEmitter.broadcast({ type: 'playBoardPulse', positions: [king], times: 3 });
 			cameraDerived.zoomTo(king, cameraDerived.ZOOM.mate, cameraDerived.TIMING.zoomIn * 1.4);
 		}
+		chessSound.mate(bookEvent.by);
 		if (bookEvent.by === 'you') {
-			eventEmitter.broadcast({ type: 'soundOnce', name: 'sfx_scatter_win' });
 			await eventEmitter.broadcastAsync({
 				type: 'moveLabel',
 				text: 'CHECKMATE!',
@@ -236,7 +233,6 @@ export const bookEventHandlerMap: BookEventHandlerMap<BookEvent, BookEventContex
 				hold: MOVE_TIMING.mate,
 			});
 		} else {
-			eventEmitter.broadcast({ type: 'soundOnce', name: 'sfx_multiplier_reset' });
 			await eventEmitter.broadcastAsync({
 				type: 'moveLabel',
 				text: 'CHECKMATED',

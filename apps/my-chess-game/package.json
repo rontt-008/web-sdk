@@ -10,7 +10,8 @@
 		"storybook": "storybook dev -p 6005",
 		"dev": "vite dev --host --port 3003",
 		"build": "vite build",
-		"preview": "vite preview"
+		"preview": "vite preview",
+		"sounds": "node scripts/generate-sounds.mjs"
 	},
 	"type": "module",
 	"devDependencies": {

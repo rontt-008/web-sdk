@@ -1,7 +1,6 @@
 import _ from 'lodash';
 import { Tween } from 'svelte/motion';
 
-import { stateBet } from 'state-shared';
 import { createEnhanceBoard, createReelForCascading } from 'utils-slots';
 import { createGetWinLevelDataByWinLevelAlias } from 'utils-shared/winLevel';
 
@@ -11,7 +10,7 @@ import type { PlayedMove } from './chess';
 import { TILT, squareToQuad, quadToSquare, type Quad } from './tilt';
 import { stateLayoutDerived } from './stateLayout';
 import { winLevelMap } from './winLevelMap';
-import { eventEmitter } from './eventEmitter';
+import { chessSound } from './chessSounds';
 import {
 	SYMBOL_SIZE,
 	BOARD_SIZES,
@@ -34,13 +33,9 @@ const board = _.range(BOARD_DIMENSIONS.x).map((reelIndex) => {
 		symbolHeight: SYMBOL_SIZE,
 		initialSymbols: INITIAL_BOARD[reelIndex],
 		initialSymbolState: INITIAL_SYMBOL_STATE,
-		onReelStopping: () => {
-			eventEmitter.broadcast({
-				type: 'soundOnce',
-				name: 'sfx_reel_stop_1',
-				forcePlay: !stateBet.isTurbo,
-			});
-		},
+		// the column's bottom piece lands, the rest up the column after it: their clatter, a note higher
+		// each column across the board
+		onReelStopping: () => chessSound.drop(reelIndex),
 		onSymbolLand: () => {},
 	});
 
