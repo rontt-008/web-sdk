@@ -300,5 +300,11 @@
 			{/each}
 		{/if}
 	</FadeContainer>
+</MainContainer>
+
+<!-- the souls in their own container, over the meter's: beside it in the same one they went under
+it, as a FadeContainer goes once faded out and comes back (it does as it mounts, too) added after
+them -->
+<MainContainer>
 	<MeterSouls target={soulTarget} {onlaunch} />
 </MainContainer>

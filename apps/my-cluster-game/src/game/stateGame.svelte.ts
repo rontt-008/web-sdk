@@ -330,24 +330,26 @@ const BOARD_FRAME_ART = {
 // between the outer symbols and the branches
 const BOARD_FRAME_MARGIN = LAYOUT_UNIT * 0.1;
 
-// the frame's size, wherever the board is: the board's units per pixel of the art (`scale`), the
-// same both ways so the art keeps its shape (the opening is a little wider than tall, so there is
-// more panel left and right of the board), and how far its art reaches left of the board's middle,
-// right of it (beside the bonus meter, `upperRight`) and below it
+// the frame's size, wherever the board is: the board's units per pixel of the art (`scale`) each
+// way, so its opening fits the board plus the margin both ways and the branches line up with the
+// board's edges, its outer columns as wide as the others between the lines on the panel (the
+// opening is a little wider than tall, so the art is drawn about 8% narrower than its shape: kept
+// the same both ways, the outer columns were a third wider, 2026-11-06); and how far its art
+// reaches left of the board's middle, right of it (beside the bonus meter, `upperRight`) and below it
 const boardFrameReach = () => {
 	const { opening, visible } = BOARD_FRAME_ART;
-	const scale = Math.max(
-		(BOARD_SIZES.width + BOARD_FRAME_MARGIN * 2) / (opening.right - opening.left),
-		(BOARD_SIZES.height + BOARD_FRAME_MARGIN * 2) / (opening.bottom - opening.top),
-	);
+	const scale = {
+		x: (BOARD_SIZES.width + BOARD_FRAME_MARGIN * 2) / (opening.right - opening.left),
+		y: (BOARD_SIZES.height + BOARD_FRAME_MARGIN * 2) / (opening.bottom - opening.top),
+	};
 	const middle = { x: (opening.left + opening.right) / 2, y: (opening.top + opening.bottom) / 2 };
 	return {
 		scale,
-		left: (middle.x - visible.left) * scale,
-		right: (visible.upperRight - middle.x) * scale,
-		above: (middle.y - visible.top) * scale,
-		below: (visible.bottom - middle.y) * scale,
-		width: (visible.right - visible.left) * scale,
+		left: (middle.x - visible.left) * scale.x,
+		right: (visible.upperRight - middle.x) * scale.x,
+		above: (middle.y - visible.top) * scale.y,
+		below: (visible.bottom - middle.y) * scale.y,
+		width: (visible.right - visible.left) * scale.x,
 	};
 };
 
@@ -364,20 +366,20 @@ const boardFrameLayout = () => {
 		x: board.x,
 		y: board.y,
 		anchor: { x: openingX / width, y: openingY / height },
-		width: width * scale,
-		height: height * scale,
+		width: width * scale.x,
+		height: height * scale.y,
 		opening: {
-			left: board.x - (openingX - opening.left) * scale,
-			right: board.x + (opening.right - openingX) * scale,
-			top: board.y - (openingY - opening.top) * scale,
-			bottom: board.y + (opening.bottom - openingY) * scale,
+			left: board.x - (openingX - opening.left) * scale.x,
+			right: board.x + (opening.right - openingX) * scale.x,
+			top: board.y - (openingY - opening.top) * scale.y,
+			bottom: board.y + (opening.bottom - openingY) * scale.y,
 		},
 		visible: {
-			left: board.x - (openingX - visible.left) * scale,
-			right: board.x + (visible.right - openingX) * scale,
-			top: board.y - (openingY - visible.top) * scale,
-			bottom: board.y + (visible.bottom - openingY) * scale,
-			upperRight: board.x + (visible.upperRight - openingX) * scale,
+			left: board.x - (openingX - visible.left) * scale.x,
+			right: board.x + (visible.right - openingX) * scale.x,
+			top: board.y - (openingY - visible.top) * scale.y,
+			bottom: board.y + (visible.bottom - openingY) * scale.y,
+			upperRight: board.x + (visible.upperRight - openingX) * scale.x,
 		},
 	};
 };

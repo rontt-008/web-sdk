@@ -189,8 +189,12 @@
 			<Sprite key="runeLadder" width={LADDER_ART.width} height={LADDER_ART.height} />
 		</Container>
 	</FadeContainer>
+</MainContainer>
 
-	<!-- the rune symbols' souls, over the ladder -->
+<!-- the rune symbols' souls, over the boxes and the ladder: in their own container, as beside them
+in the same one they went under them (a FadeContainer goes once faded out and comes back, as it
+does as it mounts, added after them) -->
+<MainContainer>
 	{#each SYMBOL_RUNES as name}
 		<MeterSouls rune={name} target={boxCentre(name)} />
 	{/each}
