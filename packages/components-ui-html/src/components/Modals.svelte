@@ -39,6 +39,9 @@
 		gameRules?: Snippet;
 		// keeps a replay's opening card away, e.g. while the game's loading screen is up
 		hideReplayCard?: boolean;
+		// the game's own menus, in the same theme (build them from the exported Popup pieces and open
+		// them with stateModal.modal = { name: 'game', id })
+		children?: Snippet;
 	};
 
 	const props: Props = $props();
@@ -68,6 +71,7 @@
 	</ModalGameRules>
 	<ModalSettings />
 	<ModalReplay hidden={props.hideReplayCard} />
+	{@render props.children?.()}
 </div>
 
 <style lang="scss">

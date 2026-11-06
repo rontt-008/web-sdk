@@ -10,7 +10,7 @@
 	import { getContext } from '../game/context';
 	import { sidePanelLayout } from '../game/sideLayout';
 	import { LAMP_SHADOW, lampShade } from '../game/tilt';
-	import { BOOSTER_MODE } from '../game/betModes';
+	import { BOOSTER_MODE, SUPER_MODE } from '../game/betModes';
 	import { moveNotation, pairMoves, pieceAssetKey, scoreText } from '../game/chess';
 	import type { Position, SymbolName } from '../game/types';
 	import TiltedPlane from './TiltedPlane.svelte';
@@ -74,7 +74,14 @@
 
 	// whose move it is: the king of the side on the move (yours drawn in your colour), none between spins
 	const turn = $derived(context.stateGame.turn);
-	const turnKing = $derived(turn ? pieceAssetKey(turn === 'you' ? 'WK' : 'BK', context.stateGame.yourColour) : undefined);
+	// the other side's king gold in the SUPER BONUS, as on the board (Piece)
+	const turnKing = $derived(
+		!turn
+			? undefined
+			: turn === 'them' && stateBet.activeBetModeKey === SUPER_MODE && !context.stateGame.sandbox
+				? 'gK'
+				: pieceAssetKey(turn === 'you' ? 'WK' : 'BK', context.stateGame.yourColour),
+	);
 	const turnText = $derived(
 		turn === 'you'
 			? 'YOUR MOVE'
@@ -142,12 +149,20 @@
 			.filter((move) => move.side === side && move.captured)
 			.map((move) => pieceAssetKey(move.captured as SymbolName, context.stateGame.yourColour))
 			.filter((key): key is string => Boolean(key));
-	const takenRows = $derived([
-		{ label: 'YOU TOOK', pieces: taken('you') },
-		{ label: 'THEY TOOK', pieces: taken('them') },
-	]);
 	const PIECES_LEFT = PAD + 104;
 	const PIECE = 36;
+	// as many as fit at full size, the latest ones; when some are left out (a long sandbox game), the
+	// first slot says how many instead ("+5")
+	const takenRoom = $derived(Math.max(2, Math.floor((sheetWidth - PAD - PIECES_LEFT) / PIECE)));
+	const shown = (pieces: string[]) => {
+		if (pieces.length <= takenRoom) return { more: 0, pieces };
+		const room = takenRoom - 1;
+		return { more: pieces.length - room, pieces: pieces.slice(-room) };
+	};
+	const takenRows = $derived([
+		{ label: 'YOU TOOK', ...shown(taken('you')) },
+		{ label: 'THEY TOOK', ...shown(taken('them')) },
+	]);
 
 	// over the marble (the sprites under it): the moves' rows striped, a faint wash of the dark squares'
 	// blue so the marble shows through; and the rules between the parts
@@ -262,7 +277,11 @@
 				/>
 			{:else}
 				<Text
-					text={context.stateGame.gameType === 'freegame' ? 'BONUS MULTIPLIER' : 'MULTIPLIER'}
+					text={context.stateGame.gameType !== 'freegame'
+						? 'MULTIPLIER'
+						: stateBet.activeBetModeKey === SUPER_MODE
+							? 'SUPER BONUS · SPIN MULTIPLIER'
+							: 'BONUS MULTIPLIER'}
 					x={PAD}
 					y={PAD - 2}
 					{resolution}
@@ -359,10 +378,20 @@
 			<!-- what each side has taken -->
 			{#each takenRows as row, index}
 				{@const y = takenTop + index * TAKEN_ROW + TAKEN_ROW / 2}
-				{@const step = Math.min(PIECE, row.pieces.length ? (sheetWidth - PAD - PIECES_LEFT) / row.pieces.length : PIECE)}
+				{@const first = row.more ? PIECES_LEFT + PIECE : PIECES_LEFT}
 				<Text text={row.label} anchor={{ x: 0, y: 0.5 }} x={PAD} y={y} {resolution} style={label(COLOURS.label)} />
+				{#if row.more}
+					<Text
+						text={`+${row.more}`}
+						anchor={{ x: 0.5, y: 0.5 }}
+						x={PIECES_LEFT + PIECE / 2}
+						y={y}
+						{resolution}
+						style={text(15, COLOURS.label, { fontWeight: '800' })}
+					/>
+				{/if}
 				{#each row.pieces as key, pieceIndex}
-					<Sprite {key} anchor={{ x: 0, y: 0.5 }} x={PIECES_LEFT + pieceIndex * step} y={y - 1} width={PIECE} height={PIECE} />
+					<Sprite {key} anchor={{ x: 0, y: 0.5 }} x={first + pieceIndex * PIECE} y={y - 1} width={PIECE} height={PIECE} />
 				{/each}
 			{/each}
 			</Container>

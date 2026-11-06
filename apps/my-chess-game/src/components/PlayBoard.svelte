@@ -1,10 +1,13 @@
 <script lang="ts" module>
-	import type { BookEventOfType, Spot } from '../game/typesBookEvent';
+	import type { BookEventOfType, KingThrow, Spot } from '../game/typesBookEvent';
 	import type { Position } from '../game/types';
 
 	export type EmitterEventPlayBoard =
 		| { type: 'playBoardMove'; move: BookEventOfType<'move'> }
 		| { type: 'playBoardCollect'; queen: Position; spots: Spot[] }
+		// SUPER BONUS: the king's multipliers fly from him to their spots, one after another, each spot
+		// taking its new value as one lands (done when all have)
+		| { type: 'playBoardThrow'; king: Position; throws: KingThrow[] }
 		// the pieces at these squares swell and settle `times` over (done when they have)
 		| { type: 'playBoardPulse'; positions: Position[]; times: number }
 		// the pieces drop off the bottom of the board, column by column (done when they have gone)
@@ -26,6 +29,7 @@
 	import { getContext } from '../game/context';
 	import { MOVE_TIMING, SYMBOL_SIZE, BOARD_COLOURS, BOARD_SIZES } from '../game/constants';
 	import { attackers, isMine } from '../game/chess';
+	import { badgeCell, spotCells } from '../game/spotShape';
 	import { BOOSTER_MODE } from '../game/betModes';
 	import type { PlayPiece } from '../game/stateGame.svelte';
 	import { cameraDerived } from '../game/camera.svelte';
@@ -48,6 +52,20 @@
 	let moving = $state<number | undefined>(undefined);
 	let flying = $state<Flying[]>([]);
 	let nextFlying = 1;
+
+	// a king's multiplier on its way to a spot: along an arc from `from` to `to` as `progress` goes 0-1,
+	// highest (THROW.arc) halfway, swelling there
+	type Thrown = { id: number; text: string; from: { x: number; y: number }; to: { x: number; y: number }; progress: Tween<number> };
+	let thrown = $state<Thrown[]>([]);
+	const THROW = { flight: 620, gap: 140, arc: SYMBOL_SIZE * 1.4, swell: 0.6 };
+	const thrownAt = (item: Thrown) => {
+		const t = item.progress.current;
+		return {
+			x: item.from.x + (item.to.x - item.from.x) * t,
+			y: item.from.y + (item.to.y - item.from.y) * t - Math.sin(Math.PI * t) * THROW.arc,
+			scale: 1 + Math.sin(Math.PI * t) * THROW.swell,
+		};
+	};
 
 	const dumbMode = $derived(stateBet.activeBetModeKey === BOOSTER_MODE);
 	// no fading of the side not on the move: faded white pieces took the board's blue (the turn tag and
@@ -165,6 +183,38 @@
 				}
 			}
 		},
+		// the king's multipliers arc out to their spots one after another (a beat apart), each spot taking
+		// its new value as its multiplier lands (BoardSquares counts it up and its look climbs)
+		playBoardThrow: async ({ king, throws }) => {
+			const from = context.stateGameDerived.squareCentre(king);
+			const kingPiece = context.stateGameDerived.pieceAt(king);
+			const flights = throws.map(async (throwAt, index) => {
+				await waitForTimeout((index * (THROW.flight * 0.5 + THROW.gap)) / timeScale());
+				if (kingPiece) {
+					kingPiece.scale.set(1.2, { duration: 90 / timeScale() }).then(() => kingPiece.scale.set(1, { duration: 200 / timeScale(), easing: cubicOut }));
+				}
+				context.eventEmitter.broadcast({ type: 'soundOnce', name: 'sfx_multiplier_landing' });
+				// at the square its value shows on (a merged spot's top right one)
+				const target = context.stateGame.spots.find((spot) => spot.reel === throwAt.reel && spot.row === throwAt.row);
+				const item: Thrown = {
+					id: nextFlying++,
+					text: `x${throwAt.mult}`,
+					from,
+					to: context.stateGameDerived.squareCentre(target ? badgeCell(spotCells(target)) : throwAt),
+					progress: new Tween(0),
+				};
+				thrown = [...thrown, item];
+				await item.progress.set(1, { duration: THROW.flight / timeScale(), easing: cubicInOut });
+				thrown = thrown.filter((other) => other.id !== item.id);
+				// the spot takes its new value (BoardSquares counts it up)
+				context.stateGame.spots = context.stateGame.spots.map((spot) =>
+					spot.reel === throwAt.reel && spot.row === throwAt.row ? { ...spot, value: throwAt.value } : spot,
+				);
+				context.eventEmitter.broadcast({ type: 'soundOnce', name: throwAt.max ? 'sfx_multiplier_win' : 'sfx_multiplier_up' });
+				cameraDerived.nudge(SYMBOL_SIZE * (throwAt.max ? 0.06 : 0.025), 0.015);
+			});
+			await Promise.all(flights);
+		},
 		// the spots fly into the queen one after another, each adding to the multiplier as it arrives
 		playBoardCollect: async ({ queen, spots }) => {
 			const target = context.stateGameDerived.squareCentre(queen);
@@ -235,6 +285,25 @@
 					fontWeight: '800',
 					fill: item.colour,
 					stroke: { color: 0x1a1208, width: 5 },
+				}}
+			/>
+		{/each}
+		<!-- the king's multipliers in flight, in the gold of the x spots -->
+		{#each thrown as item (item.id)}
+			{@const at = thrownAt(item)}
+			<Text
+				text={item.text}
+				anchor={0.5}
+				x={at.x}
+				y={at.y}
+				scale={at.scale}
+				zIndex={20}
+				style={{
+					fontFamily: 'proxima-nova',
+					fontSize: SYMBOL_SIZE * 0.42,
+					fontWeight: '800',
+					fill: BOARD_COLOURS.spot,
+					stroke: { color: 0x1a1208, width: 6 },
 				}}
 			/>
 		{/each}

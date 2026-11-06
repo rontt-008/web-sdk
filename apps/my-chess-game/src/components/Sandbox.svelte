@@ -10,7 +10,7 @@
 	import { Container, Rectangle } from 'pixi-svelte';
 
 	import { getContext } from '../game/context';
-	import { INITIAL_BOARD, MOVE_TIMING, SYMBOL_SIZE, BOARD_SIZES, BOARD_DIMENSIONS, SANDBOX_LEVELS, SANDBOX_DEFAULT_ELO, SANDBOX_HINTS, BLUNDER } from '../game/constants';
+	import { INITIAL_BOARD, MOVE_TIMING, SYMBOL_SIZE, BOARD_SIZES, BOARD_DIMENSIONS, SANDBOX_LEVELS, SANDBOX_DEFAULT_ELO, SANDBOX_HINTS, BLUNDER, type SandboxLevel } from '../game/constants';
 	import type { SymbolName } from '../game/types';
 	import { waitForTimeout } from 'utils-shared/wait';
 	import { stateBetDerived } from 'state-shared';
@@ -62,18 +62,39 @@
 		lozzaPrepare();
 	});
 
-	// the other side's move at the strength picked (SANDBOX_LEVELS): Lozza's, or the game's own engine's
-	// without it; the weaker levels play any legal move now and then
+	// One of Lozza's best moves at the level's strength (SANDBOX_LEVELS): its best `lines` moves, the ones
+	// losing more than `maxLoss` against the best left out, one of the rest picked with the chance
+	// e^(-loss / spread); the best alone when only one is asked for (or the others can't be had)
+	const levelMove = async (fen: string, level: SandboxLevel) => {
+		if (level.lines <= 1) return lozzaBestMove(fen, level.depth);
+		const top = await lozzaTopMoves(fen, level.depth, level.lines);
+		if (!top.length) return lozzaBestMove(fen, level.depth);
+		const best = top[0].score;
+		const choices = top
+			.map((line) => ({ move: line.move, loss: Math.max(0, best - line.score) }))
+			.filter((line) => line.loss <= level.maxLoss);
+		const weights = choices.map((line) => Math.exp(-line.loss / level.spread));
+		let pick = Math.random() * weights.reduce((sum, weight) => sum + weight, 0);
+		for (let index = 0; index < choices.length; index++) {
+			pick -= weights[index];
+			if (pick <= 0) return choices[index].move;
+		}
+		return choices[0].move;
+	};
+
+	// the other side's move at the strength picked (SANDBOX_LEVELS): one of Lozza's best moves as a player
+	// of that strength would pick (levelMove), or the game's own engine's without Lozza; the very weakest
+	// plays any legal move now and then
 	const opponentMove = async (pieces: BoardPiece[]) => {
 		// in the opening book (openings.ts): one of its lines, at random
 		const book = bookMoves(pieces, 'them', rules);
 		if (book.length) return book[Math.floor(Math.random() * book.length)];
 		const level = SANDBOX_LEVELS.find((candidate) => candidate.elo === context.stateGame.sandboxElo) ?? SANDBOX_LEVELS.find((candidate) => candidate.elo === SANDBOX_DEFAULT_ELO)!;
-		if (level.blunder && Math.random() < level.blunder) {
+		if (level.random && Math.random() < level.random) {
 			const moves = legalMoves(pieces, 'them', rules);
 			if (moves.length) return moves[Math.floor(Math.random() * moves.length)];
 		}
-		const uci = await lozzaBestMove(toFen(pieces, 'them', rules), level.depth);
+		const uci = await levelMove(toFen(pieces, 'them', rules), level);
 		const squares = uci && fromUci(uci);
 		if (squares) {
 			const move = legalMoves(pieces, 'them', rules).find(

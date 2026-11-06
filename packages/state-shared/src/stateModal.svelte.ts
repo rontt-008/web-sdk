@@ -38,8 +38,16 @@ type ModalSettings = {
 	name: 'settings';
 };
 
+// a game's own menu (rendered in <Modals>' children), told apart by its id; open like the others, so
+// the spin hotkeys wait while it's up
+type ModalGame = {
+	name: 'game';
+	id: string;
+};
+
 type Modal =
 	| ModalEmpty
+	| ModalGame
 	| ModalError
 	| ModalBetMenu
 	| ModalBuyBonus

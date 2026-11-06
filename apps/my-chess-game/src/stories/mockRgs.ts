@@ -10,10 +10,12 @@ import baseBooks from './data/base_books';
 import boosterBooks from './data/booster_books';
 import bonusBooks from './data/bonus_books';
 import cheatBooks from './data/cheat_books';
+import superBooks from './data/super_books';
 import baseTopBooks from './data/base_books_top';
 import boosterTopBooks from './data/booster_books_top';
 import bonusTopBooks from './data/bonus_books_top';
 import cheatTopBooks from './data/cheat_books_top';
+import superTopBooks from './data/super_books_top';
 import { pickByWeight } from './pickByWeight';
 
 type BetModeName = keyof typeof config.betModes;
@@ -25,6 +27,7 @@ const BOOKS: Partial<Record<BetModeName, Book[]>> = {
 	booster: boosterBooks,
 	bonus: bonusBooks,
 	cheat: cheatBooks,
+	super: superBooks,
 };
 
 // each mode's 20 biggest wins, its max wins among them, all as likely
@@ -33,6 +36,7 @@ const TOP_BOOKS: Partial<Record<BetModeName, Book[]>> = {
 	booster: boosterTopBooks,
 	bonus: bonusTopBooks,
 	cheat: cheatTopBooks,
+	super: superTopBooks,
 };
 
 // which rounds it answers with: picked by the real odds, or only top wins

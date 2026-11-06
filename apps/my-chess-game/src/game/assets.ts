@@ -84,6 +84,8 @@ export default {
 	bR: piece(new URL('../../assets/pieces/bR.webp', import.meta.url).href),
 	bQ: piece(new URL('../../assets/pieces/bQ.webp', import.meta.url).href),
 	bK: piece(new URL('../../assets/pieces/bK.webp', import.meta.url).href),
+	// the SUPER BONUS's golden king, the other side's (art-source/gold-king.py)
+	gK: piece(new URL('../../assets/pieces/gK.webp', import.meta.url).href),
 	loader: {
 		type: 'spine',
 		src: {

@@ -30,6 +30,7 @@
 	import Sandbox from './Sandbox.svelte';
 	import BoardHints from './BoardHints.svelte';
 	import SandboxControls from './SandboxControls.svelte';
+	import ModalSandboxLevel from './ModalSandboxLevel.svelte';
 	import MoveWinAmounts from './MoveWinAmounts.svelte';
 	import MoveLog from './MoveLog.svelte';
 	import SidePanel from './SidePanel.svelte';
@@ -164,4 +165,6 @@
 	{#snippet gameRules()}
 		<GameInfo />
 	{/snippet}
+	<!-- the practice board's opponent strength, opened by SandboxControls' cog -->
+	<ModalSandboxLevel />
 </Modals>

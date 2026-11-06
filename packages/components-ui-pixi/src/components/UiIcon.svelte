@@ -11,7 +11,13 @@
 		// a straight arrow, shaft and head, pointing down
 		| 'arrowDownLong'
 		| 'musicOn'
-		| 'musicOff';
+		| 'musicOff'
+		// a solid cog with a round hole
+		| 'cog'
+		// a circling arrow, for starting again
+		| 'restart'
+		// a lightbulb
+		| 'hint';
 </script>
 
 <script lang="ts">
@@ -101,7 +107,46 @@
 		g.stroke({ width: LINE, color, cap: 'round' });
 	};
 
+	// eight teeth, each a little narrower at its tip, round a body, the outline softened by a thin
+	// round-joined stroke; the hole cut out so the button shows through
+	const COG = { teeth: 8, body: 27, tip: 40, rootHalf: 0.23, tipHalf: 0.15, hole: 11 };
+	const cog = (g: PIXI.Graphics, color: number) => {
+		const points: number[] = [];
+		const step = (Math.PI * 2) / COG.teeth;
+		const at = (angle: number, r: number) => points.push(Math.cos(angle) * r, Math.sin(angle) * r);
+		for (let i = 0; i < COG.teeth; i++) {
+			const a = i * step - Math.PI / 2;
+			at(a - COG.rootHalf, COG.body);
+			at(a - COG.tipHalf, COG.tip);
+			at(a + COG.tipHalf, COG.tip);
+			at(a + COG.rootHalf, COG.body);
+			at(a + step / 2, COG.body);
+		}
+		// the hole is cut from the last shape drawn, so from the fill, before the outline's stroke
+		g.poly(points);
+		g.fill({ color });
+		g.circle(0, 0, COG.hole);
+		g.cut();
+		g.poly(points);
+		g.stroke({ width: 5, color, join: 'round' });
+	};
+
+	// a lightbulb: the glass open at the bottom and narrowing into its neck, then the screw base in
+	// two bars, the lower one shorter; drawn 4 up so the whole sits in the middle
+	const bulb = (g: PIXI.Graphics, color: number) => {
+		g.moveTo(-10, 14);
+		g.arc(0, -16, 25, Math.PI * 0.76, Math.PI * 2.24);
+		g.lineTo(10, 14);
+		g.stroke({ width: LINE, color, cap: 'round', join: 'round' });
+		line(g, color, [-11, 28, 11, 28]);
+		line(g, color, [-5, 43, 5, 43]);
+	};
+
 	const DRAW: Record<UiIconName, (g: PIXI.Graphics, color: number, background?: number) => void> = {
+		cog: (g, c) => cog(g, c),
+		// round from the top right, clockwise, ending at the top with its head pointing on
+		restart: (g, c) => circularArrow(g, c, 30, -Math.PI * 0.22, Math.PI * 1.42),
+		hint: (g, c) => bulb(g, c),
 		increase: (g, c) => {
 			line(g, c, [-26, 0, 26, 0]);
 			line(g, c, [0, -26, 0, 26]);
