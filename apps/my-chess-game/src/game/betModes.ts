@@ -2,21 +2,23 @@ import { stateMeta, stateUrlDerived, type BetModeMeta } from 'state-shared';
 import { DEFAULT_BET_MODE_META } from 'state-shared/src/constants';
 
 import config from './config';
-import { FREE_SPINS, RETRIGGER_SPINS, CHEAT_SPOTS } from './constants';
+import { FREE_SPINS, RETRIGGER_SPINS, CHEAT_SPOTS, SUPER_SPOT_MAX } from './constants';
 
 // Bet mode keys sent to the RGS with each spin. They must match the bet modes in the math (config.ts
 // betModes; the mock RGS in the stories takes them lowercased).
 export const BOOSTER_MODE = 'BOOSTER';
 export const BONUS_MODE = 'BONUS';
 export const CHEAT_MODE = 'CHEAT';
+export const SUPER_MODE = 'SUPER';
 
-// each spin's cost while DUMB MODE or CHEATER MODE is on, and the bonus's, as multiples of the bet
+// each spin's cost while DUMB MODE or CHEATER MODE is on, and the bonuses', as multiples of the bet
 export const BOOSTER_COST = config.betModes.booster.cost;
 export const BONUS_COST = config.betModes.bonus.cost;
 export const CHEAT_COST = config.betModes.cheat.cost;
+export const SUPER_COST = config.betModes.super.cost;
 
 // Replace the SDK's sample bet modes with this game's: DUMB MODE and CHEATER MODE (switched on and off,
-// every spin at their price) and the CHECKMATE BONUS, bought. Taken from the SDK's defaults, which
+// every spin at their price) and the CHECKMATE BONUS and SUPER BONUS, bought. Taken from the SDK's defaults, which
 // stateMeta.betModeMeta no longer has once this has run; it runs every time the game mounts (switching
 // stories in Storybook mounts it again). The buy menu lists them in this order.
 export const setBetModeMeta = () => {
@@ -55,6 +57,20 @@ export const setBetModeMeta = () => {
 				dialog: `Go straight to the CHECKMATE BONUS for ${BONUS_COST}x ${yourBet}, as a checkmate gives it: ${FREE_SPINS} FREE SPINS on bigger boards, the multiplier never resetting, and every checkmate +${RETRIGGER_SPINS} spins.`,
 				description: `${FREE_SPINS} FREE SPINS: bigger boards, a multiplier that never resets.`,
 				tickerSpin: 'CHECKMATE BONUS ACTIVATED',
+			},
+		},
+		// bought like the CHECKMATE BONUS: its FREE SPINS with sticky spots that grow
+		[SUPER_MODE]: {
+			...samples.BONUS,
+			mode: SUPER_MODE,
+			costMultiplier: SUPER_COST,
+			text: {
+				...samples.BONUS.text,
+				title: 'SUPER BONUS',
+				button: buyButton,
+				dialog: `Go straight to the SUPER BONUS for ${SUPER_COST}x ${yourBet}: ${FREE_SPINS} FREE SPINS where every + spot stays on the board until you take a piece on it, and spots side by side merge into one bigger spot. Every spin your king throws 1 to 3 multipliers (x2 to x10) at the spots on the board. A spot that reaches +${SUPER_SPOT_MAX.toLocaleString('en')} becomes a MAX square: take a piece on it for the MAX WIN. Each spin's multiplier starts from x1, and every checkmate gives +${RETRIGGER_SPINS} spins.`,
+				description: `${FREE_SPINS} FREE SPINS: sticky spots, the king's multipliers, MAX squares.`,
+				tickerSpin: 'SUPER BONUS ACTIVATED',
 			},
 		},
 		// switched on like DUMB MODE (the SDK's SUPERANTE, an 'activate' mode too): every spin costs more,

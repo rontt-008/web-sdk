@@ -12,6 +12,7 @@ import { cameraDerived } from './camera.svelte';
 import { MOVE_TIMING } from './constants';
 import { describeMove } from './chess';
 import { chessSound } from './chessSounds';
+import { spotCovers } from './spotShape';
 import type { BookEvent, BookEventOfType, BookEventContext } from './typesBookEvent';
 
 const winLevelSoundsPlay = ({ winLevelData }: { winLevelData: WinLevelData }) => {
@@ -89,7 +90,7 @@ export const bookEventHandlerMap: BookEventHandlerMap<BookEvent, BookEventContex
 		const spotsEvent = following.find((event) => event.type === 'reveal' || event.type === 'multiplierSpots');
 		spotsShownEarly = spotsEvent?.type === 'multiplierSpots';
 		if (spotsEvent?.type === 'multiplierSpots') {
-			stateGame.spots = spotsEvent.spots;
+			stateGame.spots = spotsEvent.spots.map(({ was: _was, max: _max, ...spot }) => spot);
 			eventEmitter.broadcast({ type: 'soundOnce', name: 'sfx_multiplier_landing' });
 			await pause(MOVE_TIMING.pause);
 		}
@@ -107,8 +108,25 @@ export const bookEventHandlerMap: BookEventHandlerMap<BookEvent, BookEventContex
 			spotsShownEarly = false;
 			return;
 		}
-		stateGame.spots = bookEvent.spots;
+		stateGame.spots = bookEvent.spots.map(({ was: _was, max: _max, ...spot }) => spot);
 		eventEmitter.broadcast({ type: 'soundOnce', name: 'sfx_multiplier_landing' });
+		await pause(MOVE_TIMING.pause);
+	},
+	// SUPER BONUS: your king throws his multipliers at the sticky spots, one after another: each flies
+	// from him to its spot (PlayBoard), and the spot counts up to its new value there, its look climbing
+	// with it (BoardSquares); a MAX square made is called
+	kingThrow: async (bookEvent: BookEventOfType<'kingThrow'>) => {
+		stateGame.moveLog = [
+			...stateGame.moveLog,
+			`KING THROWS ${bookEvent.throws.map((thrown) => `x${thrown.mult} (+${thrown.was}→+${thrown.value})`).join(' ')}`,
+		];
+		eventEmitter.broadcast({ type: 'moveLabel', text: 'THE KING THROWS', kind: 'good', hold: MOVE_TIMING.short });
+		await eventEmitter.broadcastAsync({ type: 'playBoardPulse', positions: [bookEvent.king], times: 1 });
+		await eventEmitter.broadcastAsync({ type: 'playBoardThrow', king: bookEvent.king, throws: bookEvent.throws });
+		if (bookEvent.throws.some((thrown) => thrown.max)) {
+			eventEmitter.broadcast({ type: 'soundOnce', name: 'sfx_scatter_win' });
+			await eventEmitter.broadcastAsync({ type: 'moveLabel', text: 'MAX SQUARE!', kind: 'mate', hold: MOVE_TIMING.mate });
+		}
 		await pause(MOVE_TIMING.pause);
 	},
 	// CHEATER MODE: your queen draws every spot in, the multiplier adding up as they arrive
@@ -166,9 +184,8 @@ export const bookEventHandlerMap: BookEventHandlerMap<BookEvent, BookEventContex
 		stateGame.attackSquare = undefined;
 		stateGame.movesThisSpin += 1;
 		if (bookEvent.spot) {
-			stateGame.spots = stateGame.spots.filter(
-				(spot) => spot.reel !== bookEvent.to.reel || spot.row !== bookEvent.to.row,
-			);
+			// the spot the piece was taken on, whole (a merged one covers more squares than this one)
+			stateGame.spots = stateGame.spots.filter((spot) => !spotCovers(spot, bookEvent.to));
 			eventEmitter.broadcast({ type: 'soundOnce', name: 'sfx_multiplier_win' });
 		}
 		if (bookEvent.win > 0) {

@@ -14,12 +14,20 @@ import LayoutPortraitBar from './src/components/LayoutPortraitBar.svelte';
 // `layouts`
 import LayoutLandscapeBar from './src/components/LayoutLandscapeBar.svelte';
 
+// the bet bar's round button face (shadow, outline, highlight, icon), for a game's own buttons to
+// match; it takes its look from the theme given to setUiTheme in a component above it
+import UiThemeButtonFace from './src/components/UiThemeButtonFace.svelte';
+// the bet bar's icons on their own, drawn in code in any colour and size
+import UiIcon from './src/components/UiIcon.svelte';
+
 import messagesMap from './src/i18n/messagesMap';
 import { i18nDerived } from './src/i18n/i18nDerived';
 
 export * from './src/types';
 export type { UiTheme, UiLayoutType } from './src/theme';
 export { UI_THEME_CLEAN } from './src/themeClean';
+export { setUiTheme } from './src/theme';
+export type { UiIconName } from './src/components/UiIcon.svelte';
 export { PORTRAIT_UI_HEIGHT, PORTRAIT_PANEL_FOLD } from './src/constants';
 // where LayoutDesktopBar's bar is, for games to place things on or around it
 export { getDesktopBarBounds } from './src/desktopBar';
@@ -33,6 +41,8 @@ export {
 	i18nDerived,
 	UI,
 	UiGameName,
+	UiThemeButtonFace,
+	UiIcon,
 	LayoutDesktopBar,
 	LayoutDesktopCorners,
 	LayoutDesktopPanel,

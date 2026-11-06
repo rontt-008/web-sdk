@@ -112,6 +112,10 @@ export const SPIN_OPTIONS_FAST = {
 
 // the board's colours: the light and dark squares, the frame round it, the last move's squares and the
 // square of a king in check
+// SUPER BONUS: a + spot this big is a MAX square (taking a piece on it is the max win): the math's
+// game_config.super_spots["max"]
+export const SUPER_SPOT_MAX = 10000;
+
 export const BOARD_COLOURS = {
 	light: 0xe8d9b8,
 	dark: 0x8d6a46,
@@ -132,17 +136,33 @@ export const SPOT_ADD_VALUES = [1, 2, 3, 5, 10, 20, 50, 100];
 export const SPOT_MULT_VALUES = [2, 3, 4, 5, 6, 8, 10];
 export const CHEAT_SPOTS = { min: 2, max: 4 };
 
-// The strengths to play against on the start screen (SandboxControls), as Elo the player picks from:
-// how deep Lozza looks for each, and how often it plays any legal move instead (the weaker levels'
-// blunders). The default is the middle one.
-export const SANDBOX_LEVELS = [
-	{ elo: 800, name: 'NOVICE', depth: 1, blunder: 0.3 },
-	{ elo: 1000, name: 'CASUAL', depth: 2, blunder: 0.2 },
-	{ elo: 1200, name: 'CLUB', depth: 3, blunder: 0.1 },
-	{ elo: 1500, name: 'STRONG', depth: 4, blunder: 0.03 },
-	{ elo: 1800, name: 'EXPERT', depth: 6, blunder: 0 },
-	{ elo: 2100, name: 'MASTER', depth: 8, blunder: 0 },
-	{ elo: 2400, name: 'ENGINE', depth: 12, blunder: 0 },
+// The strengths to play against on the start screen (ModalSandboxLevel), as Elo the player picks from.
+// Lozza has no Elo setting, and a shallow search alone still plays far above these numbers (it follows
+// every capture to the end, so even depth 1 never hangs a piece), so each level picks among Lozza's best
+// moves like a player of that strength would: it looks `depth` deep at its best `lines` moves (MultiPV),
+// leaves out any that loses more than `maxLoss` (hundredths of a pawn) against the best, and picks one of
+// the rest, a move's chance falling off with what it loses: e^(-loss / `spread`). The weak ones often
+// play a move a pawn or three worse (missing that a piece hangs), the strong ones rarely anything but
+// the best. `random`: the chance of any legal move at all instead (only the very weakest). The numbers
+// are set by feel, not measured against rated play. The default is the middle one.
+export type SandboxLevel = {
+	elo: number;
+	name: string;
+	depth: number;
+	lines: number;
+	spread: number;
+	maxLoss: number;
+	random: number;
+};
+export const SANDBOX_LEVELS: SandboxLevel[] = [
+	{ elo: 400, name: 'BEGINNER', depth: 1, lines: 12, spread: 260, maxLoss: 1000, random: 0.12 },
+	{ elo: 800, name: 'NOVICE', depth: 1, lines: 10, spread: 170, maxLoss: 650, random: 0 },
+	{ elo: 1000, name: 'CASUAL', depth: 2, lines: 8, spread: 115, maxLoss: 450, random: 0 },
+	{ elo: 1200, name: 'CLUB', depth: 2, lines: 6, spread: 75, maxLoss: 280, random: 0 },
+	{ elo: 1500, name: 'STRONG', depth: 3, lines: 5, spread: 42, maxLoss: 160, random: 0 },
+	{ elo: 1800, name: 'EXPERT', depth: 4, lines: 4, spread: 22, maxLoss: 90, random: 0 },
+	{ elo: 2100, name: 'MASTER', depth: 6, lines: 3, spread: 9, maxLoss: 40, random: 0 },
+	{ elo: 2400, name: 'ENGINE', depth: 10, lines: 1, spread: 1, maxLoss: 0, random: 0 },
 ];
 export const SANDBOX_DEFAULT_ELO = 1500;
 // A blunder on the practice board (Sandbox): a move of the player's this much worse than the engine's

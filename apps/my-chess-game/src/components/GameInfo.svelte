@@ -10,10 +10,11 @@
 		MAX_FREE_SPINS,
 		MAX_MOVES,
 		CHEAT_SPOTS,
+		SUPER_SPOT_MAX,
 		SPOT_ADD_VALUES,
 		SPOT_MULT_VALUES,
 	} from '../game/constants';
-	import { BONUS_COST, BOOSTER_COST, CHEAT_COST } from '../game/betModes';
+	import { BONUS_COST, BOOSTER_COST, CHEAT_COST, SUPER_COST } from '../game/betModes';
 	import type { PieceKind } from '../game/types';
 
 	// The game rules (the menu button opens them), which hold the pays too: the board, the moves, what
@@ -175,6 +176,32 @@
 	</section>
 
 	<section>
+		<h3>SUPER BONUS</h3>
+		<div class="card text">
+			<p>
+				The SUPER BONUS can be bought from the bonus menu for {times(SUPER_COST)} the {words.bet}: one
+				base game spin is played, then {FREE_SPINS} FREE SPINS where the multiplier spots are sticky.
+				Every spot that lands is a +, and it stays on its square from spin to spin until you take one
+				of the other side's pieces on it; then it goes into the spin's multiplier and leaves the board.
+				New spots keep landing every spin, and a + landing on a + adds to it. Spots side by side (sharing
+				an edge) merge into one spot covering all their squares, their values added: take a piece on
+				any of its squares to collect it whole.
+			</p>
+			<p>
+				Every spin, once the spots are on the board, your king throws 1 to 3 multipliers, each x2 to
+				x10, at spots on the board, multiplying their values. A spot that reaches
+				+{SUPER_SPOT_MAX.toLocaleString('en')} becomes a MAX square: take a piece on it and the round
+				pays the max win. The spots change colour and glow brighter as they grow.
+			</p>
+			<p>
+				Unlike the CHECKMATE BONUS, every spin's multiplier starts from x1: it is the spots that carry
+				over. Spots still on the board when the bonus ends are lost. Every checkmate gives
+				{RETRIGGER_SPINS} more spins, up to {MAX_FREE_SPINS} spins in a bonus.
+			</p>
+		</div>
+	</section>
+
+	<section>
 		<h3>White or black</h3>
 		<div class="card text side">
 			<div class="kings">
@@ -195,7 +222,7 @@
 			<p>
 				The most a round can win is {times(maxWin)} the {words.bet}, in any mode: once a round
 				reaches it, it ends and pays that. The return to player is {percent(config.rtp)} in the
-				base game, in DUMB MODE, in CHEATER MODE and with the bonus bought.
+				base game, in DUMB MODE, in CHEATER MODE and with either bonus bought.
 			</p>
 			<p class="note">
 				Malfunction voids all pays and plays. The game is decided by the outcome drawn from the game
@@ -210,7 +237,7 @@
 			<p>
 				SPIN plays a round. The amount panel sets the {words.bet}; AUTO plays rounds on its own
 				until stopped; the TURBO button makes the moves faster. The bonus menu (the chess piece
-				button) holds the CHECKMATE BONUS. The menu button opens these rules, and the sound buttons
+				button) holds the CHECKMATE BONUS and the SUPER BONUS. The menu button opens these rules, and the sound buttons
 				mute the music and the effects.
 			</p>
 		</div>

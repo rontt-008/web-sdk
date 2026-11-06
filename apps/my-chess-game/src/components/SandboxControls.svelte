@@ -1,151 +1,86 @@
 <script lang="ts">
-	import type * as PIXI from 'pixi.js';
-	import { Container, Graphics, Text } from 'pixi-svelte';
+	import { Container, Text } from 'pixi-svelte';
 	import { Button } from 'components-pixi';
 	import { MainContainer } from 'components-layout';
+	import { UiIcon, type UiIconName } from 'components-ui-pixi';
+	import { stateModal } from 'state-shared';
 
 	import { getContext } from '../game/context';
-	import { SANDBOX_LEVELS } from '../game/constants';
-	import { setSandboxElo } from '../game/stateGame.svelte';
+	import { uiTheme } from '../game/uiTheme';
 	import CameraContainer from './CameraContainer.svelte';
+	import { SANDBOX_LEVEL_MODAL } from './ModalSandboxLevel.svelte';
 
-	// Three round buttons on the table, left of the board's near corner, while the start screen's game
-	// is on (Sandbox): RESTART (a circling arrow) puts the pieces back to the start and begins again;
-	// SETTINGS (a cog) opens a column of strengths to play against, in Elo (SANDBOX_LEVELS), the one in
-	// use lit, the choice kept between visits; HINT (a lightbulb) has the engine show the player's three
-	// best moves on the board (BoardHints) without playing them. Flat over the table (the board's mesh
+	// Three icons lying on the table, left of the board's near corner, while the start screen's game is
+	// on (Sandbox): just the bet bar's icons (UiIcon), no button round them, with a soft shadow on the
+	// table like the pieces' kings of the colour toggle (SideToggle), and seen through the camera so they
+	// keep their place as the board zooms. RESTART (a circling arrow) puts the pieces back to the start
+	// and begins again; SETTINGS (a cog) opens the opponent's strengths, in Elo, in a menu in the middle
+	// of the screen (ModalSandboxLevel); HINT (a lightbulb) has the engine show the player's three best
+	// moves on the board (BoardHints) without playing them. Hovered (or the menu open) an icon turns the
+	// board's gold. The strength in use is written under them. Flat over the table (the board's mesh
 	// takes no presses).
 	const context = getContext();
 	const quad = $derived(context.stateGameDerived.boardQuad());
 	const corner = $derived({ x: Math.min(quad[0], quad[6]), y: Math.max(quad[5], quad[7]) });
 	const shown = $derived(context.stateGame.sandbox && context.stateXstateDerived.isIdle());
 
-	const SIZE = 46;
+	// what takes the press, each a square; the icon in it; the space between them; how far left of the
+	// board's corner the column stands
+	const SIZE = 48;
+	const ICON = 36;
 	const GAP = 12;
-	const COLOURS = { face: 0x2e3b44, faceHot: 0x47606f, rim: 0xdde9f1, icon: 0xdde9f1, lit: 0xf2c14e, ink: 0x2a1d00 };
+	const LEFT = 44;
+	const COLOURS = { icon: uiTheme.label.value, hot: uiTheme.buyBonus?.icon ?? 0xf2c94c, shadow: 0x000000 };
+	const SHADOW = { dy: 2.5, alpha: 0.45 };
 
-	let settingsOpen = $state(false);
+	const settingsOpen = $derived(stateModal.modal?.name === 'game' && stateModal.modal.id === SANDBOX_LEVEL_MODAL);
+	// the menu goes with the practice game (a spin, the loading of a bet)
 	$effect(() => {
-		if (!shown) settingsOpen = false;
+		if (!shown && settingsOpen) stateModal.modal = null;
 	});
 
-	const face = (graphics: PIXI.Graphics, hovered: boolean) => {
-		graphics.clear();
-		graphics.circle(SIZE / 2, SIZE / 2, SIZE / 2).fill({ color: hovered ? COLOURS.faceHot : COLOURS.face });
-		graphics.circle(SIZE / 2, SIZE / 2, SIZE / 2 - 1.5).stroke({ color: COLOURS.rim, width: 2, alpha: 0.85 });
-	};
-	// a circling arrow: most of a circle, with a head at its open end
-	const resetIcon = (graphics: PIXI.Graphics) => {
-		graphics.clear();
-		const c = SIZE / 2;
-		const r = SIZE * 0.24;
-		graphics.arc(c, c, r, -Math.PI * 0.35, Math.PI * 1.35).stroke({ color: COLOURS.icon, width: 3.2, cap: 'round' });
-		const tipAngle = -Math.PI * 0.35;
-		const tx = c + r * Math.cos(tipAngle);
-		const ty = c + r * Math.sin(tipAngle);
-		graphics.poly([tx - 7, ty - 1, tx + 2, ty - 8, tx + 3, ty + 4]).fill({ color: COLOURS.icon });
-	};
-	// a cog: a ring with eight teeth
-	const cogIcon = (graphics: PIXI.Graphics) => {
-		graphics.clear();
-		const c = SIZE / 2;
-		const points: number[] = [];
-		for (let i = 0; i < 16; i++) {
-			const angle = (i / 16) * Math.PI * 2;
-			const r = i % 2 === 0 ? SIZE * 0.3 : SIZE * 0.22;
-			points.push(c + r * Math.cos(angle), c + r * Math.sin(angle));
-		}
-		graphics.poly(points).fill({ color: COLOURS.icon });
-		graphics.circle(c, c, SIZE * 0.1).fill({ color: COLOURS.face });
-	};
+	const hint = () => context.eventEmitter.broadcast({ type: 'sandboxHint' });
+	const restart = () => context.eventEmitter.broadcast({ type: 'sandboxRestart' });
+	const settings = () => (stateModal.modal = { name: 'game', id: SANDBOX_LEVEL_MODAL });
 
-	// a lightbulb: the glass, its base in two bars, a filament
-	const bulbIcon = (graphics: PIXI.Graphics) => {
-		graphics.clear();
-		const c = SIZE / 2;
-		graphics.circle(c, c - 4, SIZE * 0.19).fill({ color: COLOURS.icon });
-		graphics.roundRect(c - 5, c + 4, 10, 4, 1.5).fill({ color: COLOURS.icon });
-		graphics.roundRect(c - 4, c + 10, 8, 3, 1.5).fill({ color: COLOURS.icon });
-		graphics.moveTo(c - 3, c - 1).lineTo(c, c - 6).lineTo(c + 3, c - 1).stroke({ color: COLOURS.face, width: 1.5 });
-	};
-	const hint = () => {
-		settingsOpen = false;
-		context.eventEmitter.broadcast({ type: 'sandboxHint' });
-	};
+	// from the corner up: restart, settings, hint
+	const buttons: { icon: UiIconName; onpress: () => void; active?: () => boolean }[] = [
+		{ icon: 'restart', onpress: restart },
+		{ icon: 'cog', onpress: settings, active: () => settingsOpen },
+		{ icon: 'hint', onpress: hint },
+	];
 
-	const restart = () => {
-		settingsOpen = false;
-		context.eventEmitter.broadcast({ type: 'sandboxRestart' });
-	};
-	const choose = (elo: number) => {
-		setSandboxElo(elo);
-		settingsOpen = false;
-	};
-
-	const PILL = { width: 92, height: 30 };
+	const level = $derived(context.stateGame.sandboxElo);
 </script>
 
 {#if shown}
 	<MainContainer>
 		<CameraContainer>
-			<Container x={corner.x - SIZE - 14} y={corner.y - SIZE}>
-				<!-- restart, at the corner -->
-				<Button x={0} y={0} sizes={{ width: SIZE, height: SIZE }} onpress={restart}>
-					{#snippet children({ hovered })}
-						<Graphics draw={(graphics) => face(graphics, hovered)} />
-						<Graphics draw={resetIcon} />
-					{/snippet}
-				</Button>
-				<!-- settings, above it -->
-				<Button x={0} y={-(SIZE + GAP)} sizes={{ width: SIZE, height: SIZE }} onpress={() => (settingsOpen = !settingsOpen)}>
-					{#snippet children({ hovered })}
-						<Graphics draw={(graphics) => face(graphics, hovered || settingsOpen)} />
-						<Graphics draw={cogIcon} />
-					{/snippet}
-				</Button>
-				<!-- the hint, above that -->
-				<Button x={0} y={-2 * (SIZE + GAP)} sizes={{ width: SIZE, height: SIZE }} onpress={hint}>
-					{#snippet children({ hovered })}
-						<Graphics draw={(graphics) => face(graphics, hovered)} />
-						<Graphics draw={bulbIcon} />
-					{/snippet}
-				</Button>
-				<Text
-					text={`ELO ${context.stateGame.sandboxElo}`}
-					anchor={{ x: 0.5, y: 0 }}
-					x={SIZE / 2}
-					y={SIZE + 4}
-					style={{ fontFamily: 'proxima-nova', fontSize: 12, fontWeight: '800', fill: COLOURS.rim, letterSpacing: 1 }}
-				/>
-				<!-- the strengths, in a column above the settings button -->
-				{#if settingsOpen}
-					{#each SANDBOX_LEVELS as level, index (level.elo)}
-						{@const lit = level.elo === context.stateGame.sandboxElo}
-						<Button
-							x={SIZE / 2 - PILL.width / 2}
-							y={-2 * (SIZE + GAP) - (SANDBOX_LEVELS.length - index) * (PILL.height + 6)}
-							sizes={PILL}
-							onpress={() => choose(level.elo)}
-						>
-							{#snippet children({ hovered })}
-								<Graphics
-									draw={(graphics) => {
-										graphics.clear();
-										graphics.roundRect(0, 0, PILL.width, PILL.height, PILL.height / 2).fill({ color: lit ? COLOURS.lit : hovered ? COLOURS.faceHot : COLOURS.face });
-										graphics.roundRect(0, 0, PILL.width, PILL.height, PILL.height / 2).stroke({ color: COLOURS.rim, width: 1.5, alpha: 0.7 });
-									}}
-								/>
-								<Text
-									text={`${level.elo} ${level.name}`}
-									anchor={0.5}
-									x={PILL.width / 2}
-									y={PILL.height / 2}
-									style={{ fontFamily: 'proxima-nova', fontSize: 12, fontWeight: '800', fill: lit ? COLOURS.ink : COLOURS.rim, letterSpacing: 0.5 }}
-								/>
-							{/snippet}
-						</Button>
-					{/each}
-				{/if}
+			<Container x={corner.x - SIZE - LEFT} y={corner.y - SIZE}>
+				{#each buttons as button, index (button.icon)}
+					{@const active = button.active?.() ?? false}
+					<Button x={0} y={-index * (SIZE + GAP)} sizes={{ width: SIZE, height: SIZE }} onpress={button.onpress}>
+						{#snippet children({ center, hovered, pressed })}
+							<Container x={center.x} y={center.y} scale={pressed ? 0.9 : hovered ? 1.08 : 1}>
+								<Container alpha={SHADOW.alpha}>
+									<UiIcon icon={button.icon} y={SHADOW.dy} size={ICON} color={COLOURS.shadow} />
+								</Container>
+								<UiIcon icon={button.icon} size={ICON} color={active || hovered ? COLOURS.hot : COLOURS.icon} />
+							</Container>
+						{/snippet}
+					</Button>
+				{/each}
+				<!-- the strength in use, under the icons, with the same shadow -->
+				{#each [{ dy: SHADOW.dy, fill: COLOURS.shadow, alpha: SHADOW.alpha }, { dy: 0, fill: COLOURS.icon, alpha: 1 }] as layer}
+					<Text
+						text={`ELO ${level}`}
+						anchor={{ x: 0.5, y: 0 }}
+						x={SIZE / 2}
+						y={SIZE + 2 + layer.dy}
+						alpha={layer.alpha}
+						style={{ fontFamily: uiTheme.fontFamily, fontSize: 13, fontWeight: '800', fill: layer.fill, letterSpacing: 1 }}
+					/>
+				{/each}
 			</Container>
 		</CameraContainer>
 	</MainContainer>

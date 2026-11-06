@@ -16,13 +16,28 @@ type BookEventReveal = {
 // multiplier (a + adds its value, a x multiplies by it) before the capture pays, and uses it up
 export type SpotOp = '+' | 'x';
 export type SpotValue = { op: SpotOp; value: number };
-export type Spot = Position & SpotValue;
+// `cells`: in the SUPER BONUS, every square a spot merged from spots side by side covers (its own square,
+// the anchor, the first of them); a piece taken on any of them collects it whole (game/spotShape.ts)
+export type Spot = Position & SpotValue & { cells?: Position[] };
 
-// The landed board's multiplier spots (none: no event)
+// The landed board's multiplier spots (none: no event). In the SUPER BONUS the spots are sticky, all +:
+// the ones still there from the spins before carry `was`, their value before this spin's new ones landed
+// (less than `value` where a new + landed on one); a spot without it is new; `max` a MAX square
+// (SUPER_SPOT_MAX: taking a piece on it is the max win).
 type BookEventMultiplierSpots = {
 	index: number;
 	type: 'multiplierSpots';
-	spots: Spot[];
+	spots: (Spot & { was?: number; max?: boolean })[];
+};
+
+// SUPER BONUS: once the spots are on the board, your king (at `king`) throws multipliers at them, in
+// order: each spot's value from `was` times `mult` to `value` (up to a MAX square: `max`)
+export type KingThrow = Position & { mult: number; was: number; value: number; max?: boolean };
+type BookEventKingThrow = {
+	index: number;
+	type: 'kingThrow';
+	king: Position;
+	throws: KingThrow[];
 };
 
 // CHEATER MODE: your queen (at `queen`) collects every multiplier spot, in the order given (every + first,
@@ -125,7 +140,8 @@ type BookEventUpdateFreeSpin = {
 	total: number;
 };
 
-// the spin's multiplier after a capture (in the free spins it carries over the spins)
+// the spin's multiplier after a capture (in the free spins it carries over the spins; the SUPER BONUS's
+// spins start from x1 again, with one of these before the spin lands)
 type BookEventUpdateGlobalMult = {
 	index: number;
 	type: 'updateGlobalMult';
@@ -162,6 +178,7 @@ type BookEventCreateBonusSnapshot = {
 export type BookEvent =
 	| BookEventReveal
 	| BookEventMultiplierSpots
+	| BookEventKingThrow
 	| BookEventQueenCollect
 	| BookEventMove
 	| BookEventInCheck
