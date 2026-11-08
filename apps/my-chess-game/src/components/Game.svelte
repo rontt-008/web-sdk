@@ -46,6 +46,7 @@
 	import FreeSpinOutro from './FreeSpinOutro.svelte';
 	import Transition from './Transition.svelte';
 	import GameInfo from './GameInfo.svelte';
+	import BonusCard from './BonusCard.svelte';
 
 	const context = getContext();
 
@@ -141,7 +142,7 @@
 
 		<UI theme={uiTheme}>
 			{#snippet gameName()}
-				<UiGameName name="CHECKMATE" />
+				<UiGameName name="CHESS" />
 			{/snippet}
 			{#snippet logo()}{/snippet}
 		</UI>
@@ -158,6 +159,10 @@
 </App>
 
 <Modals theme={uiHtmlTheme} hideReplayCard={context.stateLayout.showLoadingScreen}>
+	<!-- the buy bonus menu's cards, the game's own: dark and flat, the bonus's piece on each -->
+	{#snippet bonusCard({ levels, levelRow })}
+		<BonusCard {levels} {levelRow} />
+	{/snippet}
 	{#snippet version()}
 		<GameVersion version="0.0.0" />
 	{/snippet}

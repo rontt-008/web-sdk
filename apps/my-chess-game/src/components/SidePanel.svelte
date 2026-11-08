@@ -1,3 +1,16 @@
+<script lang="ts" module>
+	// the sheet's padding, its head's height, its binding's band and how far its top sheet is in from
+	// the left (see the pad, below)
+	const PAD = 16;
+	const HEAD = 112;
+	const BIND = 24;
+	const STACK = 6;
+
+	// where the spin's multiplier (its "x5") is on the panel, from its top left corner, in the panel's
+	// own units: where a capture's multiplier is thrown from (MoveWinAmounts)
+	export const SIDE_PANEL_MULTIPLIER = { x: STACK + PAD + 34, y: BIND + HEAD / 2 + 12 };
+</script>
+
 <script lang="ts">
 	import type * as PIXI from 'pixi.js';
 	import { Tween } from 'svelte/motion';
@@ -40,8 +53,6 @@
 		white: 0xffffff,
 	};
 	const SANS = ['Segoe UI', 'Roboto', 'Helvetica Neue', 'Arial', 'sans-serif'];
-	const PAD = 16;
-	const HEAD = 112;
 	const TURN = 48;
 	const MOVES_HEAD = 34;
 	const ROW = 30;
@@ -96,9 +107,7 @@
 	// binding that comes up through it and over its top edge, in pairs of loops; and the sheets under
 	// it, each peeking out a little further to the left and lower (STACK in all both ways; the top sheet
 	// sits STACK in from the left), so it reads as a pad of paper. What's written on the sheet starts under the band (in a container at BIND), so
-	// the positions below are from there.
-	const BIND = 24;
-	const STACK = 6;
+	// the positions below are from there. (BIND and STACK are with PAD and HEAD, at the top.)
 	const SHEETS = [
 		{ dx: 6, dy: 6, colour: 0xb7c8d4 },
 		{ dx: 3, dy: 3, colour: 0xcbd9e3 },

@@ -7,10 +7,12 @@ import { ARM_SLAM_ASSETS } from './armSlamAssets';
 export default {
 	// the arm slamming its fist on the table as a bonus starts (FistSlam; art-source/arm-slam.py)
 	...ARM_SLAM_ASSETS,
-	// the wooden table the board lies on, the lamp and the book at its left (Background; art-source/table.py)
+	// the wooden table the board lies on, the lamp and the book at its left (Background; art-source/table.py):
+	// preloaded with the pieces standing on it, so the loading screen is on the table too
 	table: {
 		type: 'sprite',
 		src: new URL('../../assets/table.webp', import.meta.url).href,
+		preload: true,
 	},
 	// the fist that slams the board as a bonus starts (FistSlam; art-source/fist.py)
 	fist: {
@@ -21,14 +23,17 @@ export default {
 	tableKing: {
 		type: 'sprite',
 		src: new URL('../../assets/table-pieces/king.webp', import.meta.url).href,
+		preload: true,
 	},
 	tablePawn: {
 		type: 'sprite',
 		src: new URL('../../assets/table-pieces/pawn.webp', import.meta.url).href,
+		preload: true,
 	},
 	tableRook: {
 		type: 'sprite',
 		src: new URL('../../assets/table-pieces/rook.webp', import.meta.url).href,
+		preload: true,
 	},
 	// and their animations as a fist slams the table (TablePieces; art-source/table-piece-anims.py, from
 	// the user's Blender renders): loaded once the game is up, only where the pieces are shown
@@ -86,18 +91,12 @@ export default {
 	bK: piece(new URL('../../assets/pieces/bK.webp', import.meta.url).href),
 	// the SUPER BONUS's golden king, the other side's (art-source/gold-king.py)
 	gK: piece(new URL('../../assets/pieces/gK.webp', import.meta.url).href),
-	loader: {
-		type: 'spine',
-		src: {
-			atlas: new URL('../../assets/spines/loader/loader.atlas', import.meta.url).href,
-			skeleton: new URL('../../assets/spines/loader/loader.json', import.meta.url).href,
-			scale: 2,
-		},
-		preload: true,
-	},
-	pressToContinueText: {
-		type: 'sprites',
-		src: new URL('../../assets/sprites/pressToContinueText/MM_pressanywhere.json', import.meta.url).href,
+	// Germania One (OFL, Google Fonts, as the cluster game's), chunky carved letters, for the buy bonus
+	// menu's cards (SignText); registered as "Germania One" from its file's name, loaded before the game
+	// shows
+	germaniaOne: {
+		type: 'font',
+		src: new URL('../../assets/fonts/germaniaOne/germania-one.ttf', import.meta.url).href,
 		preload: true,
 	},
 	goldFont: {
@@ -144,11 +143,6 @@ export default {
 			scale: 2,
 		},
 	},
-	progressBar: {
-		type: 'sprites',
-		src: new URL('../../assets/sprites/progressBar/progressBar.json', import.meta.url).href,
-		preload: true,
-	},
 	freeSpins: {
 		type: 'sprites',
 		src: new URL('../../assets/sprites/freeSpins/freeSpins.json', import.meta.url).href,
@@ -163,7 +157,8 @@ export default {
 	},
 	sound: {
 		type: 'audio',
+		// loaded with the rest, not before the loading screen (it's only played once that's been clicked):
+		// the biggest file by far, it held the loading screen back
 		src: new URL('../../assets/audio/sounds.json', import.meta.url).href,
-		preload: true,
 	},
 } as const;

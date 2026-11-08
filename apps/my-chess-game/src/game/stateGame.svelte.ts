@@ -108,6 +108,9 @@ export const stateGame = $state({
 	movesThisSpin: 0,
 	spinWin: 0,
 	lastSpot: undefined as SpotValue | undefined,
+	// the free spins (the bonus): the one being played (1 for the first, 0 before it) and how many in
+	// all; shown where the spin's win is outside the bonus (SidePanel, SpinWin)
+	freeSpins: { current: 0, total: 0 },
 	// the spin's moves in words (MoveLog), and as played (SidePanel)
 	moveLog: [] as string[],
 	moves: [] as PlayedMove[],

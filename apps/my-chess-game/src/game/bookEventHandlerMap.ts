@@ -46,6 +46,7 @@ let spotsShownEarly = false;
 
 // the free spins' sign, counter and multiplier put up as a bonus starts (or is resumed)
 const showFreeSpinSetup = (totalFs: number) => {
+	stateGame.freeSpins = { current: 0, total: totalFs };
 	stateGame.gameType = 'freegame';
 	eventEmitter.broadcast({ type: 'freeSpinCounterShow' });
 	eventEmitter.broadcast({ type: 'freeSpinCounterUpdate', current: undefined, total: totalFs });
@@ -188,16 +189,22 @@ export const bookEventHandlerMap: BookEventHandlerMap<BookEvent, BookEventContex
 			stateGame.spots = stateGame.spots.filter((spot) => !spotCovers(spot, bookEvent.to));
 			eventEmitter.broadcast({ type: 'soundOnce', name: 'sfx_multiplier_win' });
 		}
+		// the capture's pay on its square: the piece's pay, the multiplier thrown at it and counted in
+		// (MoveWinAmounts); the spin's win takes it once counted
+		let winShown: Promise<unknown> = Promise.resolve();
 		if (bookEvent.win > 0) {
-			stateGame.spinWin += bookEvent.win;
 			stateGame.lastSpot = bookEvent.spot;
-			eventEmitter.broadcast({
-				type: 'moveWinShow',
-				position: bookEvent.to,
-				amount: bookEvent.win,
-				multiplier: bookEvent.multiplier,
-				spot: bookEvent.spot,
-			});
+			winShown = eventEmitter
+				.broadcastAsync({
+					type: 'moveWinShow',
+					position: bookEvent.to,
+					amount: bookEvent.win,
+					multiplier: bookEvent.multiplier,
+					spot: bookEvent.spot,
+				})
+				.then(() => {
+					stateGame.spinWin += bookEvent.win;
+				});
 		}
 		if (bookEvent.promotion) {
 			eventEmitter.broadcast({ type: 'moveLabel', text: 'QUEEN!', kind: 'good', hold: MOVE_TIMING.short });
@@ -210,7 +217,11 @@ export const bookEventHandlerMap: BookEventHandlerMap<BookEvent, BookEventContex
 				hold: MOVE_TIMING.label,
 			});
 		}
-		await pause(bookEvent.captured ? MOVE_TIMING.pause + MOVE_TIMING.captureHold : MOVE_TIMING.pause);
+		// the pause after the move, and the pay's count if that's longer
+		await Promise.all([
+			pause(bookEvent.captured ? MOVE_TIMING.pause + MOVE_TIMING.captureHold : MOVE_TIMING.pause),
+			winShown,
+		]);
 	},
 	// landed with your king in check: it is lit, and the check called, before your first move
 	inCheck: async () => {
@@ -301,6 +312,7 @@ export const bookEventHandlerMap: BookEventHandlerMap<BookEvent, BookEventContex
 	freeSpinRetrigger: async (bookEvent: BookEventOfType<'freeSpinRetrigger'>) => {
 		eventEmitter.broadcast({ type: 'soundOnce', name: 'sfx_fs_respins' });
 		eventEmitter.broadcast({ type: 'freeSpinCounterUpdate', total: bookEvent.totalFs });
+		stateGame.freeSpins = { ...stateGame.freeSpins, total: bookEvent.totalFs };
 		await eventEmitter.broadcastAsync({
 			type: 'moveLabel',
 			text: `+${bookEvent.added} FREE SPINS`,
@@ -309,6 +321,7 @@ export const bookEventHandlerMap: BookEventHandlerMap<BookEvent, BookEventContex
 		});
 	},
 	updateFreeSpin: async (bookEvent: BookEventOfType<'updateFreeSpin'>) => {
+		stateGame.freeSpins = { current: bookEvent.amount, total: bookEvent.total };
 		eventEmitter.broadcast({ type: 'freeSpinCounterShow' });
 		eventEmitter.broadcast({
 			type: 'freeSpinCounterUpdate',
@@ -372,6 +385,7 @@ export const bookEventHandlerMap: BookEventHandlerMap<BookEvent, BookEventContex
 		if (lastFreeSpinTriggerEvent) await playBookEvent(lastFreeSpinTriggerEvent, { bookEvents });
 		if (lastFreeSpinRetriggerEvent) {
 			eventEmitter.broadcast({ type: 'freeSpinCounterUpdate', total: lastFreeSpinRetriggerEvent.totalFs });
+			stateGame.freeSpins = { ...stateGame.freeSpins, total: lastFreeSpinRetriggerEvent.totalFs };
 		}
 		if (lastUpdateFreeSpinEvent) playBookEvent(lastUpdateFreeSpinEvent, { bookEvents });
 		if (lastSetTotalWinEvent) playBookEvent(lastSetTotalWinEvent, { bookEvents });
