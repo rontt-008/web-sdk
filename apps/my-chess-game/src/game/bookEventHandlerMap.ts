@@ -9,7 +9,7 @@ import { playBookEvent } from './utils';
 import { winLevelMap, type WinLevel, type WinLevelData } from './winLevelMap';
 import { stateGame, stateGameDerived } from './stateGame.svelte';
 import { cameraDerived } from './camera.svelte';
-import { MOVE_TIMING } from './constants';
+import { MOVE_TIMING, MAX_MOVES } from './constants';
 import { describeMove } from './chess';
 import { chessSound } from './chessSounds';
 import { spotCovers } from './spotShape';
@@ -121,12 +121,12 @@ export const bookEventHandlerMap: BookEventHandlerMap<BookEvent, BookEventContex
 			...stateGame.moveLog,
 			`KING THROWS ${bookEvent.throws.map((thrown) => `x${thrown.mult} (+${thrown.was}→+${thrown.value})`).join(' ')}`,
 		];
-		eventEmitter.broadcast({ type: 'moveLabel', text: 'THE KING THROWS', kind: 'good', hold: MOVE_TIMING.short });
+		eventEmitter.broadcast({ type: 'moveLabel', text: 'THE KING THROWS', mark: 'K', kind: 'good', hold: MOVE_TIMING.short });
 		await eventEmitter.broadcastAsync({ type: 'playBoardPulse', positions: [bookEvent.king], times: 1 });
 		await eventEmitter.broadcastAsync({ type: 'playBoardThrow', king: bookEvent.king, throws: bookEvent.throws });
 		if (bookEvent.throws.some((thrown) => thrown.max)) {
 			eventEmitter.broadcast({ type: 'soundOnce', name: 'sfx_scatter_win' });
-			await eventEmitter.broadcastAsync({ type: 'moveLabel', text: 'MAX SQUARE!', kind: 'mate', hold: MOVE_TIMING.mate });
+			await eventEmitter.broadcastAsync({ type: 'moveLabel', text: 'MAX SQUARE!', mark: '!!', kind: 'mate', hold: MOVE_TIMING.mate });
 		}
 		await pause(MOVE_TIMING.pause);
 	},
@@ -137,7 +137,7 @@ export const bookEventHandlerMap: BookEventHandlerMap<BookEvent, BookEventContex
 			`QUEEN COLLECTS ${bookEvent.spots.map((spot) => `${spot.op}${spot.value}`).join(' ')} = x${bookEvent.multiplier}`,
 		];
 		// a hold on the queen first, so the collecting is seen as hers
-		eventEmitter.broadcast({ type: 'moveLabel', text: 'THE QUEEN COLLECTS', kind: 'good', hold: MOVE_TIMING.queenHold });
+		eventEmitter.broadcast({ type: 'moveLabel', text: 'THE QUEEN COLLECTS', mark: 'Q', kind: 'good', hold: MOVE_TIMING.queenHold });
 		await eventEmitter.broadcastAsync({ type: 'playBoardPulse', positions: [bookEvent.queen], times: 2 });
 		await eventEmitter.broadcastAsync({
 			type: 'playBoardCollect',
@@ -207,12 +207,13 @@ export const bookEventHandlerMap: BookEventHandlerMap<BookEvent, BookEventContex
 				});
 		}
 		if (bookEvent.promotion) {
-			eventEmitter.broadcast({ type: 'moveLabel', text: 'QUEEN!', kind: 'good', hold: MOVE_TIMING.short });
+			eventEmitter.broadcast({ type: 'moveLabel', text: 'QUEEN!', mark: '=Q', kind: 'good', hold: MOVE_TIMING.short });
 		}
 		if (bookEvent.check && !bookEvent.mate) {
 			eventEmitter.broadcast({
 				type: 'moveLabel',
 				text: 'CHECK',
+				mark: '+',
 				kind: bookEvent.side === 'you' ? 'good' : 'bad',
 				hold: MOVE_TIMING.label,
 			});
@@ -231,6 +232,7 @@ export const bookEventHandlerMap: BookEventHandlerMap<BookEvent, BookEventContex
 		await eventEmitter.broadcastAsync({
 			type: 'moveLabel',
 			text: 'CHECK',
+			mark: '+',
 			kind: 'bad',
 			hold: MOVE_TIMING.label,
 		});
@@ -257,6 +259,7 @@ export const bookEventHandlerMap: BookEventHandlerMap<BookEvent, BookEventContex
 			await eventEmitter.broadcastAsync({
 				type: 'moveLabel',
 				text: 'CHECKMATE!',
+				mark: '#',
 				kind: 'mate',
 				hold: MOVE_TIMING.mate,
 			});
@@ -264,6 +267,7 @@ export const bookEventHandlerMap: BookEventHandlerMap<BookEvent, BookEventContex
 			await eventEmitter.broadcastAsync({
 				type: 'moveLabel',
 				text: 'CHECKMATED',
+				mark: '#',
 				kind: 'bad',
 				hold: MOVE_TIMING.label,
 			});
@@ -281,8 +285,13 @@ export const bookEventHandlerMap: BookEventHandlerMap<BookEvent, BookEventContex
 			limit: 'MOVE LIMIT',
 		} as const;
 		const text = texts[bookEvent.reason as keyof typeof texts];
-		if (!text) return;
-		await eventEmitter.broadcastAsync({ type: 'moveLabel', text, kind: 'info', hold: MOVE_TIMING.short });
+		// the sign a chess book gives it: – a quiet move (no capture), ½ a draw; the move limit, its number
+		const marks = { quiet: '–', stalemate: '½', repetition: '½', limit: String(MAX_MOVES) } as const;
+		const mark = marks[bookEvent.reason as keyof typeof marks];
+		if (text) await eventEmitter.broadcastAsync({ type: 'moveLabel', text, mark, kind: 'info', hold: MOVE_TIMING.short });
+		// on tall screens the engine's reason goes up on a sticky note (StickyNote), and the game waits
+		// until it's pressed away
+		await eventEmitter.broadcastAsync({ type: 'stickyNoteShow' });
 	},
 	setTotalWin: async (bookEvent: BookEventOfType<'setTotalWin'>) => {
 		stateBet.winBookEventAmount = bookEvent.amount;
@@ -315,7 +324,8 @@ export const bookEventHandlerMap: BookEventHandlerMap<BookEvent, BookEventContex
 		stateGame.freeSpins = { ...stateGame.freeSpins, total: bookEvent.totalFs };
 		await eventEmitter.broadcastAsync({
 			type: 'moveLabel',
-			text: `+${bookEvent.added} FREE SPINS`,
+			text: 'FREE SPINS',
+			mark: `+${bookEvent.added}`,
 			kind: 'good',
 			hold: MOVE_TIMING.mate,
 		});

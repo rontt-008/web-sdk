@@ -2,13 +2,11 @@
 	// A start screen card's height to its width
 	export const INFO_CARD = { aspect: 1.385 };
 
-	// the cards' colours: cream paper, ink, the red of the accents, and the small print
-	export const CARD_COLOURS = {
-		paper: 0xf7f2e6,
-		ink: 0x1d1915,
-		red: 0x8b2e22,
-		caption: 0x4a443c,
-	};
+	import { PRINT_COLOURS } from '../game/print';
+
+	// the cards' colours: cream paper, ink, the red of the accents, and the small print (print.ts, where
+	// the wins printed the same way take them from)
+	export const CARD_COLOURS = PRINT_COLOURS;
 </script>
 
 <script lang="ts">

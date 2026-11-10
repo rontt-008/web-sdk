@@ -8,25 +8,27 @@
 </script>
 
 <script lang="ts">
-	import { Sprite, SpineProvider, SpineTrack, SpineSlot } from 'pixi-svelte';
-	import { FadeContainer, WinCountUpProvider, ResponsiveBitmapText } from 'components-pixi';
+	import { FadeContainer, WinCountUpProvider } from 'components-pixi';
 	import { bookEventAmountToCurrencyString } from 'utils-shared/amount';
 	import { waitForResolve } from 'utils-shared/wait';
-	import { CanvasSizeRectangle } from 'components-layout';
+	import { CanvasSizeRectangle, MainContainer } from 'components-layout';
 	import { OnMount } from 'components-shared';
-	import { stateUrlDerived } from 'state-shared';
+	import { stateBet } from 'state-shared';
 
 	import { getContext } from '../game/context';
-	import FreeSpinAnimation from './FreeSpinAnimation.svelte';
+	import { SUPER_MODE } from '../game/betModes';
+	import { winRankAt } from '../game/print';
+	import PieceRain from './PieceRain.svelte';
+	import WinCard, { winCardWidth } from './WinCard.svelte';
 	import PressToContinue from './PressToContinue.svelte';
-	import WinCoins from './WinCoins.svelte';
 
-	type AnimationName = 'intro' | 'idle';
-
+	// The bonus's end: what its free spins won in all, counted up on a card (WinCard) over the dimmed
+	// board. The bonus's own piece on it (the rook; the SUPER BONUS's golden king) and how many free
+	// spins were played; when the total is a big win, its rank's piece and name instead, climbing as it
+	// counts (see Win), with the pieces raining behind. A press finishes the count, another goes on.
 	const context = getContext();
 
 	let show = $state(true);
-	let animationName = $state<AnimationName>('intro');
 	let amount = $state(0);
 	let winLevelData = $state<WinLevelData>();
 	let oncomplete = $state(() => {});
@@ -41,69 +43,40 @@
 			await waitForResolve((resolve) => (oncomplete = resolve));
 		},
 	});
+
+	const board = $derived(context.stateGameDerived.boardLayout());
+	const isSuper = $derived(stateBet.activeBetModeKey === SUPER_MODE);
+	// more pieces fall the higher the win's rank
+	const RAIN = { least: 14, more: 6 };
 </script>
 
 <FadeContainer {show}>
 	{#if winLevelData}
 		{@const duration = winLevelData.presentDuration}
-		{@const isBigWin = winLevelData.type === 'big'}
 		<WinCountUpProvider {amount} {duration} oncomplete={() => onCountUpComplete()}>
 			{#snippet children({ countUpAmount, startCountUp, finishCountUp, countUpCompleted })}
+				{@const rank = winRankAt(winLevelData?.alias, amount ? countUpAmount / amount : 1)}
 				<OnMount onmount={() => startCountUp()} />
 
-				<CanvasSizeRectangle backgroundColor={0x000000} backgroundAlpha={0.5} />
-
-				<FreeSpinAnimation>
-					{#snippet children({ sizes })}
-						{#if isBigWin}
-							<Sprite
-								anchor={{ x: 0.5, y: 1.2 }}
-								width={500 * 2.2}
-								height={156 * 2.2}
-								key="freespins_{stateUrlDerived.lang()}.png"
-							/>
-						{:else}
-							<Sprite
-								anchor={{ x: 0.5, y: 1.2 }}
-								width={500 * 4.5}
-								height={80 * 4.5}
-								key="winsmall_{stateUrlDerived.lang()}.png"
-							/>
-						{/if}
-
-						<SpineProvider key="fsOutroNumber" width={sizes.width * 0.4}>
-							<SpineTrack
-								trackIndex={0}
-								{animationName}
-								loop={animationName === 'idle'}
-								listener={{
-									complete: () => (animationName = 'idle'),
-								}}
-							/>
-							<SpineSlot slotName="slot_number">
-								<ResponsiveBitmapText
-									anchor={{ x: 0.5, y: 0.5 }}
-									style={{
-										fontFamily: 'gold',
-										fontSize: sizes.width * 0.15,
-									}}
-									text={bookEventAmountToCurrencyString(countUpAmount)}
-									maxWidth={sizes.width}
-								/>
-							</SpineSlot>
-						</SpineProvider>
-
-						<Sprite
-							y={0}
-							anchor={{ x: 0.5, y: isBigWin ? -3.2 : -2 }}
-							width={177 * (isBigWin ? 2.2 : 3)}
-							height={42 * (isBigWin ? 2.2 : 3)}
-							key="totalwin.png"
-						/>
-					{/snippet}
-				</FreeSpinAnimation>
-
-				<WinCoins emit={!countUpCompleted} levelAlias={winLevelData?.alias} />
+				<CanvasSizeRectangle backgroundColor={0x000000} backgroundAlpha={0.6} />
+				{#if rank}
+					<MainContainer>
+						<PieceRain emit={!countUpCompleted} count={RAIN.least + rank.top * RAIN.more} />
+					</MainContainer>
+				{/if}
+				<MainContainer>
+					<WinCard
+						x={board.x}
+						y={board.y}
+						width={winCardWidth()}
+						piece={rank?.piece ?? (isSuper ? 'gK' : 'bR')}
+						heading={rank ? 'TOTAL WIN' : isSuper ? 'SUPER BONUS' : 'CHECKMATE BONUS'}
+						title={rank?.text ?? 'TOTAL WIN'}
+						figure={bookEventAmountToCurrencyString(Math.round(countUpAmount))}
+						rank={rank?.index}
+						caption={`${context.stateGame.freeSpins.total} free spins played`}
+					/>
+				</MainContainer>
 
 				<PressToContinue onpress={() => (countUpCompleted ? oncomplete() : finishCountUp())} />
 			{/snippet}

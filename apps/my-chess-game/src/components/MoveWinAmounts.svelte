@@ -17,7 +17,7 @@
 <script lang="ts">
 	import { Tween } from 'svelte/motion';
 	import { backOut, cubicIn, cubicOut, sineInOut } from 'svelte/easing';
-	import { BitmapText, Container, Text } from 'pixi-svelte';
+	import { Container, Text } from 'pixi-svelte';
 	import { MainContainer } from 'components-layout';
 	import { stateBetDerived } from 'state-shared';
 	import { bookEventAmountToCurrencyString } from 'utils-shared/amount';
@@ -26,14 +26,18 @@
 	import { SYMBOL_SIZE, BOARD_COLOURS } from '../game/constants';
 	import { sidePanelLayout } from '../game/sideLayout';
 	import { camera } from '../game/camera.svelte';
+	import { PRINT_COLOURS, printResolution, printStyle } from '../game/print';
 	import CameraContainer from './CameraContainer.svelte';
-	import { SIDE_PANEL_MULTIPLIER } from './SidePanel.svelte';
+	import PrintSlip from './PrintSlip.svelte';
+	import { NOTEBOOK_MULTIPLIER } from './NotebookPad.svelte';
+	import { STRIP_MULTIPLIER } from './NotebookStrip.svelte';
 
-	// A capture's pay, on its square, in three beats:
+	// A capture's pay, on its square, printed on a slip of the start screen cards' paper (PrintSlip), in
+	// three beats:
 	// 1. what the piece pays before the multiplier pops up there (with the spot over it, a + in blue or a
 	//    x in gold, when it was taken on one)
 	// 2. the spin's multiplier is thrown at it, "x5" flying in an arc from where the multiplier is shown
-	//    (the side panel's head on desktop, the badge elsewhere)
+	//    (the notebook's head: the side panel's, or the strip's under the board)
 	// 3. as it hits, the pay jumps and counts up to what the capture pays
 	// then it floats up and fades. At x1 there's nothing to throw: the pay just pops up. The move waits
 	// for the count (the spin's win takes the pay as it ends), not for the fade.
@@ -64,29 +68,31 @@
 
 	let amounts = $state<Amount[]>([]);
 	let thrown = $state<Thrown[]>([]);
+	// drawn at the size it's seen at, the camera's zoom too, so it's crisp
+	const resolution = $derived(printResolution(context.stateLayoutDerived.mainLayout().scale * 1.3));
 	let nextId = 1;
 
 	const ms = (duration: number) => duration / stateBetDerived.timeScale();
 	const wait = (duration: number) => new Promise((resolve) => setTimeout(resolve, ms(duration)));
 
 	// where the multiplier is shown, in the board's camera space (what's in CameraContainer): the side
-	// panel lies on the table under the camera, so its point is the table's; the badge is over the
+	// panel lies on the table under the camera, so its point is the table's; the strip is over the
 	// camera, so its point is taken back through the camera's zoom as it is now; with neither, from
 	// above the square
 	const multiplierFrom = (to: { x: number; y: number }) => {
 		const layout = sidePanelLayout();
 		if (layout.panel) {
 			return context.stateGameDerived.tablePoint(
-				layout.panel.x + SIDE_PANEL_MULTIPLIER.x,
-				layout.panel.y + SIDE_PANEL_MULTIPLIER.y,
+				layout.panel.x + NOTEBOOK_MULTIPLIER.x * layout.panel.zoom,
+				layout.panel.y + NOTEBOOK_MULTIPLIER.y * layout.panel.zoom,
 			);
 		}
-		if (layout.multiplier) {
+		if (layout.strip) {
 			const back = (point: number, focus: number, shake: number) =>
 				(point - focus - shake) / camera.scale.current + focus;
 			return {
-				x: back(layout.multiplier.x, camera.focusX.current, camera.shakeX.current),
-				y: back(layout.multiplier.y, camera.focusY.current, camera.shakeY.current),
+				x: back(layout.strip.x + STRIP_MULTIPLIER.x, camera.focusX.current, camera.shakeX.current),
+				y: back(layout.strip.y + STRIP_MULTIPLIER.y, camera.focusY.current, camera.shakeY.current),
 			};
 		}
 		return { x: to.x, y: to.y - SYMBOL_SIZE * 2 };
@@ -157,22 +163,21 @@
 					<Text
 						text={`${item.spot.op}${item.spot.value} MULTI`}
 						anchor={{ x: 0.5, y: 1 }}
-						y={-SYMBOL_SIZE * 0.26}
+						y={-SYMBOL_SIZE * 0.44}
+						{resolution}
 						style={{
 							fontFamily: 'proxima-nova',
-							fontSize: SYMBOL_SIZE * 0.26,
+							fontSize: SYMBOL_SIZE * 0.24,
 							fontWeight: '800',
 							fill: item.spot.op === '+' ? BOARD_COLOURS.spotAdd : BOARD_COLOURS.spot,
-							stroke: { color: 0x1a1208, width: 4 },
+							stroke: { color: PRINT_COLOURS.ink, width: 4, join: 'round' },
 						}}
 					/>
 				{/if}
-				<BitmapText
-					text={bookEventAmountToCurrencyString(item.value.current)}
-					anchor={0.5}
-					scale={item.scale.current}
-					style={{ fontFamily: 'gold', fontSize: SYMBOL_SIZE * 0.42, fontWeight: 'bold' }}
-				/>
+				<!-- the pay, printed on a slip (PrintSlip) -->
+				<Container scale={item.scale.current}>
+					<PrintSlip text={bookEventAmountToCurrencyString(item.value.current)} size={SYMBOL_SIZE * 0.32} />
+				</Container>
 			</Container>
 		{/each}
 
@@ -185,12 +190,10 @@
 				x={at.x}
 				y={at.y}
 				scale={at.scale}
+				{resolution}
 				style={{
-					fontFamily: 'proxima-nova',
-					fontSize: SYMBOL_SIZE * 0.5,
-					fontWeight: '800',
-					fill: BOARD_COLOURS.spot,
-					stroke: { color: 0x1a1208, width: 5 },
+					...printStyle(SYMBOL_SIZE * 0.52, PRINT_COLOURS.red, { bold: true }),
+					stroke: { color: PRINT_COLOURS.paper, width: 6, join: 'round' },
 				}}
 			/>
 		{/each}

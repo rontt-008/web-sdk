@@ -72,11 +72,6 @@ export default {
 		type: 'sprite',
 		src: new URL('../../assets/panel-dark.webp', import.meta.url).href,
 	},
-	// the multiplier badge's frame (ComboMultiplier): the user's astrology circle, see art-source
-	multiplierFrame: {
-		type: 'sprite',
-		src: new URL('../../assets/multiplier-frame.webp', import.meta.url).href,
-	},
 	wP: piece(new URL('../../assets/pieces/wP.webp', import.meta.url).href),
 	wN: piece(new URL('../../assets/pieces/wN.webp', import.meta.url).href),
 	wB: piece(new URL('../../assets/pieces/wB.webp', import.meta.url).href),
@@ -98,62 +93,6 @@ export default {
 		type: 'font',
 		src: new URL('../../assets/fonts/germaniaOne/germania-one.ttf', import.meta.url).href,
 		preload: true,
-	},
-	goldFont: {
-		type: 'font',
-		src: new URL('../../assets/fonts/goldFont/mm_gold.xml', import.meta.url).href,
-	},
-	bigwin: {
-		type: 'spine',
-		src: {
-			atlas: new URL('../../assets/spines/bigwin/big_wins.atlas', import.meta.url).href,
-			skeleton: new URL('../../assets/spines/bigwin/mm_bigwin.json', import.meta.url).href,
-			scale: 2,
-		},
-	},
-	fsIntro: {
-		type: 'spine',
-		src: {
-			atlas: new URL('../../assets/spines/fsIntro/fs_screen.atlas', import.meta.url).href,
-			skeleton: new URL('../../assets/spines/fsIntro/fs_screen.json', import.meta.url).href,
-			scale: 2,
-		},
-	},
-	fsIntroNumber: {
-		type: 'spine',
-		src: {
-			atlas: new URL('../../assets/spines/fsIntro/fs_screen.atlas', import.meta.url).href,
-			skeleton: new URL('../../assets/spines/fsIntro/fs_screen_number.json', import.meta.url).href,
-			scale: 2,
-		},
-	},
-	fsOutroNumber: {
-		type: 'spine',
-		src: {
-			atlas: new URL('../../assets/spines/fsIntro/fs_screen.atlas', import.meta.url).href,
-			skeleton: new URL('../../assets/spines/fsIntro/fs_total_number.json', import.meta.url).href,
-			scale: 2,
-		},
-	},
-	transition: {
-		type: 'spine',
-		src: {
-			atlas: new URL('../../assets/spines/transition/transition.atlas', import.meta.url).href,
-			skeleton: new URL('../../assets/spines/transition/transition.json', import.meta.url).href,
-			scale: 2,
-		},
-	},
-	freeSpins: {
-		type: 'sprites',
-		src: new URL('../../assets/sprites/freeSpins/freeSpins.json', import.meta.url).href,
-	},
-	winSmall: {
-		type: 'sprites',
-		src: new URL('../../assets/sprites/winSmall/MM_Localisation_winsmall.json', import.meta.url).href,
-	},
-	coins: {
-		type: 'spriteSheet',
-		src: new URL('../../assets/sprites/coin/SD2_Coin.json', import.meta.url).href,
 	},
 	sound: {
 		type: 'audio',

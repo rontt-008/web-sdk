@@ -3,6 +3,8 @@ import { Tween } from 'svelte/motion';
 
 import { createEnhanceBoard, createReelForCascading } from 'utils-slots';
 import { createGetWinLevelDataByWinLevelAlias } from 'utils-shared/winLevel';
+import { cubicInOut } from 'svelte/easing';
+import { PORTRAIT_UI_HEIGHT, PORTRAIT_PANEL_FOLD } from 'components-ui-pixi';
 
 import type { GameType, PieceColour, Position, RawSymbol, Side, SymbolName } from './types';
 import type { Analysis, Spot, SpotValue } from './typesBookEvent';
@@ -101,17 +103,17 @@ export const stateGame = $state({
 	attackSquare: undefined as Position | undefined,
 	checkSquare: undefined as Position | undefined,
 	checkLines: [] as { from: Position; to: Position }[],
-	// whose move it is (TurnTag; the other side's pieces dim meanwhile), none between spins
+	// whose move it is (the notebook; the other side's pieces dim meanwhile), none between spins
 	turn: undefined as Side | undefined,
-	// how many of the spin's moves have been played, what the spin has won so far (SpinWin) and the
+	// how many of the spin's moves have been played, what the spin has won so far (SidePanel) and the
 	// multiplier spot its last capture put into the multiplier, if any
 	movesThisSpin: 0,
 	spinWin: 0,
 	lastSpot: undefined as SpotValue | undefined,
 	// the free spins (the bonus): the one being played (1 for the first, 0 before it) and how many in
-	// all; shown where the spin's win is outside the bonus (SidePanel, SpinWin)
+	// all; shown where the spin's win is outside the bonus (SidePanel)
 	freeSpins: { current: 0, total: 0 },
-	// the spin's moves in words (MoveLog), and as played (SidePanel)
+	// the spin's moves in words, and as played (the notebook)
 	moveLog: [] as string[],
 	moves: [] as PlayedMove[],
 	// The start screen's game of chess (Sandbox): until the first spin the player moves the pieces of the
@@ -130,7 +132,7 @@ export const stateGame = $state({
 	// the square the player's last move went to on the practice board, when the engine judged it a
 	// blunder (BLUNDER): lit red (BoardSquares)
 	blunder: undefined as Position | undefined,
-	// the engine's reasons for the spin's quiet end (SidePanel's WHY?), none until it ends so
+	// the engine's reasons for the spin's quiet end (the notebook's WHY NO CAPTURE, StickyNote), none until it ends so
 	analysis: undefined as Analysis | undefined,
 	// the multiplier spots on the board (BoardSquares), each gone when a capture on it uses it up or the
 	// cheater spin's queen collects it
@@ -165,12 +167,54 @@ export const setYourColour = (colour: PieceColour) => {
 const BOARD_SCALE = { desktop: 15 / 14, landscape: 0.92, tablet: 0.95, portrait: 8 / 7 };
 const BOARD_RAISE = { desktop: 69, landscape: 52, tablet: 62, portrait: 200 };
 
+// How far the UI reaches up from the bottom of the screen, in the standard layout's units (it's drawn
+// against the screen's bottom): on tall screens the portrait panel, on almost square ones the desktop
+// panel's spin disc (the tablet's is 1.3x), on phones held sideways the landscape bar.
+const UI_HEIGHT = { desktop: 150, tablet: 205, landscape: 175, portrait: PORTRAIT_UI_HEIGHT };
+
+// How far the portrait bar's panel has come down, its drawer folded (LayoutPortraitBar: by the drawer's
+// arrow button, and in the free spins): 0 up, 1 down (PORTRAIT_PANEL_FOLD), in step with the bar's own
+// slide (NotebookStrip follows its drawerFold and drawerUnfold), so the notebook's strip comes down too.
+export const uiFold = new Tween(0, { duration: 400, easing: cubicInOut });
+
+// the screen's edges, and the UI's top, in the main layout's units (the main layout is centred on the
+// screen, so on a screen of another shape they reach past it): `uiTop` with the portrait bar's panel up,
+// `uiTopNow` where it is now (lower while its drawer is folded)
+const screenBounds = () => {
+	const canvas = stateLayoutDerived.canvasSizes();
+	const main = stateLayoutDerived.mainLayout();
+	const toMainY = (y: number) => main.height * 0.5 + (y - canvas.height * 0.5) / main.scale;
+	const uiTop = canvas.height - UI_HEIGHT[stateLayoutDerived.layoutType()] * stateLayoutDerived.mainLayoutStandard().scale;
+	return {
+		left: main.width * 0.5 - (canvas.width * 0.5) / main.scale,
+		right: main.width * 0.5 + (canvas.width * 0.5) / main.scale,
+		top: toMainY(0),
+		bottom: toMainY(canvas.height),
+		uiTop: toMainY(uiTop),
+		uiTopNow: toMainY(
+			uiTop +
+				(stateLayoutDerived.layoutType() === 'portrait'
+					? uiFold.current * PORTRAIT_PANEL_FOLD * stateLayoutDerived.mainLayoutStandard().scale
+					: 0),
+		),
+	};
+};
+
+// On tall and almost square screens the notebook's strip (NotebookStrip) lies between the board's frame
+// and the UI: on short screens the board goes up (this much at most) to leave room for the strip's head
+// (STRIP_ROOM: its band and head with the gaps round it).
+export const STRIP_ROOM = 104;
+const EXTRA_RAISE = { desktop: 0, landscape: 0, tablet: 40, portrait: 60 };
+
 const boardLayout = () => {
 	const layoutType = stateLayoutDerived.layoutType();
 	const scale = BOARD_SCALE[layoutType];
+	const y = stateLayoutDerived.mainLayout().height * 0.5 - BOARD_RAISE[layoutType];
+	const frameBottom = y + (BOARD_SIZES.height * scale) / 2 + BOARD_FRAME.reach * scale;
+	const short = EXTRA_RAISE[layoutType] ? frameBottom + STRIP_ROOM - screenBounds().uiTop : 0;
 	return {
 		x: stateLayoutDerived.mainLayout().width * 0.5,
-		y: stateLayoutDerived.mainLayout().height * 0.5 - BOARD_RAISE[layoutType],
+		y: y - Math.min(EXTRA_RAISE[layoutType], Math.max(0, short)),
 		anchor: { x: 0.5, y: 0.5 },
 		pivot: { x: BOARD_SIZES.width / 2, y: BOARD_SIZES.height / 2 },
 		scale,
@@ -304,6 +348,7 @@ export const { getWinLevelDataByWinLevelAlias } = createGetWinLevelDataByWinLeve
 
 export const stateGameDerived = {
 	boardLayout,
+	screenBounds,
 	boardQuad,
 	boardPoint,
 	squareAt,
