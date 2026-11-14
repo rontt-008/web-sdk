@@ -18,13 +18,16 @@ export default {
 				{
 					name: 'L1',
 				},
+				{
+					name: 'L1',
+				},
 			],
 			[
 				{
 					name: 'H1',
 				},
 				{
-					name: 'L5',
+					name: 'L2',
 				},
 				{
 					name: 'L2',
@@ -33,6 +36,9 @@ export default {
 					name: 'H3',
 				},
 				{
+					name: 'L2',
+				},
+				{
 					name: 'L4',
 				},
 			],
@@ -41,13 +47,16 @@ export default {
 					name: 'L3',
 				},
 				{
-					name: 'L5',
+					name: 'L1',
 				},
 				{
 					name: 'L3',
 				},
 				{
 					name: 'H4',
+				},
+				{
+					name: 'L1',
 				},
 				{
 					name: 'L4',
@@ -64,7 +73,10 @@ export default {
 					name: 'L4',
 				},
 				{
-					name: 'L5',
+					name: 'L4',
+				},
+				{
+					name: 'L4',
 				},
 				{
 					name: 'L1',
@@ -82,6 +94,9 @@ export default {
 				},
 				{
 					name: 'H1',
+				},
+				{
+					name: 'L3',
 				},
 				{
 					name: 'H1',

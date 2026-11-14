@@ -8,29 +8,36 @@
 </script>
 
 <script lang="ts">
-	import { Sprite, SpineProvider, SpineTrack, SpineSlot } from 'pixi-svelte';
-	import { FadeContainer, WinCountUpProvider, ResponsiveBitmapText } from 'components-pixi';
+	import { Container } from 'pixi-svelte';
+	import { FadeContainer, WinCountUpProvider } from 'components-pixi';
 	import { bookEventAmountToCurrencyString } from 'utils-shared/amount';
 	import { waitForResolve } from 'utils-shared/wait';
-	import { CanvasSizeRectangle } from 'components-layout';
+	import { CanvasSizeRectangle, MainContainer } from 'components-layout';
 	import { OnMount } from 'components-shared';
-	import { stateUrlDerived } from 'state-shared';
 
 	import { getContext } from '../game/context';
-	import FreeSpinAnimation from './FreeSpinAnimation.svelte';
+	import { SYMBOL_SIZE } from '../game/constants';
+	import { LOGO_TEXT_COLORS } from '../game/textStyles';
+	import LogoText from './LogoText.svelte';
 	import PressToContinue from './PressToContinue.svelte';
-	import WinCoins from './WinCoins.svelte';
 
-	type AnimationName = 'intro' | 'idle';
+	// The free spins' total win counting up over the dimmed board, in the logo's lettering as the start
+	// screen's cards and the free spins sign are (LogoText, look logo; the user, 2026-11-14: "make the
+	// bonus win screen have the same font as the cards"): TOTAL WIN in the blue, the amount in the pink
+	// to red. (It was the UI's font, the amount gold, till then.) The sample's Mining Mayhem panel
+	// animation, word pictures and coin fountain were removed before.
+	// Font sizes in cells; middles: the words `gap` cells above the board's middle (their bottom), the
+	// amount under it; both at most `fill` of the board's width.
+	const WORDS = { title: 0.75, amount: 1.1, gap: 0.2, fill: 1.1 };
 
 	const context = getContext();
 
 	let show = $state(true);
-	let animationName = $state<AnimationName>('intro');
 	let amount = $state(0);
 	let winLevelData = $state<WinLevelData>();
 	let oncomplete = $state(() => {});
-	let onCountUpComplete = $state(() => {});
+
+	const board = $derived(context.stateGameDerived.boardLayout());
 
 	context.eventEmitter.subscribeOnMount({
 		freeSpinOutroShow: () => (show = true),
@@ -46,63 +53,33 @@
 <FadeContainer {show}>
 	{#if winLevelData}
 		{@const duration = winLevelData.presentDuration}
-		{@const isBigWin = winLevelData.type === 'big'}
-		<WinCountUpProvider {amount} {duration} oncomplete={() => onCountUpComplete()}>
+		<WinCountUpProvider {amount} {duration} oncomplete={() => {}}>
 			{#snippet children({ countUpAmount, startCountUp, finishCountUp, countUpCompleted })}
 				<OnMount onmount={() => startCountUp()} />
 
-				<CanvasSizeRectangle backgroundColor={0x000000} backgroundAlpha={0.5} />
+				<CanvasSizeRectangle backgroundColor={0x000000} backgroundAlpha={0.6} />
 
-				<FreeSpinAnimation>
-					{#snippet children({ sizes })}
-						{#if isBigWin}
-							<Sprite
-								anchor={{ x: 0.5, y: 1.2 }}
-								width={500 * 2.2}
-								height={156 * 2.2}
-								key="freespins_{stateUrlDerived.lang()}.png"
-							/>
-						{:else}
-							<Sprite
-								anchor={{ x: 0.5, y: 1.2 }}
-								width={500 * 4.5}
-								height={80 * 4.5}
-								key="winsmall_{stateUrlDerived.lang()}.png"
-							/>
-						{/if}
-
-						<SpineProvider key="fsOutroNumber" width={sizes.width * 0.4}>
-							<SpineTrack
-								trackIndex={0}
-								{animationName}
-								loop={animationName === 'idle'}
-								listener={{
-									complete: () => (animationName = 'idle'),
-								}}
-							/>
-							<SpineSlot slotName="slot_number">
-								<ResponsiveBitmapText
-									anchor={0.5}
-									style={{
-										fontFamily: 'gold',
-										fontSize: sizes.width * 0.08,
-									}}
-									text={bookEventAmountToCurrencyString(countUpAmount)}
-									maxWidth={sizes.width}
-								/>
-							</SpineSlot>
-						</SpineProvider>
-
-						<Sprite
-							anchor={{ x: 0.5, y: isBigWin ? -3.2 : -2 }}
-							width={177 * (isBigWin ? 2.2 : 3)}
-							height={42 * (isBigWin ? 2.2 : 3)}
-							key="totalwin.png"
+				<MainContainer>
+					<!-- (LogoText is centred on its place: half a line above / below the old edges) -->
+					<Container x={board.x} y={board.y}>
+						<LogoText
+							text="TOTAL WIN"
+							y={-SYMBOL_SIZE * (WORDS.gap + WORDS.title * 0.6)}
+							fontSize={SYMBOL_SIZE * WORDS.title}
+							maxWidth={board.width * WORDS.fill}
+							colors={LOGO_TEXT_COLORS.blue}
+							look="logo"
 						/>
-					{/snippet}
-				</FreeSpinAnimation>
-
-				<WinCoins emit={!countUpCompleted} levelAlias={winLevelData?.alias} />
+						<LogoText
+							text={bookEventAmountToCurrencyString(countUpAmount)}
+							y={SYMBOL_SIZE * WORDS.amount * 0.6}
+							fontSize={SYMBOL_SIZE * WORDS.amount}
+							maxWidth={board.width * WORDS.fill}
+							colors={LOGO_TEXT_COLORS.pink}
+							look="logo"
+						/>
+					</Container>
+				</MainContainer>
 
 				<PressToContinue onpress={() => (countUpCompleted ? oncomplete() : finishCountUp())} />
 			{/snippet}

@@ -147,6 +147,7 @@ export function createReelForCascading<TRawSymbol extends object, TSymbolState e
 		}
 
 		reelState.motion = 'fallingIn';
+		const landLead = reelOptions.landLead?.() ?? 0;
 
 		await moveAllSymbolsWith(async (reelSymbol) => {
 			const oldSymbolY = reelSymbol.symbolY.current;
@@ -160,11 +161,19 @@ export function createReelForCascading<TRawSymbol extends object, TSymbolState e
 			const bounceDuration = bounceDistance / reelState.spinOptions().symbolFallInBounceSpeed;
 			const landDuration = (distance - bounceDistance) / reelState.spinOptions().symbolFallInSpeed;
 
+			// (landLead: it goes to 'land' that long before it arrives, unless it has arrived already)
+			let arrived = false;
+			if (landLead > 0) {
+				waitForTimeout(delay + Math.max(0, landDuration - landLead)).then(() => {
+					if (!arrived) reelSymbol.symbolState = 'land' as TSymbolState;
+				});
+			}
 			await reelSymbol.symbolY.set(newSymbolY - bounceDistance, {
 				duration: landDuration,
 				delay,
 				easing: reelState.spinOptions().symbolFallInEasing,
 			});
+			arrived = true;
 			reelSymbol.symbolState = 'land' as TSymbolState;
 			reelOptions.onSymbolLand({
 				rawSymbol: reelSymbol.rawSymbol,
