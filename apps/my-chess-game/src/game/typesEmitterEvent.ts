@@ -3,7 +3,8 @@ import type { EmitterEventPlayBoard } from '../components/PlayBoard.svelte';
 import type { EmitterEventSandbox } from '../components/Sandbox.svelte';
 import type { EmitterEventMoveWinAmounts } from '../components/MoveWinAmounts.svelte';
 import type { EmitterEventMoveLabel } from '../components/MoveLabel.svelte';
-import type { EmitterEventComboMultiplier } from '../components/ComboMultiplier.svelte';
+import type { EmitterEventNotebook } from '../components/NotebookPad.svelte';
+import type { EmitterEventStickyNote } from '../components/StickyNote.svelte';
 import type { EmitterEventFreeSpinIntro } from '../components/FreeSpinIntro.svelte';
 import type { EmitterEventFreeSpinCounter } from '../components/FreeSpinCounter.svelte';
 import type { EmitterEventFreeSpinOutro } from '../components/FreeSpinOutro.svelte';
@@ -18,7 +19,8 @@ export type EmitterEventGame =
 	| EmitterEventSandbox
 	| EmitterEventMoveWinAmounts
 	| EmitterEventMoveLabel
-	| EmitterEventComboMultiplier
+	| EmitterEventNotebook
+	| EmitterEventStickyNote
 	| EmitterEventWin
 	| EmitterEventFreeSpinIntro
 	| EmitterEventFreeSpinCounter

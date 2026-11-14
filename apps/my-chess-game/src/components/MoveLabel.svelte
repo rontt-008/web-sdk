@@ -2,14 +2,15 @@
 	export type MoveLabelKind = 'good' | 'bad' | 'mate' | 'info';
 
 	export type EmitterEventMoveLabel =
-		| { type: 'moveLabel'; text: string; kind: MoveLabelKind; hold: number }
+		// `mark`: the sign in the square at the slip's left end (+ for a check, # for a mate...)
+		| { type: 'moveLabel'; text: string; kind: MoveLabelKind; hold: number; mark?: string }
 		| { type: 'moveLabelHide' };
 </script>
 
 <script lang="ts">
 	import { Tween } from 'svelte/motion';
 	import { backOut } from 'svelte/easing';
-	import { Container, Rectangle, Text, type Sizes } from 'pixi-svelte';
+	import { Container } from 'pixi-svelte';
 	import { FadeContainer } from 'components-pixi';
 	import { MainContainer } from 'components-layout';
 	import { stateBetDerived } from 'state-shared';
@@ -17,31 +18,37 @@
 
 	import { getContext } from '../game/context';
 	import { SYMBOL_SIZE } from '../game/constants';
+	import PrintSlip from './PrintSlip.svelte';
 
-	// a word over the board: CHECK, CHECKMATE!, STALEMATE... It pops up and stays for its hold, then
-	// fades; a new one replaces it at once
+	// A word over the board: CHECK, CHECKMATE!, STALEMATE... printed on a slip of the start screen cards'
+	// paper (PrintSlip), a little askew, with the move's sign as a chess book writes it in a square at its
+	// left end: + for a check, # for a mate, – for a quiet move, ½ for a draw. It pops up and stays for
+	// its hold, then fades; a new one replaces it at once.
+	// - good and info: in ink
+	// - bad (your king in check, or mated): in red
+	// - mate (your checkmate, the MAX square): in red, bigger, a row of chessboard squares along its top
+	//   and foot
 	const context = getContext();
-	const COLOURS: Record<MoveLabelKind, number> = {
-		good: 0xf2c94c,
-		bad: 0xe8503f,
-		mate: 0xffd86b,
-		info: 0xe8d9b8,
+	const LOOKS: Record<MoveLabelKind, { size: number; tone: 'ink' | 'red'; band: boolean }> = {
+		info: { size: SYMBOL_SIZE * 0.4, tone: 'ink', band: false },
+		good: { size: SYMBOL_SIZE * 0.46, tone: 'ink', band: false },
+		bad: { size: SYMBOL_SIZE * 0.46, tone: 'red', band: false },
+		mate: { size: SYMBOL_SIZE * 0.66, tone: 'red', band: true },
 	};
-	const PAD = { x: SYMBOL_SIZE * 0.5, y: SYMBOL_SIZE * 0.22 };
+	const TILT = -0.035;
 
 	let show = $state(false);
 	let text = $state('');
+	let mark = $state<string>();
 	let kind = $state<MoveLabelKind>('info');
-	let textSizes = $state<Sizes>({ width: 0, height: 0 });
 	let latest = 0;
 	const pop = new Tween(1);
-
-	const fontSize = $derived(SYMBOL_SIZE * (kind === 'mate' ? 0.8 : 0.5));
 
 	context.eventEmitter.subscribeOnMount({
 		moveLabel: async (emitterEvent) => {
 			const call = ++latest;
 			text = emitterEvent.text;
+			mark = emitterEvent.mark;
 			kind = emitterEvent.kind;
 			show = true;
 			pop.set(0.6, { duration: 0 });
@@ -62,29 +69,11 @@
 			x={context.stateGameDerived.boardLayout().x}
 			y={context.stateGameDerived.boardLayout().y}
 			scale={pop.current}
+			rotation={TILT}
 		>
-			<Rectangle
-				anchor={0.5}
-				width={textSizes.width + PAD.x * 2}
-				height={textSizes.height + PAD.y * 2}
-				borderRadius={SYMBOL_SIZE * 0.2}
-				backgroundColor={0x0a0a0c}
-				backgroundAlpha={0.82}
-				borderColor={COLOURS[kind]}
-				borderWidth={3}
-			/>
-			<Text
-				{text}
-				anchor={0.5}
-				style={{
-					fontFamily: 'proxima-nova',
-					fontSize,
-					fontWeight: '800',
-					letterSpacing: 2,
-					fill: COLOURS[kind],
-				}}
-				onresize={(sizes) => (textSizes = sizes)}
-			/>
+			{#key `${kind}|${mark ?? ''}`}
+				<PrintSlip {text} {mark} {...LOOKS[kind]} />
+			{/key}
 		</Container>
 	</MainContainer>
 </FadeContainer>

@@ -1,6 +1,5 @@
 <script lang="ts">
 	import * as PIXI from 'pixi.js';
-	import { onMount } from 'svelte';
 	import { Tween } from 'svelte/motion';
 	import { Graphics, Sprite, SpriteSheet } from 'pixi-svelte';
 
@@ -132,8 +131,9 @@
 		},
 	});
 
-	onMount(() => {
-		context.stateApp.loadLazyAssets(ANIM_KEYS);
+	// once the game has loaded: they stand on the table under the loading screen, and shouldn't hold it up
+	$effect(() => {
+		if (context.stateApp.loaded) context.stateApp.loadLazyAssets(ANIM_KEYS);
 	});
 
 	// the shadows: under each foot, and under the rook as it lies (crossed over as it falls, and back as

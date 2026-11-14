@@ -1,4 +1,10 @@
-import { UI_THEME_CLEAN, LayoutDesktopPanel, type UiTheme } from 'components-ui-pixi';
+import {
+	UI_THEME_CLEAN,
+	LayoutDesktopPanel,
+	LayoutPortraitBar,
+	LayoutLandscapeBar,
+	type UiTheme,
+} from 'components-ui-pixi';
 import { UI_HTML_THEME_CLEAN, type UiHtmlTheme } from 'components-ui-html';
 
 // The same UI as the cluster game (apps/my-cluster-game): chunky and charcoal, near-black outlines,
@@ -56,7 +62,16 @@ export const uiTheme: UiTheme = {
 		betLevel: { track: 0x2d2c33, fill: CREAM },
 		win: 0xffd34d,
 	},
-	layouts: { desktop: LayoutDesktopPanel, tablet: LayoutDesktopPanel },
+	// the same as my-game's: on wide and almost square screens, the chunky panel right across the
+	// bottom; on tall ones (a phone held upright) a panel of the amounts over the spin row, and a pill
+	// of menu and sound; on small wide ones (a phone held sideways, the miniplayer) a bar right across
+	// the bottom and the spin buttons in a column on the right
+	layouts: {
+		desktop: LayoutDesktopPanel,
+		tablet: LayoutDesktopPanel,
+		portrait: LayoutPortraitBar,
+		landscape: LayoutLandscapeBar,
+	},
 	// the buy bonus button a disc at the bar's left end, in the board's gold
 	buyBonus: {
 		fill: 0x2c2b31,

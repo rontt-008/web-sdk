@@ -41,6 +41,7 @@
 		<Button
 			x={at.x}
 			y={at.y}
+			scale={layout.toggle.scale}
 			anchor={0.5}
 			sizes={{ width: WIDTH, height: HEIGHT }}
 			onpress={() => setYourColour(isBlack ? 'white' : 'black')}

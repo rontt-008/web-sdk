@@ -8,7 +8,7 @@
 	import { App, Graphics, Sprite } from 'pixi-svelte';
 	import { stateModal } from 'state-shared';
 
-	import { UI, UiGameName } from 'components-ui-pixi';
+	import { UI } from 'components-ui-pixi';
 	import { GameVersion, Modals } from 'components-ui-html';
 
 	import { getContext } from '../game/context';
@@ -32,13 +32,12 @@
 	import SandboxControls from './SandboxControls.svelte';
 	import ModalSandboxLevel from './ModalSandboxLevel.svelte';
 	import MoveWinAmounts from './MoveWinAmounts.svelte';
-	import MoveLog from './MoveLog.svelte';
 	import SidePanel from './SidePanel.svelte';
+	import NotebookStrip from './NotebookStrip.svelte';
+	import NotebookOverlay from './NotebookOverlay.svelte';
+	import StickyNote from './StickyNote.svelte';
 	import MoveLabel from './MoveLabel.svelte';
 	import FistSlam from './FistSlam.svelte';
-	import ComboMultiplier from './ComboMultiplier.svelte';
-	import SpinWin from './SpinWin.svelte';
-	import TurnTag from './TurnTag.svelte';
 	import SideToggle from './SideToggle.svelte';
 	import Win from './Win.svelte';
 	import FreeSpinIntro from './FreeSpinIntro.svelte';
@@ -46,6 +45,7 @@
 	import FreeSpinOutro from './FreeSpinOutro.svelte';
 	import Transition from './Transition.svelte';
 	import GameInfo from './GameInfo.svelte';
+	import BonusCard from './BonusCard.svelte';
 
 	const context = getContext();
 
@@ -127,29 +127,29 @@
 		<!-- the start screen's game's buttons: restart, and the strength to play against -->
 		<SandboxControls />
 
+		<!-- the notebook (sideLayout.ts): on tall and almost square screens a strip under the board (the
+		     multipliers thrown from it fly over it); on desktop and phones held sideways lying on the table
+		     beside the board; on phones it opens over the board, and the engine's reason for a quiet end
+		     goes up on a sticky note -->
+		<NotebookStrip />
 		<MoveWinAmounts />
-		<!-- on desktop the side panel right of the board has the moves (the log would be under the UI bar) -->
-		{#if context.stateLayoutDerived.layoutType() === 'desktop'}
-			<SidePanel />
-		{:else}
-			<MoveLog />
-		{/if}
-		<ComboMultiplier />
+		<SidePanel />
 		<SideToggle />
-		<SpinWin />
-		<TurnTag />
+		<NotebookOverlay />
 
 		<UI theme={uiTheme}>
-			{#snippet gameName()}
-				<UiGameName name="CHECKMATE" />
-			{/snippet}
+			<!-- no clock and game name in the screen's corner, as in my-game -->
+			{#snippet gameName()}{/snippet}
 			{#snippet logo()}{/snippet}
 		</UI>
+		<!-- over the UI: while it's up, a press anywhere puts it away and the game goes on -->
+		<StickyNote />
 		<MoveLabel />
 		<FistSlam />
 		<Win />
 		<FreeSpinIntro />
-		{#if ['desktop', 'landscape'].includes(context.stateLayoutDerived.layoutType())}
+		<!-- elsewhere the notebook has the free spins left -->
+		{#if context.stateLayoutDerived.layoutType() === 'desktop'}
 			<FreeSpinCounter />
 		{/if}
 		<FreeSpinOutro />
@@ -158,6 +158,10 @@
 </App>
 
 <Modals theme={uiHtmlTheme} hideReplayCard={context.stateLayout.showLoadingScreen}>
+	<!-- the buy bonus menu's cards, the game's own: dark and flat, the bonus's piece on each -->
+	{#snippet bonusCard({ levels, levelRow })}
+		<BonusCard {levels} {levelRow} />
+	{/snippet}
 	{#snippet version()}
 		<GameVersion version="0.0.0" />
 	{/snippet}

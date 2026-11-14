@@ -9,6 +9,7 @@
 	import { uiTheme } from '../game/uiTheme';
 	import CameraContainer from './CameraContainer.svelte';
 	import { SANDBOX_LEVEL_MODAL } from './ModalSandboxLevel.svelte';
+	import { sidePanelLayout } from '../game/sideLayout';
 
 	// Three icons lying on the table, left of the board's near corner, while the start screen's game is
 	// on (Sandbox): just the bet bar's icons (UiIcon), no button round them, with a soft shadow on the
@@ -20,6 +21,9 @@
 	// board's gold. The strength in use is written under them. Flat over the table (the board's mesh
 	// takes no presses).
 	const context = getContext();
+	// on tall and almost square screens in a row above the board instead (sideLayout's `controls`):
+	// restart at its right end, then settings, then hint, the strength left of them
+	const row = $derived(sidePanelLayout().controls);
 	const quad = $derived(context.stateGameDerived.boardQuad());
 	const corner = $derived({ x: Math.min(quad[0], quad[6]), y: Math.max(quad[5], quad[7]) });
 	const shown = $derived(context.stateGame.sandbox && context.stateXstateDerived.isIdle());
@@ -56,10 +60,19 @@
 {#if shown}
 	<MainContainer>
 		<CameraContainer>
-			<Container x={corner.x - SIZE - LEFT} y={corner.y - SIZE}>
+			<Container
+				x={row ? row.x : corner.x - SIZE - LEFT}
+				y={row ? row.y : corner.y - SIZE}
+				scale={row?.scale ?? 1}
+			>
 				{#each buttons as button, index (button.icon)}
 					{@const active = button.active?.() ?? false}
-					<Button x={0} y={-index * (SIZE + GAP)} sizes={{ width: SIZE, height: SIZE }} onpress={button.onpress}>
+					<Button
+						x={row ? -(index + 1) * SIZE - index * GAP : 0}
+						y={row ? -SIZE / 2 : -index * (SIZE + GAP)}
+						sizes={{ width: SIZE, height: SIZE }}
+						onpress={button.onpress}
+					>
 						{#snippet children({ center, hovered, pressed })}
 							<Container x={center.x} y={center.y} scale={pressed ? 0.9 : hovered ? 1.08 : 1}>
 								<Container alpha={SHADOW.alpha}>
@@ -70,13 +83,13 @@
 						{/snippet}
 					</Button>
 				{/each}
-				<!-- the strength in use, under the icons, with the same shadow -->
+				<!-- the strength in use, under the icons (in the row, left of them), with the same shadow -->
 				{#each [{ dy: SHADOW.dy, fill: COLOURS.shadow, alpha: SHADOW.alpha }, { dy: 0, fill: COLOURS.icon, alpha: 1 }] as layer}
 					<Text
 						text={`ELO ${level}`}
-						anchor={{ x: 0.5, y: 0 }}
-						x={SIZE / 2}
-						y={SIZE + 2 + layer.dy}
+						anchor={row ? { x: 1, y: 0.5 } : { x: 0.5, y: 0 }}
+						x={row ? -buttons.length * (SIZE + GAP) - 2 : SIZE / 2}
+						y={(row ? 0 : SIZE + 2) + layer.dy}
 						alpha={layer.alpha}
 						style={{ fontFamily: uiTheme.fontFamily, fontSize: 13, fontWeight: '800', fill: layer.fill, letterSpacing: 1 }}
 					/>

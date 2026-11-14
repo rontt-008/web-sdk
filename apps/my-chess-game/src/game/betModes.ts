@@ -55,7 +55,8 @@ export const setBetModeMeta = () => {
 				title: 'CHECKMATE BONUS',
 				button: buyButton,
 				dialog: `Go straight to the CHECKMATE BONUS for ${BONUS_COST}x ${yourBet}, as a checkmate gives it: ${FREE_SPINS} FREE SPINS on bigger boards, the multiplier never resetting, and every checkmate +${RETRIGGER_SPINS} spins.`,
-				description: `${FREE_SPINS} FREE SPINS: bigger boards, a multiplier that never resets.`,
+				// (the card shows its free spins on a tag of their own, BonusCard)
+				description: 'Bigger boards, a multiplier that never resets.',
 				tickerSpin: 'CHECKMATE BONUS ACTIVATED',
 			},
 		},
@@ -69,7 +70,7 @@ export const setBetModeMeta = () => {
 				title: 'SUPER BONUS',
 				button: buyButton,
 				dialog: `Go straight to the SUPER BONUS for ${SUPER_COST}x ${yourBet}: ${FREE_SPINS} FREE SPINS where every + spot stays on the board until you take a piece on it, and spots side by side merge into one bigger spot. Every spin your king throws 1 to 3 multipliers (x2 to x10) at the spots on the board. A spot that reaches +${SUPER_SPOT_MAX.toLocaleString('en')} becomes a MAX square: take a piece on it for the MAX WIN. Each spin's multiplier starts from x1, and every checkmate gives +${RETRIGGER_SPINS} spins.`,
-				description: `${FREE_SPINS} FREE SPINS: sticky spots, the king's multipliers, MAX squares.`,
+				description: "Sticky spots, the king's multipliers, MAX squares.",
 				tickerSpin: 'SUPER BONUS ACTIVATED',
 			},
 		},
