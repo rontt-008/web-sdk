@@ -72,12 +72,24 @@ type ReelCreateOptions<TRawSymbol extends object, TSymbolState extends string> =
 export type SpinningReelCreateOptions<
 	TRawSymbol extends object,
 	TSymbolState extends string,
-> = ReelCreateOptions<TRawSymbol, TSymbolState>;
+> = ReelCreateOptions<TRawSymbol, TSymbolState> & {
+	// For land animations that fall in before they hit the ground: the reel's symbols go to 'land'
+	// this long (ms) before the reel reaches the bottom of its slide (where it hits and bounces back),
+	// while it is still coming down, so they hit as the reel does. onSymbolLand is still called once
+	// the reel has stopped. Without it (or when the reel skips its slide, e.g. stopped in turbo), they
+	// land once the reel has bounced back and stopped.
+	landLead?: () => number;
+};
 
 export type CascadingReelCreateOptions<
 	TRawSymbol extends object,
 	TSymbolState extends string,
-> = ReelCreateOptions<TRawSymbol, TSymbolState>;
+> = ReelCreateOptions<TRawSymbol, TSymbolState> & {
+	// As for spinning reels, for land animations that fall in before they hit the ground: each symbol
+	// goes to 'land' this long (ms) before it reaches its place as it falls in, so it hits as it
+	// arrives. onSymbolLand is still called as it arrives.
+	landLead?: () => number;
+};
 
 export type SpinningReel<TRawSymbol extends object, TSymbolState extends string> = ReturnType<
 	typeof createReelForSpinning<TRawSymbol, TSymbolState>

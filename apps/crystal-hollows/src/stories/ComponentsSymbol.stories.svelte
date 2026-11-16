@@ -28,7 +28,6 @@
 		{ name: 'L2' },
 		{ name: 'L3' },
 		{ name: 'L4' },
-		{ name: 'L5' },
 	] as const;
 
 	const SYMBOLS_RIGHT = [

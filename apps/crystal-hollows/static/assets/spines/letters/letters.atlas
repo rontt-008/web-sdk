@@ -1,0 +1,27 @@
+letters.webp
+	size: 1024, 256
+	filter: MipMapLinearLinear, Linear
+a/letter
+	bounds: 4, 4, 213, 199
+a/tuft_L
+	bounds: 864, 4, 38, 50
+a/tuft_R
+	bounds: 974, 54, 40, 41
+j/letter
+	bounds: 601, 4, 159, 181
+j/tuft_L
+	bounds: 822, 64, 56, 43
+j/tuft_R
+	bounds: 906, 4, 60, 47
+k/letter
+	bounds: 221, 4, 191, 192
+k/tuft_L
+	bounds: 822, 4, 38, 56
+k/tuft_R
+	bounds: 764, 4, 54, 63
+q/letter
+	bounds: 416, 4, 181, 187
+q/tuft_L
+	bounds: 906, 55, 64, 46
+q/tuft_R
+	bounds: 974, 4, 40, 46

@@ -90,6 +90,26 @@ export function createReelForSpinning<TRawSymbol extends object, TSymbolState ex
 	// set by skip during a spin, until the spin ends
 	let skipRequested = false;
 	let paddingSize = 0;
+	// the board's symbols landing before the reel hits the bottom of its slide (landLead): where
+	// that is, and once its last stretch there starts, when they land
+	let landEarly:
+		| { stopY: number; timer?: ReturnType<typeof setTimeout>; done: boolean }
+		| undefined;
+
+	// a slide starting now, taking duration ms: if it is the last stretch to the bottom, the symbols
+	// land landLead before it ends (at once if it is shorter)
+	const scheduleLand = (targetY: number, duration: number) => {
+		if (!landEarly || landEarly.done || targetY !== landEarly.stopY) return;
+		const early = landEarly;
+		clearTimeout(early.timer);
+		early.timer = setTimeout(
+			() => {
+				early.done = true;
+				targetSymbols.forEach((reelSymbol) => (reelSymbol.symbolState = 'land' as TSymbolState));
+			},
+			Math.max(0, duration - (reelOptions.landLead?.() ?? 0)),
+		);
+	};
 
 	const getPaddingRawSymbol = ({
 		paddingRawReel,
@@ -149,6 +169,7 @@ export function createReelForSpinning<TRawSymbol extends object, TSymbolState ex
 		const distance = Math.abs(targetY - currentY);
 		const duration = distance / speed; // (speed unit: pixel / ms)
 
+		scheduleLand(targetY, duration);
 		await reelY.set(targetY, { duration, easing });
 	};
 
@@ -168,6 +189,7 @@ export function createReelForSpinning<TRawSymbol extends object, TSymbolState ex
 		const easing = (t: number) =>
 			(2 * (fromSpeed * t - ((fromSpeed - toSpeed) * t * t) / 2)) / (fromSpeed + toSpeed);
 
+		scheduleLand(targetY, duration);
 		await reelY.set(targetY, { duration, easing });
 	};
 
@@ -192,6 +214,7 @@ export function createReelForSpinning<TRawSymbol extends object, TSymbolState ex
 			return -lift + ramped + speed * Math.max(0, time - liftDuration - accelerate);
 		};
 
+		scheduleLand(targetY, duration);
 		await reelY.set(targetY, { duration, easing: (t) => at(t * duration) / distance });
 	};
 
@@ -295,6 +318,9 @@ export function createReelForSpinning<TRawSymbol extends object, TSymbolState ex
 			updateAllReelSymbolState('spin');
 		}
 
+		const bounceSize = reelOptions.symbolHeight * reelState.spinOptions().reelBounceSizeMulti;
+		landEarly = reelOptions.landLead ? { stopY: defaultY + bounceSize, done: false } : undefined;
+
 		// Q: When to skip the slideDown?
 		// A: When skip was called, or when it's preSpinning(isSpinning) and stop button is clicked(isTurbo)
 		// and is noStop is false. Only skip cuts the noStop reels (e.g. the anticipated ones) short.
@@ -308,13 +334,26 @@ export function createReelForSpinning<TRawSymbol extends object, TSymbolState ex
 			await interruptible.add(slideDown);
 		}
 
+		// landed already (landLead) or not: no later than now (a slide cut short or skipped lands them
+		// as it always has, once the reel has stopped)
+		clearTimeout(landEarly?.timer);
+		const landedEarly = landEarly?.done ?? false;
+		landEarly = undefined;
+
 		// stopping: from here (with its symbols back to the board's) they are drawn as usual
 		reelState.scrolling = false;
 		reelState.motion = 'bouncing';
 		onSpinFinishing();
 		await removePaddingAndBounceBack();
 		reelState.motion = 'stopped';
-		updateAllReelSymbolState('land');
+		if (landedEarly) {
+			// landing already, as they hit: the game is told now, as it always is
+			reelState.symbols.forEach((reelSymbol, symbolIndex) =>
+				reelOptions.onSymbolLand({ rawSymbol: reelSymbol.rawSymbol, symbolIndex }),
+			);
+		} else {
+			updateAllReelSymbolState('land');
+		}
 	};
 
 	const fastSpin = () =>

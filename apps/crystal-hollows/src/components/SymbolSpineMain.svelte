@@ -5,8 +5,14 @@
 	import { getSymbolInfo } from '../game/utils';
 	import { SYMBOL_SIZE } from '../game/constants';
 
+	// a symbol's skeleton state (SYMBOL_INFO_MAP), or another animation of it (the wild's `fly`)
+	type SpineInfo = Pick<
+		Extract<ReturnType<typeof getSymbolInfo>, { type: 'spine' }>,
+		'assetKey' | 'sizeRatios'
+	> & { animationName: string };
+
 	type Props = {
-		symbolInfo: ReturnType<typeof getSymbolInfo>;
+		symbolInfo: SpineInfo;
 		x?: number;
 		y?: number;
 		listener: SpineTrackProps['listener'];
@@ -22,11 +28,12 @@
 	key={props.symbolInfo.assetKey}
 	height={SYMBOL_SIZE * props.symbolInfo.sizeRatios.height}
 >
+	<!-- a loop (the letters' idles) keeps its own pace; one-offs (their lands) follow the game's speed -->
 	<SpineTrack
 		loop={props.loop}
 		trackIndex={0}
 		animationName={props.symbolInfo.animationName}
-		timeScale={stateBetDerived.timeScale()}
+		timeScale={props.loop ? 1 : stateBetDerived.timeScale()}
 		listener={props.listener}
 	/>
 </SpineProvider>

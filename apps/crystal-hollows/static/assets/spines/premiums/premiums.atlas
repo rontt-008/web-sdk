@@ -1,0 +1,11 @@
+premiums.webp
+	size: 512, 512
+	filter: MipMapLinearLinear, Linear
+berries/symbol
+	bounds: 4, 258, 175, 248
+crystal/symbol
+	bounds: 203, 4, 227, 248
+mushroom/symbol
+	bounds: 4, 4, 195, 250
+stalactite/symbol
+	bounds: 203, 256, 241, 248

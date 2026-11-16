@@ -1,0 +1,9 @@
+wild.webp
+	size: 512, 256
+	filter: MipMapLinearLinear, Linear
+wild/bat
+	bounds: 240, 4, 193, 110
+wild/glow
+	bounds: 240, 118, 107, 67
+wild/ring
+	bounds: 4, 4, 232, 232

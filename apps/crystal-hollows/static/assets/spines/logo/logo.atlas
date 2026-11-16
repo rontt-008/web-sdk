@@ -1,0 +1,33 @@
+logo.webp
+	size: 1024, 512
+	filter: MipMapLinearLinear, Linear
+logo/letter_A
+	bounds: 648, 120, 92, 104
+logo/letter_C
+	bounds: 299, 222, 93, 100
+logo/letter_H
+	bounds: 846, 4, 116, 107
+logo/letter_L
+	bounds: 396, 222, 75, 100
+logo/letter_L2
+	bounds: 941, 115, 70, 105
+logo/letter_L3
+	bounds: 223, 222, 72, 102
+logo/letter_O
+	bounds: 752, 4, 90, 109
+logo/letter_O2
+	bounds: 846, 115, 91, 106
+logo/letter_R
+	bounds: 744, 120, 91, 104
+logo/letter_S
+	bounds: 135, 222, 84, 103
+logo/letter_S2
+	bounds: 648, 4, 100, 112
+logo/letter_T
+	bounds: 839, 225, 84, 93
+logo/letter_W
+	bounds: 4, 222, 127, 104
+logo/letter_Y
+	bounds: 475, 222, 86, 100
+logo/plaque
+	bounds: 4, 4, 640, 214

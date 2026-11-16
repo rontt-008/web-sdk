@@ -1,0 +1,25 @@
+bat.webp
+	size: 1024, 1024
+	filter: MipMapLinearLinear, Linear
+wing_R
+	bounds: 8, 8, 526, 328
+ear_R
+	bounds: 542, 8, 296, 322
+ear_L
+	bounds: 8, 344, 246, 310
+wing_L
+	bounds: 262, 344, 506, 308
+leg_R
+	bounds: 8, 662, 243, 272
+head
+	bounds: 259, 662, 290, 270
+body
+	bounds: 776, 344, 207, 256
+leg_L
+	bounds: 846, 8, 146, 192
+eye_R
+	bounds: 846, 208, 94, 89
+mouth
+	bounds: 557, 662, 110, 86
+eye_L
+	bounds: 948, 208, 52, 70
