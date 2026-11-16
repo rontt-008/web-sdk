@@ -109,8 +109,8 @@ export const uiTheme: UiTheme = {
 	hideSoundSwitch: true,
 	// no settings menu: the mute buttons have volume sliders
 	hideSettings: true,
-	// the pay table stays until the game has its own rules page holding the symbol wins (as RuneFall's
-	// and Lazy Evening's GameInfo)
+	// the rules (the info button, GameInfo) hold the symbol wins and paylines too
+	hidePayTable: true,
 };
 
 // the menus (buy bonus, bet, auto play, rules, pay table) in the same black as the UI
@@ -119,7 +119,15 @@ const MENU_BLACK = 'rgba(0, 0, 0, 0.88)';
 export const uiHtmlTheme: UiHtmlTheme = {
 	...UI_HTML_THEME_CLEAN,
 	backdrop: 'rgba(0, 0, 0, 0.65)',
-	panel: { ...UI_HTML_THEME_CLEAN.panel, background: MENU_BLACK },
+	// the rules (the only solid panel) draw their own cards, so they have no panel behind them
+	panel: {
+		...UI_HTML_THEME_CLEAN.panel,
+		background: MENU_BLACK,
+		solidBackground: 'transparent',
+		solidBorder: 'none',
+		solidShadow: 'none',
+		solidBorderImage: 'none',
+	},
 	card: { ...UI_HTML_THEME_CLEAN.card, background: MENU_BLACK },
 	dock: { ...UI_HTML_THEME_CLEAN.dock, background: 'rgba(0, 0, 0, 0.8)' },
 	control: {

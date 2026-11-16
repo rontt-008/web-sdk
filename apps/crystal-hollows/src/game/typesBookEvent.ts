@@ -72,6 +72,13 @@ type BookEventWinInfo = {
 };
 
 // customised
+// before a free spin's reveal: where each sticky bat flies (math-sdk games/crystal_hollows game_events.py)
+type BookEventStickyBats = {
+	index: number;
+	type: 'stickyBats';
+	moves: { from: number; to: number; row: number; multiplier: number }[];
+};
+
 type BookEventCreateBonusSnapshot = {
 	index: number;
 	type: 'createBonusSnapshot';
@@ -89,6 +96,7 @@ export type BookEvent =
 	| BookEventSetWin
 	| BookEventFreeSpinEnd
 	// customised
+	| BookEventStickyBats
 	| BookEventCreateBonusSnapshot;
 
 export type Bet = BetType<BookEvent>;

@@ -7,6 +7,7 @@ import { stateBetDerived } from 'state-shared';
 import { BOARD_DIMENSIONS, TALL_WILD } from './constants';
 import { hoverStickyBat, landStickyBat, type StickyBat } from './stickyBats.svelte';
 import type { ReelSymbol } from './stateGame.svelte';
+import type { RawSymbol } from './types';
 
 // The tall wild: when a bat ring (W) lands, once its reel has stopped, the ring glides to the middle of
 // the reel and morphs into the big WILD that fills it, 1 cell wide and 4 tall (TALL_WILD, drawn by
@@ -42,8 +43,9 @@ export type TallWild = {
 	// while it plays (hitTallWild)
 	hit: Tween<number>;
 	hitting: Promise<void> | undefined;
-	// its multiplier (TALL_WILD.multiplier; drawn by WildMultiplier): from the start (x2), or its sticky
-	// bat's, doubling once in its spin if it is in a win (as its first hit plays; doubled: it has); pop: 0
+	// its multiplier (TALL_WILD.multiplier; drawn by WildMultiplier): in the base game a random one (x2 to
+	// x1000) it keeps; in the bonus from the start (x2), or its sticky bat's, doubling once in its spin if
+	// it is in a win (as its first hit plays; doubled: it has); pop: 0
 	// to 1 as it pops on doubling. (A tall wild is a spin's: each spin's WILD is a new one.)
 	multiplier: number;
 	doubled: boolean;
@@ -120,7 +122,7 @@ export const startTallWild = (
 		unmorph: new Tween(0),
 		hit: new Tween(0),
 		hitting: undefined,
-		multiplier: bat?.multiplier ?? TALL_WILD.multiplier.start,
+		multiplier: bat?.multiplier ?? ringMultiplier(covered[ringRow].rawSymbol, inBonus),
 		doubled: false,
 		pop: new Tween(0),
 		phase: bat ? 'arrive' : 'hold',
@@ -132,16 +134,39 @@ export const startTallWild = (
 		// speed), easing in and out, gone as the bat lands on it
 		const descent = bat.approachMs / timeScale();
 		const from = TALL_WILD.sticky.coverFadeFrom;
-		tallWild.ringFade.set(0, { delay: descent * from, duration: descent * (1 - from), easing: sineInOut });
+		tallWild.ringFade.set(0, {
+			delay: descent * from,
+			duration: descent * (1 - from),
+			easing: sineInOut,
+		});
 	}
 	run(tallWild, settle);
 };
 
+// A ring's multiplier: the book's (the math rolls it: x2 to x1000 in the base game, x2 in the bonus);
+// for rounds whose rings carry none (older story books), rolled here the same way
+const ringMultiplier = (ring: RawSymbol, inBonus: boolean) => {
+	if (ring.multiplier && ring.multiplier > 1) return ring.multiplier;
+	return inBonus ? TALL_WILD.multiplier.start : rollBaseMultiplier();
+};
+
+// A base game WILD's multiplier: x2 to x1000 at random (TALL_WILD.multiplier.base's weights)
+const rollBaseMultiplier = () => {
+	const entries = Object.entries(TALL_WILD.multiplier.base);
+	let roll = Math.random() * _.sumBy(entries, ([, weight]) => weight);
+	for (const [multiplier, weight] of entries) {
+		roll -= weight;
+		if (roll < 0) return Number(multiplier);
+	}
+	return Number(entries[0][0]);
+};
+
 // The WILD is in a win: its multiplier doubles (and its sticky bat's, which keeps it), popping; only
 // once in its spin (the user, 2026-11-13: "make the wild multiplier double only once per spin if it
-// hits"; it used to double with every winning line it was in).
+// hits"; it used to double with every winning line it was in). Only in the bonus: a base game WILD keeps
+// the multiplier it landed with (2026-11-16).
 const double = (tallWild: TallWild) => {
-	if (tallWild.doubled) return;
+	if (tallWild.doubled || !tallWild.inBonus) return;
 	tallWild.doubled = true;
 	tallWild.multiplier *= 2;
 	if (tallWild.bat) tallWild.bat.multiplier = tallWild.multiplier;

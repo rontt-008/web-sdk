@@ -1,14 +1,17 @@
 // Stands in for Stake Engine's RGS in Storybook, so the game can be played like the real thing (the PLAY
 // stories, as RuneFall's and Cat Hunt's): it keeps a balance, takes each bet at its mode's cost and answers
-// with a round from the story books. Crystal Hollows has no math of its own yet: the books are the sample
-// game's (data/base_books, data/bonus_books), with no lookup table weights, so every round is as likely as
-// any other (pickByWeight with weight 1), not the real odds. Requests to the RGS endpoints are answered
-// here; everything else goes through to the network.
+// with a round from the story books: Crystal Hollows' own math's (data/base_books, data/bonus_books, written
+// by math-sdk/games/crystal_hollows/export_story_books.py: a few hundred rounds drawn by their lookup table
+// weights, each carrying its share as `weight`, so pickByWeight gives losses, wins, free spins and max wins
+// as often as the real game does). Requests to the RGS endpoints are answered here; everything else goes
+// through to the network.
 import { API_AMOUNT_MULTIPLIER } from 'constants-shared/bet';
 
 import config from '../game/config';
 import baseBooks from './data/base_books';
 import bonusBooks from './data/bonus_books';
+import baseTopBooks from './data/base_books_top';
+import bonusTopBooks from './data/bonus_books_top';
 import { pickByWeight } from './pickByWeight';
 
 type BetModeName = keyof typeof config.betModes;
@@ -31,12 +34,14 @@ const landsRings = (book: Book) =>
 const base = baseBooks as Book[];
 const bonus = bonusBooks as Book[];
 
-// which rounds it answers with: any of the books; only rounds whose spin triggers the free spins; only
-// rounds whose spin lands bat rings (each a tall wild). The bonus buy always plays a bonus book.
-export type MockRounds = 'random' | 'free spins' | 'tall wild';
+// which rounds it answers with: any of the books at the real odds; only top wins (1000x the bet and up,
+// data/<mode>_books_top, all as likely, spread up to the max win); only rounds whose spin triggers the free
+// spins; only rounds whose spin lands bat rings (each a tall wild). The bonus buy always plays a bonus book.
+export type MockRounds = 'real odds' | 'top wins' | 'free spins' | 'tall wild';
 
 const ROUNDS: Record<MockRounds, Partial<Record<BetModeName, Book[]>>> = {
-	random: { base, bonus },
+	'real odds': { base, bonus },
+	'top wins': { base: baseTopBooks as Book[], bonus: bonusTopBooks as Book[] },
 	'free spins': { base: base.filter(triggersFreeSpins), bonus },
 	'tall wild': { base: base.filter(landsRings), bonus },
 };
@@ -162,7 +167,7 @@ const installFetch = () => {
 // Returns a function that stops it.
 export const startMockRgs = ({
 	balance,
-	rounds = 'random',
+	rounds = 'real odds',
 }: {
 	balance: number;
 	rounds?: MockRounds;

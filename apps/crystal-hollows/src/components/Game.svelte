@@ -27,6 +27,7 @@
 	import FreeSpinIntro from './FreeSpinIntro.svelte';
 	import FreeSpinCounter from './FreeSpinCounter.svelte';
 	import FreeSpinOutro from './FreeSpinOutro.svelte';
+	import GameInfo from './GameInfo.svelte';
 
 	const context = getContext();
 
@@ -105,5 +106,9 @@
 <Modals theme={uiHtmlTheme} hideReplayCard={context.stateLayout.showLoadingScreen}>
 	{#snippet version()}
 		<GameVersion version="0.0.0" />
+	{/snippet}
+	<!-- no pay table: the rules hold the symbol wins and paylines too (see uiTheme's hidePayTable) -->
+	{#snippet gameRules()}
+		<GameInfo />
 	{/snippet}
 </Modals>

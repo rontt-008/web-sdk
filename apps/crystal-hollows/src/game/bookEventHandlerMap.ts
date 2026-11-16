@@ -9,7 +9,7 @@ import { playBookEvent } from './utils';
 import { winLevelMap, type WinLevel, type WinLevelData } from './winLevelMap';
 import { stateGame, stateGameDerived } from './stateGame.svelte';
 import { tallWildsSettled, tallWildsBack } from './tallWilds.svelte';
-import { flyStickyBats, stickyBatsLeave } from './stickyBats.svelte';
+import { flyStickyBats, planStickyBats, stickyBatsLeave } from './stickyBats.svelte';
 import { nudgeBoardOnSpin } from './boardNudge.svelte';
 import type { BookEvent, BookEventOfType, BookEventContext } from './typesBookEvent';
 import type { Position } from './types';
@@ -71,6 +71,10 @@ export const bookEventHandlerMap: BookEventHandlerMap<BookEvent, BookEventContex
 		// rings that landed turn into tall wilds before anything else happens (tallWilds)
 		await tallWildsSettled();
 		eventEmitter.broadcast({ type: 'soundScatterCounterClear' });
+	},
+	// the math's moves for the sticky bats, which fly as the next reveal's reels drop (stickyBats)
+	stickyBats: async (bookEvent: BookEventOfType<'stickyBats'>) => {
+		planStickyBats(bookEvent.moves);
 	},
 	winInfo: async (bookEvent: BookEventOfType<'winInfo'>) => {
 		eventEmitter.broadcast({ type: 'soundOnce', name: 'sfx_winlevel_small' });

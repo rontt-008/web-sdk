@@ -436,8 +436,25 @@ export const TALL_WILD = {
 	// popScale bigger and back over popMs. It fades in over the morph's frames fadeIn (the cave opened)
 	// and out over the way back's first fadeOut frames (before its stones close). Visual only for now:
 	// the wins are the books' (the real math will have to multiply them).
+	// Since 2026-11-16 (the user: "when wild drops in bonus its 2x start always in bonus, and in basegame
+	// the wilds go up to 1000x like randomly"): in the bonus a new WILD starts at `start` and doubles as
+	// above; in the base game it lands with a random multiplier, x2 to x1000 with these weights (x2 about
+	// half the time, x1000 about 1 in 4,000), and keeps it: no doubling, as it is gone after its spin. The
+	// game rolls it for now; the real math will put it in the book (and these weights in the math).
 	multiplier: {
 		start: 2,
+		base: {
+			2: 2000,
+			3: 1200,
+			5: 600,
+			10: 240,
+			25: 80,
+			50: 30,
+			100: 10,
+			250: 4,
+			500: 2,
+			1000: 1,
+		} as Record<number, number>,
 		// (smaller since 2026-11-13, the user: "make the multiplier smaller"; was 0.54)
 		y: 0.275,
 		fontSize: 0.4,
