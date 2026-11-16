@@ -1,5 +1,5 @@
 """Makes the side panel's marble (static/assets/panel-light.webp, panel-dark.webp) from the board picture
-(art-source/board.png), so the panel is the same stone as the board: the light squares' marble for its
+(art-source/board.webp), so the panel is the same stone as the board: the light squares' marble for its
 page, the dark squares' for its head.
 
 The squares without coordinates on them (files b-h, ranks 2-8) are cut out (a little in from their
@@ -19,7 +19,7 @@ import numpy as np
 import OpenImageIO as oiio
 
 HERE = os.path.dirname(os.path.abspath(__file__))
-SOURCE = os.path.join(HERE, "board.png")
+SOURCE = os.path.join(HERE, "board.webp")
 OUT = os.path.join(HERE, "..", "static", "assets")
 
 SQUARES = 8

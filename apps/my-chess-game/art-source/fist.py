@@ -1,5 +1,5 @@
 """Makes the fist that slams the table as a bonus starts (static/assets/fist.webp) from the user's drawing
-(art-source/fist.png, 1774 x 887, a fist and forearm in a white sleeve on transparency, the sleeve cut off
+(art-source/fist.webp, 1774 x 887, a fist and forearm in a white sleeve on transparency, the sleeve cut off
 along the bottom edge): scaled by SCALE, the whole picture kept so the points the game uses
 (FistSlam.svelte: the middle of the sleeve's cut, where the arm pivots, and the middle of the fist) are
 the same fractions of it.
@@ -14,7 +14,7 @@ import numpy as np
 import OpenImageIO as oiio
 
 HERE = os.path.dirname(os.path.abspath(__file__))
-SOURCE = os.path.join(HERE, "fist.png")
+SOURCE = os.path.join(HERE, "fist.webp")
 OUT = os.path.join(HERE, "..", "static", "assets", "fist.webp")
 # the fist is seen at about 0.4-0.5 of the drawing's size, so this keeps it sharp at twice that
 SCALE = 0.9

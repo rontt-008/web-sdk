@@ -1,5 +1,5 @@
 """Makes the chess pieces' pictures (static/assets/pieces/<colour><piece>.webp) from the user's drawings:
-art-source/pieces/white/<piece>.png (white with black lines) and art-source/pieces/black/<piece>.png
+art-source/pieces/white/<piece>.webp (white with black lines) and art-source/pieces/black/<piece>.webp
 (black with a white edge and white inner lines), each on transparency, 1254 px square, drawn filling it.
 
 Each piece is cut to its outline and scaled to its own height, so the king stands tallest and the pawn
@@ -113,7 +113,7 @@ if __name__ == "__main__":
     os.makedirs(OUT, exist_ok=True)
     for prefix, folder in COLOURS.items():
         for piece in HEIGHTS:
-            rgb, alpha = read(os.path.join(SOURCES, folder, f"{piece}.png"))
+            rgb, alpha = read(os.path.join(SOURCES, folder, f"{piece}.webp"))
             if (folder, piece) in THICKEN:
                 rgb, alpha = thicken(rgb, alpha, THICKEN[(folder, piece)])
             write(place(rgb, alpha, piece), os.path.join(OUT, f"{prefix}{piece}.webp"))

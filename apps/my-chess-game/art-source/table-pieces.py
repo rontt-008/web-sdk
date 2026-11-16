@@ -1,5 +1,5 @@
 """Makes the pieces standing on the table beside the board (static/assets/table-pieces/<piece>.webp) from
-the user's drawings (art-source/table-pieces/<piece>.png: a white king, pawn and rook on transparency):
+the user's drawings (art-source/table-pieces/<piece>.webp: a white king, pawn and rook on transparency):
 each cut to its outline and scaled to HEIGHT px tall, as a WebP with alpha. Their sizes on the table
 are set in the game (Background.svelte).
 
@@ -23,7 +23,7 @@ HEIGHT = 320
 def make(piece):
     config = oiio.ImageSpec()
     config.attribute("oiio:UnassociatedAlpha", 1)
-    pixels = oiio.ImageBuf(os.path.join(SOURCES, f"{piece}.png"), 0, 0, config).get_pixels(oiio.FLOAT)
+    pixels = oiio.ImageBuf(os.path.join(SOURCES, f"{piece}.webp"), 0, 0, config).get_pixels(oiio.FLOAT)
     alpha = pixels[..., 3]
     ys, xs = np.nonzero(alpha > 0.02)
     top, bottom, left, right = ys.min(), ys.max() + 1, xs.min(), xs.max() + 1

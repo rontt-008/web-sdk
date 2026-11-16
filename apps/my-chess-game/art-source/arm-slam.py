@@ -1,6 +1,6 @@
 """Packs the arm slamming its fist on the table, as a bonus starts (static/assets/arm-slam/arm-slam-<n>.{webp,json}
 and src/game/armSlamAssets.ts), from the user's Blender render: "<blender stuff>/folders/arm_table_slam/frames/
-*.png", 53 frames of 1774 x 887 at 30 fps, the same frame as the drawing (art-source/fist.png): the arm comes
+*.png", 53 frames of 1774 x 887 at 30 fps, the same frame as the drawing (art-source/fist.webp): the arm comes
 down past the frame's top right corner, the fist hits the table on frame 9 where it is in the drawing,
 rests, and lifts away; frames 1-4 and 52-53 are empty (left out).
 

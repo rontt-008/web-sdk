@@ -1,4 +1,4 @@
-"""Makes the board's picture (static/assets/board.webp) from the user's board (art-source/board.png, 1254 px
+"""Makes the board's picture (static/assets/board.webp) from the user's board (art-source/board.webp, 1254 px
 square, its eight by eight squares covering all of it under a thin dark edge): scaled to 1024 px so each
 square is exactly 128 px, as a WebP.
 
@@ -11,7 +11,7 @@ import os
 import OpenImageIO as oiio
 
 HERE = os.path.dirname(os.path.abspath(__file__))
-SOURCE = os.path.join(HERE, "board.png")
+SOURCE = os.path.join(HERE, "board.webp")
 OUT = os.path.join(HERE, "..", "static", "assets", "board.webp")
 SIZE = 1024
 

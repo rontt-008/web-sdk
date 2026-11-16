@@ -1,5 +1,5 @@
 """Makes the board's wooden frame (static/assets/board-frame.webp) from the user's frame
-(art-source/board-frame.png, 1254 px, drawn already tipped away: its far side narrower) by straightening
+(art-source/board-frame.webp, 1254 px, drawn already tipped away: its far side narrower) by straightening
 it: its opening is mapped onto a flat square of the board picture's scale (1024 px, 128 a square), the
 frame round it, so the game can tilt it with the board itself (TiltedPlane), whatever TILT is.
 
@@ -18,7 +18,7 @@ import numpy as np
 import OpenImageIO as oiio
 
 HERE = os.path.dirname(os.path.abspath(__file__))
-SOURCE = os.path.join(HERE, "board-frame.png")
+SOURCE = os.path.join(HERE, "board-frame.webp")
 OUT = os.path.join(HERE, "..", "static", "assets", "board-frame.webp")
 # the opening at the board picture's scale, and the board's own units across it
 SQUARE = 1024
