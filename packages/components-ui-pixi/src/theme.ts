@@ -112,6 +112,10 @@ export type UiTheme = {
 		spriteOutline?: { key: string; color: number };
 		// a solid ring around the button, instead of the UI's outline (greyed out like it)
 		ring?: { color: number; width: number };
+		// while a bet mode is switched on (a booster), the button is an X in `icon` on `fill` that
+		// switches it off when pressed, instead of opening the buy menu (as the default button's DISABLE
+		// does)
+		offWhileOn?: { fill: number; fillHovered: number; fillPressed: number; icon: number };
 	};
 	// no pay table button in the menu, for a game whose rules (the info button) cover the pay table
 	hidePayTable?: boolean;

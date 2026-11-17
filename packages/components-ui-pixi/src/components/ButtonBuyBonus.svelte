@@ -17,6 +17,10 @@
 	const active = $derived(stateBetDerived.activeBetMode()?.type === 'activate');
 	const theme = getUiTheme();
 	const pill = !!theme?.buyBonus?.pillWidth;
+	// switched on, it is the off button (an X, in its own colours), with a theme that asks for it
+	// (buyBonus.offWhileOn); otherwise switched on it is lit (the button's active colours)
+	const offButton = $derived(active && !!theme?.buyBonus?.offWhileOn);
+	const lit = $derived(active && !offButton);
 
 	// a pill keeps the margin a round button's hit area has around its circle
 	const sizes = {
@@ -26,12 +30,13 @@
 
 	const openModal = () => (stateModal.modal = { name: 'buyBonus' });
 	const disableActiveBetMode = () => (stateBet.activeBetModeKey = 'BASE');
-	// themed, it always opens the buy menu, where a bet mode that is switched on (like a booster) is
-	// switched off from its card; the default button says DISABLE and switches it off itself
+	// themed, it opens the buy menu, where a bet mode that is switched on (like a booster) is switched
+	// off from its card, unless the theme makes it an off button meanwhile (offButton); the default
+	// button says DISABLE and switches it off itself
 	const onpress = () => {
 		eventEmitter.broadcast({ type: 'soundPressGeneral' });
 
-		if (active && !theme) {
+		if (active && (!theme || offButton)) {
 			disableActiveBetMode();
 		} else {
 			openModal();
@@ -55,15 +60,15 @@
 {#if theme}
 	<Button {...props} {sizes} {disabled} {onpress}>
 		{#snippet children({ center, hovered, pressed })}
-			{@const colors = theme.buyBonus ?? theme.button}
+			{@const colors = (offButton && theme.buyBonus?.offWhileOn) || theme.buyBonus || theme.button}
 			<UiThemeButtonFace
 				{center}
 				{pressed}
-				icon="buyBonus"
-				sprite={theme.buyBonus?.sprite}
-				spriteOutline={theme.buyBonus?.spriteOutline}
-				hideSpriteOutline={disabled || active}
-				text={pill ? i18nDerived.buyBonus() : undefined}
+				icon={offButton ? 'menuExit' : 'buyBonus'}
+				sprite={offButton ? undefined : theme.buyBonus?.sprite}
+				spriteOutline={offButton ? undefined : theme.buyBonus?.spriteOutline}
+				hideSpriteOutline={disabled || lit}
+				text={pill && !offButton ? i18nDerived.buyBonus() : undefined}
 				diameter={UI_BASE_SIZE * theme.button.scale}
 				width={UI_BASE_SIZE * theme.button.scale + getBuyBonusExtraWidth(theme)}
 				cornerRadius={pill
@@ -76,7 +81,7 @@
 				shadow={theme.buyBonus?.shadow}
 				fill={disabled
 					? theme.button.fillDisabled
-					: active
+					: lit
 						? theme.button.fillActive
 						: pressed
 							? colors.fillPressed
@@ -85,7 +90,7 @@
 								: colors.fill}
 				iconColor={disabled
 					? theme.button.iconDisabled
-					: active
+					: lit
 						? theme.button.iconActive
 						: colors.icon}
 			/>

@@ -2,9 +2,11 @@ import _ from 'lodash';
 import { Tween } from 'svelte/motion';
 import { sineInOut } from 'svelte/easing';
 
-import { stateBetDerived } from 'state-shared';
+import { stateBet, stateBetDerived } from 'state-shared';
 
 import { BOARD_DIMENSIONS, TALL_WILD } from './constants';
+import { eventEmitter } from './eventEmitter';
+import { playAt } from './winsHurry.svelte';
 import { hoverStickyBat, landStickyBat, type StickyBat } from './stickyBats.svelte';
 import type { ReelSymbol } from './stateGame.svelte';
 import type { RawSymbol } from './types';
@@ -86,6 +88,8 @@ const run = async (tallWild: TallWild, settle: () => void) => {
 	tallWild.phase = 'glide';
 	await tallWild.glide.set(1, { duration: paced(TALL_WILD.glideMs), easing: sineInOut });
 	tallWild.phase = 'morph';
+	// (several opening at once are heard as one: a sound isn't started again while it plays)
+	eventEmitter.broadcast({ type: 'soundOnce', name: 'sfx_wild_open' });
 	await tallWild.morph.set(TALL_WILD.frames, {
 		duration: paced((TALL_WILD.frames / TALL_WILD.fps) * 1000),
 	});
@@ -147,8 +151,14 @@ export const startTallWild = (
 // for rounds whose rings carry none (older story books), rolled here the same way
 const ringMultiplier = (ring: RawSymbol, inBonus: boolean) => {
 	if (ring.multiplier && ring.multiplier > 1) return ring.multiplier;
-	return inBonus ? TALL_WILD.multiplier.start : rollBaseMultiplier();
+	return inBonus ? bonusStart() : rollBaseMultiplier();
 };
+
+// a new WILD's multiplier in the free spins: higher in the super bonus (its round is bought as SUPER)
+const bonusStart = () =>
+	stateBet.activeBetModeKey.toUpperCase() === 'SUPER'
+		? TALL_WILD.multiplier.superStart
+		: TALL_WILD.multiplier.start;
 
 // A base game WILD's multiplier: x2 to x1000 at random (TALL_WILD.multiplier.base's weights)
 const rollBaseMultiplier = () => {
@@ -171,7 +181,8 @@ const double = (tallWild: TallWild) => {
 	tallWild.multiplier *= 2;
 	if (tallWild.bat) tallWild.bat.multiplier = tallWild.multiplier;
 	tallWild.pop.set(0, { duration: 0 });
-	tallWild.pop.set(1, { duration: TALL_WILD.multiplier.popMs / timeScale() });
+	playAt(tallWild.pop, 1, TALL_WILD.multiplier.popMs);
+	eventEmitter.broadcast({ type: 'soundOnce', name: 'sfx_multiplier_up' });
 };
 
 // The symbols a WILD at rest covers win (ReelSymbol; the wins are shown a line at a time, and a line has
@@ -183,14 +194,17 @@ export const hitTallWild = (reelIndex: number) => {
 	if (!tallWild || tallWild.phase !== 'still') return Promise.resolve();
 	if (tallWild.hitting) return tallWild.hitting;
 	const { frames, fps } = TALL_WILD.hit;
-	const duration = ((frames / fps) * 1000) / timeScale();
+	eventEmitter.broadcast({ type: 'soundOnce', name: 'sfx_wild_hit' });
 	tallWild.hit.set(0, { duration: 0 });
-	tallWild.hitting = Promise.all([
-		tallWild.hit.set(frames, { duration }),
-		new Promise((resolve) => setTimeout(resolve, duration * TALL_WILD.multiplier.at)).then(() =>
-			double(tallWild),
-		),
-	]).then(() => {
+	// (at the wins' speed, faster as it plays if they are hurried: winsHurry)
+	let sprung = false;
+	tallWild.hitting = playAt(tallWild.hit, frames, (frames / fps) * 1000, {
+		onprogress: (p) => {
+			if (sprung || p < TALL_WILD.multiplier.at) return;
+			sprung = true;
+			double(tallWild);
+		},
+	}).then(() => {
 		tallWild.hitting = undefined;
 	});
 	return tallWild.hitting;
@@ -219,6 +233,7 @@ export const releaseTallWild = (reelIndex: number) => {
 // there as a sticky bat.
 const back = async (reelIndex: number, tallWild: TallWild) => {
 	tallWild.phase = 'unmorph';
+	eventEmitter.broadcast({ type: 'soundOnce', name: 'sfx_wild_close' });
 	await tallWild.unmorph.set(TALL_WILD.back.frames, {
 		duration: paced((TALL_WILD.back.frames / TALL_WILD.fps) * 1000),
 	});

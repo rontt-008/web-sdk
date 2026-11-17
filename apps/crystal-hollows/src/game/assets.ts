@@ -170,11 +170,12 @@ export default {
 		type: 'spriteSheet',
 		src: new URL('../../assets/sprites/wildUnmorph/wildUnmorph.json', import.meta.url).href,
 	},
-	// the tall WILD's multiplier is written in it (WildMultiplier, styled like the logo's letters): a
-	// chunky rounded web font (OFL, as Cat Hunt's); pixi names it after the file, fontFamily 'Titan One'
-	titanOne: {
+	// every text over the game is written in it (LogoText, textStyles): Germania One (OFL, Google Fonts),
+	// RuneFall's chunky carved letters (the user, 2026-11-17: "make the font be same as runefall"; Titan
+	// One till then); pixi names it after the file, fontFamily 'Germania One'
+	germaniaOne: {
 		type: 'font',
-		src: new URL('../../assets/fonts/titanOne/titan-one.ttf', import.meta.url).href,
+		src: new URL('../../assets/fonts/germaniaOne/germania-one.ttf', import.meta.url).href,
 	},
 	symbolsStatic: {
 		type: 'sprites',

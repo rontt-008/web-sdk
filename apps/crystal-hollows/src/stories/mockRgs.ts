@@ -8,6 +8,7 @@
 import { API_AMOUNT_MULTIPLIER } from 'constants-shared/bet';
 
 import config from '../game/config';
+import { MYSTERY_CHANCE } from '../game/betModes';
 import baseBooks from './data/base_books';
 import bonusBooks from './data/bonus_books';
 import baseTopBooks from './data/base_books_top';
@@ -37,13 +38,38 @@ const bonus = bonusBooks as Book[];
 // which rounds it answers with: any of the books at the real odds; only top wins (1000x the bet and up,
 // data/<mode>_books_top, all as likely, spread up to the max win); only rounds whose spin triggers the free
 // spins; only rounds whose spin lands bat rings (each a tall wild). The bonus buy always plays a bonus book.
+// The math has no books yet for the buy menu's other modes (betModes.ts), so: the booster plays the base
+// game's, those that trigger the free spins BOOSTED times as likely; the super bonus plays the bonus's
+// (the game shows its WILDs starting higher); the mystery bonus a bonus book half the time and a base
+// game round that wins nothing the other half (MYSTERY_CHANCE).
 export type MockRounds = 'real odds' | 'top wins' | 'free spins' | 'tall wild';
 
+const BOOSTED = 4;
+const weightOf = (book: Book) => book.weight ?? 1;
+const boosted = (books: Book[]) =>
+	books.map((book) => (triggersFreeSpins(book) ? { ...book, weight: weightOf(book) * BOOSTED } : book));
+// a list whose first half of the weight is `wins` and the rest `losses`, each spread as their own weights
+const mystery = (wins: Book[], losses: Book[]) => {
+	const share = (books: Book[], part: number) => {
+		const total = books.reduce((sum, book) => sum + weightOf(book), 0);
+		return books.map((book) => ({ ...book, weight: (weightOf(book) / total) * part * 1e6 }));
+	};
+	return [...share(wins, MYSTERY_CHANCE), ...share(losses, 1 - MYSTERY_CHANCE)];
+};
+const blanks = base.filter((book) => book.payoutMultiplier === 0 && !triggersFreeSpins(book));
+const buys = (baseBooks: Book[], bonusBooks: Book[]) => ({
+	base: baseBooks,
+	booster: boosted(baseBooks),
+	bonus: bonusBooks,
+	super: bonusBooks,
+	mystery: mystery(bonusBooks, blanks),
+});
+
 const ROUNDS: Record<MockRounds, Partial<Record<BetModeName, Book[]>>> = {
-	'real odds': { base, bonus },
-	'top wins': { base: baseTopBooks as Book[], bonus: bonusTopBooks as Book[] },
-	'free spins': { base: base.filter(triggersFreeSpins), bonus },
-	'tall wild': { base: base.filter(landsRings), bonus },
+	'real odds': buys(base, bonus),
+	'top wins': buys(baseTopBooks as Book[], bonusTopBooks as Book[]),
+	'free spins': buys(base.filter(triggersFreeSpins), bonus),
+	'tall wild': buys(base.filter(landsRings), bonus),
 };
 
 // bet sizes offered, in dollars (the bet menu shows a handful of them)

@@ -2,9 +2,9 @@
 	import { onMount } from 'svelte';
 	import { Tween } from 'svelte/motion';
 	import { BaseSprite, type LoadedSpriteSheet } from 'pixi-svelte';
-	import { stateBetDerived } from 'state-shared';
 
 	import { getContext } from '../game/context';
+	import { playAt } from '../game/winsHurry.svelte';
 	import { SYMBOL_SIZE } from '../game/constants';
 
 	// A symbol state drawn from a sprite sheet (the free spins symbol's drop and activation,
@@ -38,10 +38,10 @@
 			props.oncomplete?.();
 			return;
 		}
-		const timeScale = stateBetDerived.timeScale() || 1;
-		frame
-			.set(count - 1, { duration: ((count - 1) / props.symbolInfo.fps) * 1000 / timeScale })
-			.then(() => props.oncomplete?.());
+		// (at the wins' speed: the game's, faster as it plays if the wins are hurried, winsHurry)
+		playAt(frame, count - 1, ((count - 1) / props.symbolInfo.fps) * 1000).then(() =>
+			props.oncomplete?.(),
+		);
 	});
 
 	const at = (k: number) =>

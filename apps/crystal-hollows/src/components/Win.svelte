@@ -9,20 +9,24 @@
 
 <script lang="ts">
 	import { Container } from 'pixi-svelte';
-	import { FadeContainer, WinCountUpProvider, ResponsiveText } from 'components-pixi';
+	import { FadeContainer, WinCountUpProvider } from 'components-pixi';
 	import { waitForResolve, waitForTimeout } from 'utils-shared/wait';
 	import { bookEventAmountToCurrencyString } from 'utils-shared/amount';
 	import { CanvasSizeRectangle, MainContainer } from 'components-layout';
 	import { OnMount } from 'components-shared';
 
 	import PressToContinue from './PressToContinue.svelte';
+	import LogoText from './LogoText.svelte';
 	import { SYMBOL_SIZE } from '../game/constants';
 	import { getContext } from '../game/context';
-	import { gameTextStyle, TEXT_GOLD } from '../game/textStyles';
+	import { LOGO_TEXT_COLORS } from '../game/textStyles';
 
-	// The win counting up over the board in plain text; big wins dim the screen and have their name
-	// (BIG WIN, SUPER WIN...) over the amount. The sample's Mining Mayhem big win animation and coin
-	// fountain were removed.
+	// The win counting up over the board; big wins dim the screen and have their name (BIG WIN, SUPER
+	// WIN...) over the amount. In the game's rock lettering (LogoText; the user, 2026-11-16: every text in
+	// the game but the UI's): the name in the logo's colours, the amount in gold. (Only big wins are shown
+	// here since the same day: bookEventHandlerMap's setWin.) The sample's Mining Mayhem big win animation
+	// and coin fountain were removed.
+	const WORDS = { title: 1.1, amount: 1, small: 0.8, gap: 0.2 };
 
 	const context = getContext();
 
@@ -66,20 +70,24 @@
 
 				<MainContainer>
 					<Container x={board.x} y={board.y}>
+						<!-- (LogoText is centred on its place: half a line above / below the old edges) -->
 						{#if title}
-							<ResponsiveText
-								anchor={{ x: 0.5, y: 1 }}
-								y={-SYMBOL_SIZE * 0.2}
-								{maxWidth}
+							<LogoText
 								text={title}
-								style={gameTextStyle(SYMBOL_SIZE * 1.1)}
+								y={-SYMBOL_SIZE * (WORDS.gap + WORDS.title * 0.6)}
+								fontSize={SYMBOL_SIZE * WORDS.title}
+								{maxWidth}
+								colors={LOGO_TEXT_COLORS.logo}
+								look="logo"
 							/>
 						{/if}
-						<ResponsiveText
-							anchor={isBigWin ? { x: 0.5, y: 0 } : 0.5}
+						<LogoText
+							text={bookEventAmountToCurrencyString(countUpAmount, { counting: !countUpCompleted })}
+							y={isBigWin ? SYMBOL_SIZE * WORDS.amount * 0.6 : 0}
+							fontSize={SYMBOL_SIZE * (isBigWin ? WORDS.amount : WORDS.small)}
 							{maxWidth}
-							text={bookEventAmountToCurrencyString(countUpAmount)}
-							style={gameTextStyle(SYMBOL_SIZE * (isBigWin ? 1 : 0.8), TEXT_GOLD)}
+							colors={LOGO_TEXT_COLORS.gold}
+							look="logo"
 						/>
 					</Container>
 				</MainContainer>

@@ -1,10 +1,10 @@
 <script lang="ts">
 	import { MainContainer, OnPressFullScreen } from 'components-layout';
 	import { OnHotkey } from 'components-shared';
-	import { Text } from 'pixi-svelte';
 
 	import { getContext } from '../game/context';
-	import { gameTextStyle } from '../game/textStyles';
+	import { LOGO_TEXT_COLORS } from '../game/textStyles';
+	import LogoText from './LogoText.svelte';
 
 	type Props = {
 		onpress: () => void;
@@ -15,19 +15,23 @@
 	const props: Props = $props();
 	const context = getContext();
 
-	// the sample's Mining Mayhem picture of the words was replaced by plain text in the UI's look
+	// the sample's Mining Mayhem picture of the words was replaced by plain text in the UI's look, and
+	// that by the game's rock lettering in pale stone (LogoText; the user, 2026-11-16: every text in the
+	// game but the UI's), centred half a line above its old bottom edge
 	const FONT_SIZE = 40;
 	const BOTTOM_GAP = 60;
 </script>
 
 {#if !props.hideText}
 	<MainContainer alignVertical="bottom">
-		<Text
-			anchor={{ x: 0.5, y: 1 }}
+		<LogoText
 			x={context.stateLayoutDerived.mainLayout().width * 0.5}
-			y={context.stateLayoutDerived.mainLayout().height - BOTTOM_GAP}
+			y={context.stateLayoutDerived.mainLayout().height - BOTTOM_GAP - FONT_SIZE * 0.6}
 			text="PRESS ANYWHERE TO CONTINUE"
-			style={gameTextStyle(FONT_SIZE)}
+			fontSize={FONT_SIZE}
+			maxWidth={context.stateLayoutDerived.mainLayout().width * 0.92}
+			colors={LOGO_TEXT_COLORS.stone}
+			look="logo"
 		/>
 	</MainContainer>
 {/if}

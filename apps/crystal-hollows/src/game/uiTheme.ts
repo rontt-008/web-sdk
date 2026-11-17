@@ -101,6 +101,11 @@ export const uiTheme: UiTheme = {
 		sprite: 'buyBonusLogo',
 		spriteOutline: { key: 'buyBonusLogoOutline', color: BLACK },
 		ring: { color: OUTLINE, width: BUY_BONUS_OUTLINE },
+		// with the BOOSTER on, it is an X that switches it off (the user, 2026-11-17: "when enabling a
+		// booster make this button have a X on it when u press it it disables"), a white X on the UI's
+		// grey, as its other buttons ("make the button same gray as the rest of the ui not black"; black
+		// before that, and the lit cream with a dark X at first)
+		offWhileOn: { fill: BUTTON, fillHovered: 0x403f47, fillPressed: 0x2a2930, icon: WHITE },
 	},
 	// mute music and mute sounds buttons beside the menu button, instead of the menu's sound switch
 	muteButtons: true,

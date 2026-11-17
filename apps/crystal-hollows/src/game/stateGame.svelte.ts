@@ -11,7 +11,7 @@ import { winLevelMap } from './winLevelMap';
 import { eventEmitter } from './eventEmitter';
 import { PICTURE } from './caveWater';
 import { startTallWild } from './tallWilds.svelte';
-import { stickyBatOn } from './stickyBats.svelte';
+import { stickyBatOn, watchReels } from './stickyBats.svelte';
 import { symbolLanded } from './landPose.svelte';
 import {
 	SYMBOL_SIZE,
@@ -58,6 +58,14 @@ const onSymbolLand = ({ rawSymbol, symbolIndex }: { rawSymbol: RawSymbol; symbol
 // the same 0.1 s, were taken out on 2026-11-13; this read their skeletons' `impact` event till then.)
 const landLead = () => FREE_SPINS.impactMs / stateBetDerived.timeScale();
 
+const REEL_STOP_SOUNDS = [
+	'sfx_reel_stop_1',
+	'sfx_reel_stop_2',
+	'sfx_reel_stop_3',
+	'sfx_reel_stop_4',
+	'sfx_reel_stop_5',
+] as const;
+
 const board = _.range(BOARD_DIMENSIONS.x).map((reelIndex) => {
 	// the reels drop their symbols in, rather than spinning (SPIN_OPTIONS)
 	const reel = createReelForCascading({
@@ -66,9 +74,10 @@ const board = _.range(BOARD_DIMENSIONS.x).map((reelIndex) => {
 		initialSymbols: INITIAL_BOARD[reelIndex],
 		initialSymbolState: INITIAL_SYMBOL_STATE,
 		onReelStopping: () => {
+			// each reel's set lands as its own stone (scripts/generate-sounds.mjs)
 			eventEmitter.broadcast({
 				type: 'soundOnce',
-				name: 'sfx_reel_stop_1',
+				name: REEL_STOP_SOUNDS[reelIndex],
 				forcePlay: !stateBet.isTurbo,
 			});
 		},
@@ -97,6 +106,12 @@ const board = _.range(BOARD_DIMENSIONS.x).map((reelIndex) => {
 
 	return reel;
 });
+
+// the bonus's sticky bats fake landings on symbols, so on reels at rest or with their symbols dropping in
+// (not while a reel is empty: its symbols falling out or hanging before they drop)
+watchReels(() =>
+	board.map((reel) => reel.reelState.motion === 'stopped' || reel.reelState.motion === 'fallingIn'),
+);
 
 export type Reel = (typeof board)[number];
 export type ReelSymbol = Reel['reelState']['symbols'][number];

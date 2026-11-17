@@ -53,7 +53,20 @@ export type SoundEffectName =
 	| 'tumble_win_1'
 	| 'tumble_win_2'
 	| 'tumble_win_3'
-	| 'tumble_win_4';
+	| 'tumble_win_4'
+	| 'tumble_win_5'
+	// the game's own (scripts/generate-sounds.mjs): the bat right of the board attacking (BatSpine),
+	// the bonus's sticky bats flying (stickyBats), the tall WILD opening, closing and its bat reacting
+	// to a win (tallWilds), and the 2nd to 5th win lines (bookEventHandlerMap's winInfo)
+	| 'sfx_bat_attack'
+	| 'sfx_bat_fly'
+	| 'sfx_wild_open'
+	| 'sfx_wild_close'
+	| 'sfx_wild_hit'
+	| 'sfx_win_line_1'
+	| 'sfx_win_line_2'
+	| 'sfx_win_line_3'
+	| 'sfx_win_line_4';
 
 export type SoundName = MusicName | SoundEffectName;
 

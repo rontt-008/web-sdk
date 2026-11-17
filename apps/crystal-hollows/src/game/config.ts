@@ -13,8 +13,34 @@ export default {
 			rtp: 0.967,
 			max_win: 25000.0,
 		},
+		// the buy menu's (betModes.ts; the user, 2026-11-17: "make these have only the booster and normal
+		// bonus buy, super bonus buy and gamble bonus buy"). Placeholders till the math has them: the
+		// booster as RuneFall's (the base game's spins for 3x the bet, the free spins far more often), the
+		// super bonus twice the bonus (its WILDs start at twice the multiplier), the mystery bonus half of
+		// it (a 50% chance of the bonus, so the same return; it was the gamble till the user renamed it).
+		booster: {
+			cost: 3.0,
+			feature: true,
+			buyBonus: false,
+			rtp: 0.967,
+			max_win: 25000.0,
+		},
 		bonus: {
 			cost: 100.0,
+			feature: false,
+			buyBonus: true,
+			rtp: 0.967,
+			max_win: 25000.0,
+		},
+		super: {
+			cost: 200.0,
+			feature: false,
+			buyBonus: true,
+			rtp: 0.967,
+			max_win: 25000.0,
+		},
+		mystery: {
+			cost: 50.0,
 			feature: false,
 			buyBonus: true,
 			rtp: 0.967,

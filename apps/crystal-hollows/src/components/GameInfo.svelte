@@ -4,6 +4,15 @@
 	import assets from '../game/assets';
 	import config from '../game/config';
 	import { TALL_WILD } from '../game/constants';
+	import {
+		BOOSTER_COST,
+		BONUS_COST,
+		SUPER_COST,
+		MYSTERY_COST,
+		MYSTERY_CHANCE,
+		BONUS_WILD_START,
+		SUPER_WILD_START,
+	} from '../game/betModes';
 
 	// The game rules (the menu's info button), which hold the pay table too (uiTheme's hidePayTable): the
 	// symbol wins, the bat wild and free spins, the paylines, the bonus buy, RTP, the controls and the
@@ -89,9 +98,12 @@
 	// every way to play, with its cost, RTP and max win
 	const MODES = [
 		{ name: 'Base game', mode: config.betModes.base },
+		{ name: 'Booster', mode: config.betModes.booster },
 		{ name: 'Bonus', mode: config.betModes.bonus },
+		{ name: 'Super bonus', mode: config.betModes.super },
+		{ name: 'Mystery bonus', mode: config.betModes.mystery },
 	];
-	const BONUS_COST = config.betModes.bonus.cost;
+	const MYSTERY_PERCENT = Math.round(MYSTERY_CHANCE * 100);
 	const maxWin = Math.max(...MODES.map(({ mode }) => mode.max_win));
 	const WILD_START = TALL_WILD.multiplier.start;
 	const BASE_MULTIPLIERS = Object.keys(TALL_WILD.multiplier.base).map(Number);
@@ -223,8 +235,21 @@
 		<h2>{words.buyBonus}</h2>
 		<div class="card text">
 			<p>
-				Go straight to FREE SPINS for {BONUS_COST}x the {words.bet}: the round starts with a spin
-				that lands 3 or more FS symbols.
+				BOOSTER: switched on in the bonus menu, each spin {words.costs} {BOOSTER_COST}x the
+				{words.bet} and triggers FREE SPINS far more often. It stays on until you turn it off: in the
+				bonus menu, or with the X the bonus button shows while it is on.
+			</p>
+			<p>
+				BONUS: go straight to FREE SPINS for {BONUS_COST}x the {words.bet}: the round starts with a
+				spin that lands 3 or more FS symbols.
+			</p>
+			<p>
+				SUPER BONUS: go straight to SUPER FREE SPINS for {SUPER_COST}x the {words.bet}: every bat
+				WILD starts at x{SUPER_WILD_START} instead of x{BONUS_WILD_START}.
+			</p>
+			<p>
+				MYSTERY BONUS: a {MYSTERY_PERCENT}% chance of FREE SPINS for {MYSTERY_COST}x the
+				{words.bet}. If the mystery opens, the FREE SPINS start; if not, the round ends.
 			</p>
 		</div>
 	</section>

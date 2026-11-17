@@ -182,13 +182,14 @@ export const LAND_POSE = {
 // dropped (quadIn) into their places with no bounce of their own (the free spins symbol's drop thumps
 // and bounces as it hits, landLead in stateGame; the letters' and premiums' land animations did too
 // till 2026-11-13, when the user had them taken out). Speeds in px/ms (on average). An
-// anticipated reel waits longer before its symbols drop (reelPaddingMultiplierAnticipated).
+// anticipated reel waits longer before its symbols drop (reelPaddingMultiplierAnticipated: 12 since
+// 2026-11-17's anticipation rework, ~1.7 s of it a reel; 6 till then, ~1 s; turbo's 7).
 // The normal drop is SPIN_PACE times as slow as it first was (the user, 2026-11-12: "make ... the spins
 // slower"); turbo's is as it was.
 const SPIN_PACE = 1.5;
 const SPIN_OPTIONS_SHARED = {
 	reelPaddingMultiplierNormal: 1.25,
-	reelPaddingMultiplierAnticipated: 6,
+	reelPaddingMultiplierAnticipated: 12,
 	symbolFallInBounceSpeed: 0.15,
 	symbolFallInBounceSizeMulti: 0,
 	symbolFallInEasing: quadIn,
@@ -207,6 +208,7 @@ export const SPIN_OPTIONS_DEFAULT = {
 
 export const SPIN_OPTIONS_FAST = {
 	...SPIN_OPTIONS_SHARED,
+	reelPaddingMultiplierAnticipated: 7,
 	reelFallOutDelay: 60,
 	reelFallInDelay: 90,
 	symbolFallOutSpeed: 6,
@@ -403,19 +405,21 @@ export const TALL_WILD = {
 	ringSize: 1180 / 1254,
 	back: { from: 2, frames: 50, close: { from: 14, to: 38 } },
 	// in the bonus the bat then stays (stickyBats): hovering in the reel's middle as the ring (ringSize);
-	// as the next free spin's reels spin it takes off, growing to WILD_SIZE over growMs, and flutters
-	// round the board (a smooth path through random waypoints, one every segmentMs, each up to reach
-	// cells from the last and then pulled `homing` of the way to the cell it is going to), leaning (tilt,
-	// radians) into its flight; once its new reel stops it eases onto its cell from the way it was flying,
+	// as the next free spin's reels spin it takes off, growing to WILD_SIZE over growMs, and flies round
+	// the board faking landings (`fake`: the user, 2026-11-17, "when the bats are flying randomly make them
+	// fly on top of other symbols to fake them"; it used to flutter along a smooth path through random
+	// waypoints): it hops from symbol to symbol, hopMs a hop, rising `arc` cells mid-hop, up to `reach`
+	// cells at a time, each hop likelier to go nearer the cell it is going to (`homing`: how much a cell
+	// further from it counts against it, per cell), and settles on each for holdMs as if landing there (its
+	// size dipping by `squash`) before taking off again; leaning (tilt, radians) into its flight; once its
+	// new reel stops it eases onto its cell from the way it was flying,
 	// slowing to a stop, in about the time it takes to stop from `cruise` (cells/s, about its wander's
 	// speed) over the distance left, approachMs to approachMaxMs (2026-11-13: it used to dash there in a
 	// fixed 380 ms from wherever it was); it spins there (spinMs) and flies to the middle as a ring that
 	// landed does; when the bonus ends it rises and fades away over leaveMs
 	sticky: {
 		growMs: 300,
-		segmentMs: 420,
-		reach: { x: 1.6, y: 1.3 },
-		homing: 0.45,
+		fake: { hopMs: 320, holdMs: 250, arc: 0.22, reach: 2.3, homing: 0.6, squash: 0.1 },
 		tilt: 0.3,
 		cruise: 3,
 		approachMs: 380,
@@ -443,6 +447,8 @@ export const TALL_WILD = {
 	// game rolls it for now; the real math will put it in the book (and these weights in the math).
 	multiplier: {
 		start: 2,
+		// in the super bonus (bought: betModes SUPER_MODE) a new WILD starts at this instead
+		superStart: 4,
 		base: {
 			2: 2000,
 			3: 1200,
@@ -499,3 +505,10 @@ export const SCATTER_LAND_SOUND_MAP = {
 	4: 'sfx_scatter_stop_4',
 	5: 'sfx_scatter_stop_5',
 } as const;
+
+// The crystal bat's skeleton (Bat, BatSign; art-source/bat-spine.py), in its own units with y down (its
+// origin between its shoulders): where its wings reach over its `fly` loop, measured with Spine's maths
+// frame by frame (the box the side bat is fitted by), and where its feet are at rest (between the tips of
+// its legs' bones, leg_L and leg_R, from the box's middle).
+export const BAT_LOOP_BOUNDS = { x: -739, y: -548, width: 1462, height: 987 };
+export const BAT_FEET = { x: 116, y: 249.5 };

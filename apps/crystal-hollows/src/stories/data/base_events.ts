@@ -165,7 +165,7 @@ export default {
 					},
 				],
 				meta: {
-					lineIndex: 4,
+					lineIndex: 11,
 					multiplier: 1,
 					winWithoutMult: 200,
 					globalMult: 1,
@@ -191,7 +191,7 @@ export default {
 					},
 				],
 				meta: {
-					lineIndex: 13,
+					lineIndex: 9,
 					multiplier: 1,
 					winWithoutMult: 200,
 					globalMult: 1,
@@ -200,10 +200,11 @@ export default {
 			},
 		],
 	},
+	// a big win: only big wins are shown over the board (bookEventHandlerMap's setWin)
 	setWin: {
 		type: 'setWin',
-		amount: 400,
-		winLevel: 4,
+		amount: 2000,
+		winLevel: 6,
 	},
 	freeSpinEnd: {
 		type: 'freeSpinEnd',

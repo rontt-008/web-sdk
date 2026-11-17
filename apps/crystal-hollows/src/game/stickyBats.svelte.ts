@@ -5,6 +5,7 @@ import { cubicOut } from 'svelte/easing';
 import { stateBetDerived } from 'state-shared';
 
 import { BOARD_DIMENSIONS, TALL_WILD, WILD_SIZE } from './constants';
+import { eventEmitter } from './eventEmitter';
 import type { ReelSymbol } from './stateGame.svelte';
 import type { RawSymbol } from './types';
 
@@ -29,6 +30,7 @@ export type StickyBat = {
 	mode: 'hover' | 'wander' | 'approach' | 'perch';
 	pos: Point;
 	tilt: number; // radians, leaning into its flight
+	dip: number; // 0-1, settling onto a symbol it fakes a landing on (its size dips)
 	size: Tween<number>; // cells
 	alpha: Tween<number>;
 	rise: Tween<number>; // cells, as it leaves at the bonus's end
@@ -37,7 +39,7 @@ export type StickyBat = {
 	// doubles it with every winning line it is in (tallWilds)
 	multiplier: number;
 	landed: Promise<void>; // it is on its cell
-	path: Point[]; // the wander's waypoints
+	path: Point[]; // the wander's cells: where it took off, then each it fakes a landing on
 	since: number; // ms (performance.now) its wander or approach started
 	from: Point; // where its approach started
 	velocity: Point; // cells per ms (at the game's speed), how it was flying as its approach started
@@ -56,7 +58,7 @@ const MIDDLE = (BOARD_DIMENSIONS.y - 1) / 2;
 export const hoverStickyBat = (reel: number, bat: StickyBat | undefined, multiplier: number) => {
 	const pos = { x: reel, y: MIDDLE };
 	if (bat) {
-		Object.assign(bat, { mode: 'hover', pos, tilt: 0, hovers: bat.hovers + 1, multiplier });
+		Object.assign(bat, { mode: 'hover', pos, tilt: 0, dip: 0, hovers: bat.hovers + 1, multiplier });
 		bat.size.set(TALL_WILD.ringSize, { duration: 0 });
 		return;
 	}
@@ -69,6 +71,7 @@ const newStickyBat = (reel: number, pos: Point, multiplier: number, alpha: numbe
 		mode: 'hover',
 		pos,
 		tilt: 0,
+		dip: 0,
 		size: new Tween(TALL_WILD.ringSize),
 		alpha: new Tween(alpha),
 		rise: new Tween(0),
@@ -100,47 +103,78 @@ export const planStickyBats = (moves: StickyBatMove[]) => {
 const ENTRY = { x: (BOARD_DIMENSIONS.x - 1) / 2, y: -1.5 };
 
 // ---------------------------------------------------------------- the flight
-// The wander: a smooth curve (Catmull-Rom) through random waypoints, one every segmentMs, each a little
-// way from the last (TALL_WILD.sticky.reach cells) and then pulled `homing` of the way to its cell, so it
-// flutters over towards it and round it till its reel stops. It takes off from rest (the first segment
-// eases in).
-const nextWaypoint = (p: Point, to: Point): Point => {
-	const { reach, homing } = TALL_WILD.sticky;
-	const x = p.x + _.random(-reach.x, reach.x, true);
-	const y = p.y + _.random(-reach.y, reach.y, true);
-	return {
-		x: _.clamp(x + (to.x - x) * homing, -0.2, BOARD_DIMENSIONS.x - 0.8),
-		y: _.clamp(y + (to.y - y) * homing, 0, BOARD_DIMENSIONS.y - 1),
-	};
+// The wander: faking landings (TALL_WILD.sticky.fake). It hops from symbol to symbol (cells: x a reel, y
+// a row), each hop easing out of the last cell and into the next along a little arc, and settles on each
+// for a moment as if landing there, then takes off again, till its reel stops. The next cell: a different
+// one, up to `reach` cells away, not where another bat is faking, on a reel showing its symbols (the
+// ones it fakes landings on; anywhere while the board is empty, as the reels drop), picked at random, the
+// ones nearer the cell it is really going to likelier (by `homing` per cell).
+// (which reels show their symbols: stateGame tells, as it has the reels)
+let reelsShowing: () => boolean[] = () => [];
+export const watchReels = (showing: () => boolean[]) => {
+	reelsShowing = showing;
 };
-const catmullRom = (a: number, b: number, c: number, d: number, u: number) =>
-	0.5 * (2 * b + (c - a) * u + (2 * a - 5 * b + 4 * c - d) * u * u + (3 * b - a - 3 * c + d) * u * u * u);
-// its slope (per u)
-const catmullRomSlope = (a: number, b: number, c: number, d: number, u: number) =>
-	0.5 * (c - a + 2 * (2 * a - 5 * b + 4 * c - d) * u + 3 * (3 * b - a - 3 * c + d) * u * u);
-
-// where it is and how it is flying (cells per ms), `elapsed` ms into its wander
-const wanderAt = (bat: StickyBat, elapsed: number) => {
-	const segment = TALL_WILD.sticky.segmentMs;
-	// the take-off: the first segment's time eased in (2u² - u³: from rest, at full speed by its end)
-	let time = elapsed;
-	let pace = 1;
-	if (elapsed < segment) {
-		const u = elapsed / segment;
-		time = segment * (2 * u * u - u * u * u);
-		pace = 4 * u - 3 * u * u;
+const fakeCell = (bat: StickyBat, from: Point): Point => {
+	const { reach, homing } = TALL_WILD.sticky.fake;
+	const taken = stateStickyBats.bats
+		.filter((other) => other !== bat && other.mode === 'wander')
+		.map((other) => other.path[other.path.length - 1]);
+	const cells = _.range(BOARD_DIMENSIONS.x).flatMap((x) =>
+		_.range(BOARD_DIMENSIONS.y).map((y) => ({ x, y })),
+	);
+	const choices = cells.filter((cell) => {
+		const distance = Math.hypot(cell.x - from.x, cell.y - from.y);
+		return (
+			distance >= 0.9 &&
+			distance <= reach &&
+			!taken.some((other) => other && other.x === cell.x && other.y === cell.y)
+		);
+	});
+	if (!choices.length) return bat.to;
+	const showing = reelsShowing();
+	const onSymbols = choices.filter((cell) => showing[cell.x]);
+	if (onSymbols.length) choices.splice(0, choices.length, ...onSymbols);
+	const weights = choices.map((cell) =>
+		Math.exp(-homing * Math.hypot(cell.x - bat.to.x, cell.y - bat.to.y)),
+	);
+	let roll = Math.random() * _.sum(weights);
+	for (let i = 0; i < choices.length; i++) {
+		roll -= weights[i];
+		if (roll < 0) return choices[i];
 	}
-	const i = Math.floor(time / segment);
-	while (bat.path.length < i + 4) bat.path.push(nextWaypoint(bat.path[bat.path.length - 1], bat.to));
-	const [a, b, c, d] = bat.path.slice(i, i + 4);
-	const u = time / segment - i;
-	return {
-		pos: { x: catmullRom(a.x, b.x, c.x, d.x, u), y: catmullRom(a.y, b.y, c.y, d.y, u) },
-		velocity: {
-			x: (catmullRomSlope(a.x, b.x, c.x, d.x, u) * pace) / segment,
-			y: (catmullRomSlope(a.y, b.y, c.y, d.y, u) * pace) / segment,
-		},
-	};
+	return choices[choices.length - 1];
+};
+
+// where it is, how it is flying (cells per ms) and how far it has settled onto a symbol (0-1), `elapsed`
+// ms into its wander
+const wanderAt = (bat: StickyBat, elapsed: number) => {
+	const { hopMs, holdMs, arc } = TALL_WILD.sticky.fake;
+	const cycle = hopMs + holdMs;
+	const k = Math.floor(elapsed / cycle);
+	const t = elapsed - k * cycle;
+	while (bat.path.length < k + 2) bat.path.push(fakeCell(bat, bat.path[bat.path.length - 1]));
+	const a = bat.path[k];
+	const b = bat.path[k + 1];
+	if (t < hopMs) {
+		// the hop: eased in and out (a half cosine), rising mid-way
+		const u = t / hopMs;
+		const eased = 0.5 - 0.5 * Math.cos(Math.PI * u);
+		const slope = 0.5 * Math.PI * Math.sin(Math.PI * u);
+		const lift = arc * Math.min(1, Math.hypot(b.x - a.x, b.y - a.y));
+		return {
+			pos: {
+				x: a.x + (b.x - a.x) * eased,
+				y: a.y + (b.y - a.y) * eased - lift * Math.sin(Math.PI * u),
+			},
+			velocity: {
+				x: ((b.x - a.x) * slope) / hopMs,
+				y: ((b.y - a.y) * slope - lift * Math.PI * Math.cos(Math.PI * u)) / hopMs,
+			},
+			dip: 0,
+		};
+	}
+	// on the symbol, as if landing: settling onto it and lifting off again
+	return { pos: b, velocity: { x: 0, y: 0 }, dip: Math.sin((Math.PI * (t - hopMs)) / holdMs) };
 };
 
 // The approach: from where it is, flying on as it was (its velocity), curving round onto its cell and
@@ -165,7 +199,8 @@ const step = (now: number) => {
 		// (the frame's time can be a little before the moment it took off)
 		const elapsed = Math.max(0, now - bat.since) * timeScale();
 		let pos = bat.pos;
-		if (bat.mode === 'wander') pos = wanderAt(bat, elapsed).pos;
+		let dip = 0;
+		if (bat.mode === 'wander') ({ pos, dip } = wanderAt(bat, elapsed));
 		if (bat.mode === 'approach') {
 			const u = Math.min(1, elapsed / bat.approachMs);
 			pos = approachAt(bat, u);
@@ -179,6 +214,7 @@ const step = (now: number) => {
 			const lean = _.clamp((pos.x - bat.pos.x) * 6, -1, 1) * TALL_WILD.sticky.tilt;
 			bat.tilt += (bat.mode === 'perch' ? -bat.tilt : lean - bat.tilt) * 0.2;
 			bat.pos = pos;
+			bat.dip = dip;
 		}
 	}
 	if (stateStickyBats.bats.some((bat) => bat.mode !== 'hover')) frame = requestAnimationFrame(step);
@@ -212,6 +248,7 @@ export const flyStickyBats = (board: RawSymbol[][]) => {
 			if (move.to < 0) leave(bat);
 			else takeOff(bat, move.to, move.row);
 		}
+		if (moves.length) flapping();
 		moving();
 		return;
 	}
@@ -226,8 +263,12 @@ export const flyStickyBats = (board: RawSymbol[][]) => {
 		taken.add(to);
 		takeOff(bat, to, pickRow(board[to] ?? []));
 	}
+	if (stateStickyBats.bats.length) flapping();
 	moving();
 };
+
+// the bats' wings as they take off (or fly away): one flutter for them all
+const flapping = () => eventEmitter.broadcast({ type: 'soundOnce', name: 'sfx_bat_fly' });
 
 // a bat takes off for reel `to`, to come down on row `row` once that reel stops
 const takeOff = (bat: StickyBat, to: number, row: number) => {
@@ -235,7 +276,7 @@ const takeOff = (bat: StickyBat, to: number, row: number) => {
 	bat.to = { x: to, y: row };
 	bat.mode = 'wander';
 	bat.since = performance.now();
-	bat.path = [bat.pos, bat.pos];
+	bat.path = [bat.pos];
 	bat.landed = new Promise((resolve) => (bat.land = resolve));
 	bat.size.set(WILD_SIZE, { duration: TALL_WILD.sticky.growMs / timeScale(), easing: cubicOut });
 };
@@ -279,4 +320,7 @@ const leave = async (bat: StickyBat) => {
 };
 
 // The bonus is over: the bats rise and fade away.
-export const stickyBatsLeave = () => Promise.all(stateStickyBats.bats.map(leave));
+export const stickyBatsLeave = () => {
+	if (stateStickyBats.bats.length) flapping();
+	return Promise.all(stateStickyBats.bats.map(leave));
+};

@@ -11,6 +11,7 @@ import { stateGame, stateGameDerived } from './stateGame.svelte';
 import { tallWildsSettled, tallWildsBack } from './tallWilds.svelte';
 import { flyStickyBats, planStickyBats, stickyBatsLeave } from './stickyBats.svelte';
 import { nudgeBoardOnSpin } from './boardNudge.svelte';
+import { winsShowing } from './winsHurry.svelte';
 import type { BookEvent, BookEventOfType, BookEventContext } from './typesBookEvent';
 import type { Position } from './types';
 import config from './config';
@@ -38,6 +39,8 @@ const winLevelSoundsStop = () => {
 	}
 	eventEmitter.broadcastAsync({ type: 'uiShow' });
 };
+
+const WIN_LINE_SOUNDS = ['sfx_win_line_1', 'sfx_win_line_2', 'sfx_win_line_3', 'sfx_win_line_4'] as const;
 
 const animateSymbols = async ({ positions }: { positions: Position[] }) => {
 	eventEmitter.broadcast({ type: 'boardShow' });
@@ -78,9 +81,21 @@ export const bookEventHandlerMap: BookEventHandlerMap<BookEvent, BookEventContex
 	},
 	winInfo: async (bookEvent: BookEventOfType<'winInfo'>) => {
 		eventEmitter.broadcast({ type: 'soundOnce', name: 'sfx_winlevel_small' });
-		await sequence(bookEvent.wins, async (win) => {
+		// each line win's payline is drawn over the board with its win on it while its symbols play
+		// (WinLines)
+		// a click while they show plays the rest fast (winsHurry)
+		winsShowing(true);
+		await sequence(bookEvent.wins, async (win, index) => {
+			// the first line has the win's own sound (above); each one after it a drop and a crystal, a
+			// step higher each line, up to the 5th
+			if (index > 0) {
+				eventEmitter.broadcast({ type: 'soundOnce', name: WIN_LINE_SOUNDS[Math.min(index, 4) - 1] });
+			}
+			eventEmitter.broadcast({ type: 'winLineShow', win });
 			await animateSymbols({ positions: win.positions });
+			eventEmitter.broadcast({ type: 'winLineHide' });
 		});
+		winsShowing(false);
 	},
 	setTotalWin: async (bookEvent: BookEventOfType<'setTotalWin'>) => {
 		stateBet.winBookEventAmount = bookEvent.amount;
@@ -155,6 +170,10 @@ export const bookEventHandlerMap: BookEventHandlerMap<BookEvent, BookEventContex
 	},
 	setWin: async (bookEvent: BookEventOfType<'setWin'>) => {
 		const winLevelData = winLevelMap[bookEvent.winLevel as WinLevel];
+		// only big wins (BIG WIN and up) count up over the board; smaller ones are already shown on their
+		// lines (WinLines) and in the UI's win panel (the user, 2026-11-16: "make the win appear only on the
+		// screen if its big")
+		if (winLevelData?.type !== 'big') return;
 
 		eventEmitter.broadcast({ type: 'winShow' });
 		winLevelSoundsPlay({ winLevelData });

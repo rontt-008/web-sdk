@@ -14,6 +14,7 @@
 	import { coverAlpha, hitTallWild, underTallWild } from '../game/tallWilds.svelte';
 	import { stateLanded, landPose } from '../game/landPose.svelte';
 	import type { ReelSymbol } from '../game/stateGame.svelte';
+	import { stateAnticipation, throb } from '../game/anticipation.svelte';
 
 	type Props = {
 		reelIndex: number;
@@ -69,6 +70,15 @@
 		pose.set(1, { duration: LAND_POSE.durationMs / (stateBetDerived.timeScale() || 1) });
 	});
 	const squash = $derived(landPose(pose.current));
+
+	// while a reel anticipates, the free spins rocks already down swell a little on each beat
+	// (anticipation.svelte; the user, 2026-11-17: "rework the reel anticipation")
+	const TEASE = 0.09;
+	const tease = $derived(
+		props.reelSymbol.rawSymbol.name === 'S' && stateAnticipation.active
+			? 1 + TEASE * throb(stateAnticipation.time)
+			: 1,
+	);
 	const POSE_PIVOT = LAND_POSE.pivot * SYMBOL_SIZE;
 </script>
 
@@ -80,29 +90,31 @@
 	animating={isWin || overBoard}
 >
 	<Container {alpha} y={POSE_PIVOT} pivot={{ x: 0, y: POSE_PIVOT }} scale={squash}>
-		{#if isWin && !winUnderWild}
-			<SymbolWin pulse={!winPlays} oncomplete={() => props.reelSymbol.oncomplete()}>
-				{#snippet children(done)}
+		<Container scale={tease}>
+			{#if isWin && !winUnderWild}
+				<SymbolWin pulse={!winPlays} oncomplete={() => props.reelSymbol.oncomplete()}>
+					{#snippet children(done)}
+						<Symbol
+							state="win"
+							rawSymbol={props.reelSymbol.rawSymbol}
+							oncomplete={winPlays ? done : undefined}
+						/>
+					{/snippet}
+				</SymbolWin>
+			{:else}
+				{#key hidden}
 					<Symbol
-						state="win"
+						{state}
 						rawSymbol={props.reelSymbol.rawSymbol}
-						oncomplete={winPlays ? done : undefined}
+						oncomplete={() => {
+							// (only its land itself ends it: not an oversize symbol's still, shown in its place
+							// till its reel is at rest, which says it is done as soon as it shows)
+							if (props.reelSymbol.symbolState === 'land' && state === 'land')
+								props.reelSymbol.symbolState = 'static';
+						}}
 					/>
-				{/snippet}
-			</SymbolWin>
-		{:else}
-			{#key hidden}
-				<Symbol
-					{state}
-					rawSymbol={props.reelSymbol.rawSymbol}
-					oncomplete={() => {
-						// (only its land itself ends it: not an oversize symbol's still, shown in its place
-						// till its reel is at rest, which says it is done as soon as it shows)
-						if (props.reelSymbol.symbolState === 'land' && state === 'land')
-							props.reelSymbol.symbolState = 'static';
-					}}
-				/>
-			{/key}
-		{/if}
+				{/key}
+			{/if}
+		</Container>
 	</Container>
 </SymbolWrap>

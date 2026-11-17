@@ -5,7 +5,8 @@
 	import { cubicOut, cubicInOut } from 'svelte/easing';
 
 	import { Container } from 'pixi-svelte';
-	import { stateBetDerived } from 'state-shared';
+
+	import { playAt } from '../game/winsHurry.svelte';
 
 	// A winning symbol, then the win is done:
 	// - pulse: it swells a little and settles back, twice (a plain stand-in for the sample's Mining
@@ -39,10 +40,10 @@
 	onMount(() => {
 		if (props.pulse) {
 			(async () => {
+				// (at the wins' speed, which goes up as it plays if they are hurried: winsHurry)
 				for (let i = 0; i < PULSES && !done; i++) {
-					const timeScale = stateBetDerived.timeScale() || 1;
-					await scale.set(GROW, { duration: UP / timeScale, easing: cubicOut });
-					await scale.set(1, { duration: DOWN / timeScale, easing: cubicInOut });
+					await playAt(scale, GROW, UP, { easing: cubicOut });
+					await playAt(scale, 1, DOWN, { easing: cubicInOut });
 				}
 				finish();
 			})();

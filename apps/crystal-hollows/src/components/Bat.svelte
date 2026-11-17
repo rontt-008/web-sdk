@@ -3,11 +3,13 @@
 </script>
 
 <script lang="ts">
+	import { Tween } from 'svelte/motion';
 	import { Container, SpineProvider } from 'pixi-svelte';
 
 	import BatSpine from './BatSpine.svelte';
 	import { getContext } from '../game/context';
-	import { SYMBOL_SIZE } from '../game/constants';
+	import { BAT_LOOP_BOUNDS, SYMBOL_SIZE } from '../game/constants';
+	import { stateBatPerch } from '../game/batPerch.svelte';
 
 	const context = getContext();
 
@@ -16,9 +18,8 @@
 	// board. As the free spins trigger (batAttack) it attacks (the user, 2026-11-13: "add this animation to
 	// the bat and trigger it when you get a bonus"), BatSpine; its lunge reaches a little past the box
 	// below (the hover's, where it spends its time).
-	// Where its wings reach over the loop, in the skeleton's units with y down (its origin is between
-	// its shoulders): measured with Spine's maths, frame by frame. This box is fitted into the room.
-	const LOOP_BOUNDS = { x: -739, y: -548, width: 1462, height: 987 };
+	// Where its wings reach over the loop (BAT_LOOP_BOUNDS): this box is fitted into the room.
+	const LOOP_BOUNDS = BAT_LOOP_BOUNDS;
 	const BAT = {
 		// the room's width it fills: at most this, and narrower than minWidth it is left out (no room
 		// beside the board)
@@ -80,6 +81,19 @@
 	});
 
 	let drift = $state({ x: 0, y: 0 });
+
+	// where it is, for the free spins screens' bat, which takes off from here and comes back (BatSign);
+	// while that one is out, this one fades away, and back once it is home
+	$effect(() => {
+		stateBatPerch.shown = shown;
+		stateBatPerch.x = layout.x + drift.x;
+		stateBatPerch.y = layout.y + drift.y;
+		stateBatPerch.scale = layout.scale;
+	});
+	const alpha = new Tween(1);
+	$effect(() => {
+		alpha.set(stateBatPerch.away ? 0 : 1, { duration: stateBatPerch.away ? 200 : 350 });
+	});
 	$effect(() => {
 		const ticker = context.stateApp.pixiApplication?.ticker;
 		if (!shown || !ticker) return;
@@ -98,7 +112,7 @@
 
 {#if shown}
 	<!-- the container at the box's middle; the skeleton's origin put so the box is centred there -->
-	<Container x={layout.x + drift.x} y={layout.y + drift.y} scale={layout.scale}>
+	<Container x={layout.x + drift.x} y={layout.y + drift.y} scale={layout.scale} alpha={alpha.current}>
 		<SpineProvider
 			key="bat"
 			x={-(LOOP_BOUNDS.x + LOOP_BOUNDS.width / 2)}

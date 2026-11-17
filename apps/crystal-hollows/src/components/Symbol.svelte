@@ -1,12 +1,13 @@
 <script lang="ts">
-	import { Text } from 'pixi-svelte';
 
 	import SymbolSpineMain from './SymbolSpineMain.svelte';
 	import SymbolSprite from './SymbolSprite.svelte';
 	import SymbolSheet from './SymbolSheet.svelte';
 	import { getSymbolInfo } from '../game/utils';
 	import type { SymbolState, RawSymbol } from '../game/types';
-	import { gameTextStyle, TEXT_GOLD } from '../game/textStyles';
+	import { LOGO_TEXT_COLORS } from '../game/textStyles';
+	import { SYMBOL_SIZE } from '../game/constants';
+	import LogoText from './LogoText.svelte';
 
 	type Props = {
 		x?: number;
@@ -57,11 +58,13 @@
 {/if}
 
 {#if multiplierLabel}
-	<Text
-		anchor={0.5}
+	<!-- (in the game's rock lettering, gold, as every text over the game: LogoText) -->
+	<LogoText
 		x={props.x}
 		y={props.y}
 		text={multiplierLabel}
-		style={gameTextStyle(40, TEXT_GOLD)}
+		fontSize={40}
+		maxWidth={SYMBOL_SIZE}
+		colors={LOGO_TEXT_COLORS.gold}
 	/>
 {/if}

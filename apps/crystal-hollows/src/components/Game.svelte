@@ -12,6 +12,7 @@
 
 	import { getContext } from '../game/context';
 	import { uiTheme, uiHtmlTheme } from '../game/uiTheme';
+	import { setBetModeMeta } from '../game/betModes';
 	import EnableSound from './EnableSound.svelte';
 	import EnableGameActor from './EnableGameActor.svelte';
 	import ResumeBet from './ResumeBet.svelte';
@@ -24,6 +25,8 @@
 	import Board from './Board.svelte';
 	import Anticipations from './Anticipations.svelte';
 	import Win from './Win.svelte';
+	import WinLines from './WinLines.svelte';
+	import WinsHurry from './WinsHurry.svelte';
 	import FreeSpinIntro from './FreeSpinIntro.svelte';
 	import FreeSpinCounter from './FreeSpinCounter.svelte';
 	import FreeSpinOutro from './FreeSpinOutro.svelte';
@@ -31,13 +34,16 @@
 
 	const context = getContext();
 
+	// the buy menu's booster and its three buys, at this game's prices (not the SDK's sample modes)
+	setBetModeMeta();
+
 	onMount(() => (context.stateLayout.showLoadingScreen = true));
 
-	// the bat is only on wide screens (see Bat), so it is only loaded once the screen is one (the logo is
-	// on the start screen too, so it loads first, assets.ts)
+	// the bat hovers beside the board only on wide screens (Bat), but it brings the free spins screens'
+	// sign on every screen (BatSign), so it is loaded once the game is in (lazily: the logo is on the start
+	// screen too, so it loads first, assets.ts)
 	$effect(() => {
-		if (context.stateLayoutDerived.layoutType() === 'desktop')
-			context.stateApp.loadLazyAssets(['bat']);
+		context.stateApp.loadLazyAssets(['bat']);
 	});
 
 	context.eventEmitter.subscribeOnMount({
@@ -72,6 +78,8 @@
 
 		<MainContainer>
 			<Board />
+			<!-- a winning payline over the board, with its win on it -->
+			<WinLines />
 			<Anticipations />
 		</MainContainer>
 
@@ -81,6 +89,9 @@
 			<Logo />
 			<Bat />
 		</MainContainer>
+
+		<!-- while the line wins show, a click anywhere but the UI's buttons plays them fast -->
+		<WinsHurry />
 
 		<!-- the charcoal UI of RuneFall and Lazy Evening (see uiTheme) -->
 		<UI theme={uiTheme}>

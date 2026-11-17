@@ -36,7 +36,9 @@
 	// where it is (in cells), how big, how much it shows and what it plays: by its own flight, or by its
 	// reel's tall wild once it is down
 	const look = (bat: StickyBat) => {
-		const own = { x: bat.pos.x, y: bat.pos.y, size: bat.size.current, alpha: 1, play: 'idle' as const };
+		// (settling onto a symbol it fakes a landing on, its size dips)
+		const size = bat.size.current * (1 - TALL_WILD.sticky.fake.squash * bat.dip);
+		const own = { x: bat.pos.x, y: bat.pos.y, size, alpha: 1, play: 'idle' as const };
 		const tallWild = stateTallWilds.reels[bat.reel];
 		if (tallWild?.bat !== bat || tallWild.phase === 'arrive' || tallWild.phase === 'gone') return own;
 		if (tallWild.phase === 'hold') return { ...own, play: 'spin' as const };

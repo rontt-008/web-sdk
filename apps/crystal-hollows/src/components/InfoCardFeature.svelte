@@ -10,10 +10,10 @@
 </script>
 
 <script lang="ts">
-	import { Container, Sprite, Text } from 'pixi-svelte';
+	import { Sprite } from 'pixi-svelte';
 
 	import LogoText from './LogoText.svelte';
-	import { gameTextStyle, LOGO_TEXT_COLORS } from '../game/textStyles';
+	import { LOGO_TEXT_COLORS } from '../game/textStyles';
 
 	type Props = {
 		// the card's panel (InfoCard)
@@ -23,7 +23,8 @@
 		// the feature's name under it, in the logo's lettering, in `colors`
 		title: string;
 		colors: LogoTextColors;
-		// and under that, in small, what it does
+		// and under that, in small, what it does (in the lettering too, in pale stone: every text over
+		// the game is, LogoText; the user, 2026-11-16)
 		caption: string[];
 	};
 
@@ -35,7 +36,8 @@
 	// apart, the middle ones `arch` higher.
 	const PICTURE = { y: 0.29, size: 0.74, word: 0.42, rowSize: 0.34, rowStep: 0.19, arch: 0.07 };
 	const TITLE = { y: 0.63, size: 0.2 };
-	const CAPTION = { y: 0.84, size: 0.072 };
+	// (rock: how much of the rock is on it, little at its small size, where its cracks broke the letters)
+	const CAPTION = { y: 0.84, size: 0.072, rock: 0.4 };
 
 	const w = $derived(props.width);
 	const h = $derived(props.height);
@@ -96,13 +98,13 @@
 	look="logo"
 />
 
-<Container x={w / 2} y={h * CAPTION.y}>
-	<Text
-		anchor={0.5}
-		text={props.caption.join('\n')}
-		style={{
-			...gameTextStyle(w * CAPTION.size),
-			lineHeight: w * CAPTION.size * 1.2,
-		}}
-	/>
-</Container>
+<LogoText
+	text={props.caption.join('\n')}
+	x={w / 2}
+	y={h * CAPTION.y}
+	fontSize={w * CAPTION.size}
+	maxWidth={w * 0.92}
+	lineHeight={w * CAPTION.size * 1.2}
+	colors={LOGO_TEXT_COLORS.stone}
+	rock={CAPTION.rock}
+/>
